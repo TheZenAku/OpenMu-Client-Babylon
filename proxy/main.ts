@@ -122,6 +122,35 @@ if (!ALLOW_RULES.length) {
 /** The per-packet hex dump. Priceless locally, far too loud against a real server. */
 const LOG_PACKETS = (process.env.LOG_PACKETS ?? "on") !== "off";
 
+/**
+ * Relay origin check: when set, a game socket is only accepted from a page served on this very
+ * host at this port (the web client), so another site cannot open game sessions through a
+ * visitor's browser. The host follows whatever the browser used (localhost, a LAN address), as
+ * the client builds the proxy address from its own page (`VITE_WS_HOST=auto`).
+ */
+const RELAY_ORIGIN_PORT = process.env.RELAY_ORIGIN_PORT ?? "";
+
+/** Concurrent game sockets per client address; 0 = unlimited. */
+const MAX_RELAYS_PER_IP = Number(process.env.MAX_RELAYS_PER_IP ?? 0);
+
+/** The largest frame a client may send; game packets are far smaller. */
+const MAX_PAYLOAD = Number(process.env.MAX_PAYLOAD ?? 16 * 1024 * 1024);
+
+const relaysByIp = new Map<string, number>();
+
+function relayOriginAllowed(req: Request, url: URL): boolean {
+  if (!RELAY_ORIGIN_PORT) return true;
+  const origin = req.headers.get("origin");
+  if (!origin) return false;
+  try {
+    const o = new URL(origin);
+    const port = o.port || (o.protocol === "https:" ? "443" : "80");
+    return (o.protocol === "http:" || o.protocol === "https:") && o.hostname === url.hostname && port === RELAY_ORIGIN_PORT;
+  } catch {
+    return false;
+  }
+}
+
 type RelayData = {
   kind: "relay";
   targetHost: string;
@@ -133,6 +162,8 @@ type RelayData = {
   band: BandPeer | null;
   /** This socket as the ping relay knows it; set in `open`, null without tracking. */
   ping: PingPeer | null;
+  /** The client address, for the per-address socket cap. */
+  ip: string;
 };
 
 type AdminData = {
@@ -358,6 +389,17 @@ Bun.serve<WebSocketData>({
       return new Response("target not allowed", { status: 403 });
     }
 
+    if (!relayOriginAllowed(req, url)) {
+      console.warn(`refused origin ${req.headers.get("origin") ?? "(none)"}`);
+      return new Response("origin not allowed", { status: 403 });
+    }
+
+    const ip = server.requestIP(req)?.address ?? "";
+    if (MAX_RELAYS_PER_IP > 0 && (relaysByIp.get(ip) ?? 0) >= MAX_RELAYS_PER_IP) {
+      console.warn(`refused ${ip}: more than ${MAX_RELAYS_PER_IP} game sockets`);
+      return new Response("too many connections", { status: 429 });
+    }
+
     // The page's session nonce (src/common/sessionNonce.ts), which lets the
     // cash shop put an account to this socket through the presence server's
     // /ticket/<nonce>. Absent or malformed is not a refusal: it only means
@@ -373,10 +415,11 @@ Bun.serve<WebSocketData>({
     const presence = new ConnectionPresence(session, targetPort);
     const track = tracker ? tracker.open(session, targetPort) : null;
 
-    const data: RelayData = { kind: "relay", targetHost, targetPort, presence, track, band: null, ping: null };
+    const data: RelayData = { kind: "relay", targetHost, targetPort, presence, track, band: null, ping: null, ip };
 
     // upgrade the request to a WebSocket
     if (server.upgrade(req, { data })) {
+      relaysByIp.set(ip, (relaysByIp.get(ip) ?? 0) + 1);
       return; // do not return a Response
     }
 
@@ -386,6 +429,7 @@ Bun.serve<WebSocketData>({
   },
   websocket: {
     sendPings: false,
+    maxPayloadLength: MAX_PAYLOAD,
     open(ws) {
       if (ws.data.kind === "admin") {
         const data = ws.data;
@@ -534,6 +578,9 @@ Bun.serve<WebSocketData>({
 
       const relay = ws as ServerWebSocket<RelayData>;
       clients.delete(relay);
+      const open = (relaysByIp.get(relay.data.ip) ?? 1) - 1;
+      if (open > 0) relaysByIp.set(relay.data.ip, open);
+      else relaysByIp.delete(relay.data.ip);
       relay.data.presence.close();
       // Before the tracker closes the session: the gone / leave notices
       // still need its map and scope.
