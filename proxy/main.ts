@@ -138,6 +138,48 @@ const MAX_PAYLOAD = Number(process.env.MAX_PAYLOAD ?? 16 * 1024 * 1024);
 
 const relaysByIp = new Map<string, number>();
 
+/**
+ * Failed logins per address: OpenMU answers a wrong password as often as it is asked (each one a
+ * BCrypt check). After MAX_LOGIN_FAILURES within LOGIN_FAILURE_WINDOW_MS, the address gets no game
+ * socket for LOGIN_BLOCK_MS. 0 = off. Read off the server's LoginResponse (C1 05 F1 01 <result>).
+ */
+const MAX_LOGIN_FAILURES = Number(process.env.MAX_LOGIN_FAILURES ?? 0);
+const LOGIN_FAILURE_WINDOW_MS = Number(process.env.LOGIN_FAILURE_WINDOW_MS ?? 10 * 60_000);
+const LOGIN_BLOCK_MS = Number(process.env.LOGIN_BLOCK_MS ?? 10 * 60_000);
+const loginFailures = new Map<string, number[]>();
+const blockedUntil = new Map<string, number>();
+
+/** LoginResponse results that count as a failed attempt: invalid password (0), account invalid (2). */
+function isFailedLogin(bytes: Uint8Array): boolean {
+  for (let i = 0; i + 4 < bytes.length; i++) {
+    if (bytes[i] === 0xc1 && bytes[i + 1] === 0x05 && bytes[i + 2] === 0xf1 && bytes[i + 3] === 0x01) {
+      return bytes[i + 4] === 0x00 || bytes[i + 4] === 0x02;
+    }
+  }
+  return false;
+}
+
+/** Records a failed login; returns true when the address is now blocked. */
+function noteFailedLogin(ip: string): boolean {
+  const now = Date.now();
+  const recent = (loginFailures.get(ip) ?? []).filter(t => now - t < LOGIN_FAILURE_WINDOW_MS);
+  recent.push(now);
+  loginFailures.set(ip, recent);
+  if (recent.length < MAX_LOGIN_FAILURES) return false;
+  blockedUntil.set(ip, now + LOGIN_BLOCK_MS);
+  loginFailures.delete(ip);
+  console.warn(`blocked ${ip} for ${LOGIN_BLOCK_MS / 1000}s after ${recent.length} failed logins`);
+  return true;
+}
+
+function isBlocked(ip: string): boolean {
+  const until = blockedUntil.get(ip);
+  if (until === undefined) return false;
+  if (Date.now() < until) return true;
+  blockedUntil.delete(ip);
+  return false;
+}
+
 function relayOriginAllowed(req: Request, url: URL): boolean {
   if (!RELAY_ORIGIN_PORT) return true;
   const origin = req.headers.get("origin");
@@ -395,6 +437,10 @@ Bun.serve<WebSocketData>({
     }
 
     const ip = server.requestIP(req)?.address ?? "";
+    if (MAX_LOGIN_FAILURES > 0 && isBlocked(ip)) {
+      return new Response("too many failed logins, try again later", { status: 429 });
+    }
+
     if (MAX_RELAYS_PER_IP > 0 && (relaysByIp.get(ip) ?? 0) >= MAX_RELAYS_PER_IP) {
       console.warn(`refused ${ip}: more than ${MAX_RELAYS_PER_IP} game sockets`);
       return new Response("too many connections", { status: 429 });
@@ -485,6 +531,11 @@ Bun.serve<WebSocketData>({
             const forwarded = asBufferSource(data);
 
             relay.send(forwarded);
+
+            if (MAX_LOGIN_FAILURES > 0 && isFailedLogin(new Uint8Array(data.buffer, data.byteOffset, data.byteLength)) && noteFailedLogin(relay.data.ip)) {
+              relay.close();
+              return;
+            }
 
             // The server's side of the login: the sniffer names a socket only
             // once the game server has said yes, never off the client's own
