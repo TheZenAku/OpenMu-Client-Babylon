@@ -9,6 +9,7 @@
     "copy-data": "bun run tools/copyData.ts && bun run tools/copyData.ts --src Data-v097d --out dist/Data-v097d",
     "compress-assets": "bun run tools/compressAssets.ts",
     "assets-index": "bun run tools/assetsIndex.ts",
+    "serve:prod": "bun run tools/serveProd.ts",
     "preview": "vite preview --port 4173 --strictPort",
     "proxy": "bun run --watch proxy/main.ts",
     "dev:register": "vite --config register/vite.config.ts",
