@@ -136,7 +136,22 @@ const MAX_RELAYS_PER_IP = Number(process.env.MAX_RELAYS_PER_IP ?? 0);
 /** The largest frame a client may send; game packets are far smaller. */
 const MAX_PAYLOAD = Number(process.env.MAX_PAYLOAD ?? 16 * 1024 * 1024);
 
-const relaysByIp = new Map<string, number>();
+/**
+ * The live game sockets per client address. A set of the sockets themselves rather than a counter:
+ * it is pruned by their real state on every check, so a close event that never comes (a socket that
+ * died between the upgrade and `open`) cannot leave an address capped forever.
+ */
+const relaysByIp = new Map<string, Set<ServerWebSocket<RelayData>>>();
+
+function liveRelays(ip: string): number {
+  const sockets = relaysByIp.get(ip);
+  if (!sockets) return 0;
+  for (const ws of sockets) {
+    if (ws.readyState > 1) sockets.delete(ws); // CLOSING or CLOSED
+  }
+  if (sockets.size === 0) relaysByIp.delete(ip);
+  return sockets.size;
+}
 
 /**
  * Failed logins per address: OpenMU answers a wrong password as often as it is asked (each one a
@@ -441,7 +456,7 @@ Bun.serve<WebSocketData>({
       return new Response("too many failed logins, try again later", { status: 429 });
     }
 
-    if (MAX_RELAYS_PER_IP > 0 && (relaysByIp.get(ip) ?? 0) >= MAX_RELAYS_PER_IP) {
+    if (MAX_RELAYS_PER_IP > 0 && liveRelays(ip) >= MAX_RELAYS_PER_IP) {
       console.warn(`refused ${ip}: more than ${MAX_RELAYS_PER_IP} game sockets`);
       return new Response("too many connections", { status: 429 });
     }
@@ -465,7 +480,6 @@ Bun.serve<WebSocketData>({
 
     // upgrade the request to a WebSocket
     if (server.upgrade(req, { data })) {
-      relaysByIp.set(ip, (relaysByIp.get(ip) ?? 0) + 1);
       return; // do not return a Response
     }
 
@@ -490,6 +504,10 @@ Bun.serve<WebSocketData>({
       }
 
       const relay = ws as ServerWebSocket<RelayData>;
+
+      let sockets = relaysByIp.get(relay.data.ip);
+      if (!sockets) relaysByIp.set(relay.data.ip, (sockets = new Set()));
+      sockets.add(relay);
 
       console.log(
         `client connected, target ${relay.data.targetHost}:${relay.data.targetPort}`
@@ -629,9 +647,9 @@ Bun.serve<WebSocketData>({
 
       const relay = ws as ServerWebSocket<RelayData>;
       clients.delete(relay);
-      const open = (relaysByIp.get(relay.data.ip) ?? 1) - 1;
-      if (open > 0) relaysByIp.set(relay.data.ip, open);
-      else relaysByIp.delete(relay.data.ip);
+      const sockets = relaysByIp.get(relay.data.ip);
+      sockets?.delete(relay);
+      if (sockets?.size === 0) relaysByIp.delete(relay.data.ip);
       relay.data.presence.close();
       // Before the tracker closes the session: the gone / leave notices
       // still need its map and scope.
