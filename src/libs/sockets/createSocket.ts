@@ -13,6 +13,9 @@ type Options = {
 
 const STCPackets = [...ConnectServerPackets, ...ServerToClientPackets].filter(p => p.Direction === 'ServerToClient');
 
+/** MUIdle's own packets (see `muidle/protocol.ts`); unused by the season 6 protocol. */
+const MUIDLE_PACKET_CODE = 0xee;
+
 const packetsCacheByCode: (typeof STCPackets)[] = [];
 
 STCPackets.forEach(p => {
@@ -189,6 +192,20 @@ export function createSocket({ wsAddress, tcpIP, tcpPort }: Options) {
         packetHeaderSize === 2
           ? packet.getUint8(1)
           : (packet.getUint8(1) << 8) | packet.getUint8(2);
+
+      // MUIdle (0xEE): sub code + UTF-8 JSON, not part of the generated protocol.
+      if (packetCode === MUIDLE_PACKET_CODE && subCode >= 0) {
+        const start = codeIndex + 2;
+        const end = Math.min(decodedLength, packet.byteLength);
+        const json = new TextDecoder().decode(new Uint8Array(packet.buffer, packet.byteOffset + start, Math.max(0, end - start)));
+        try {
+          EventBus.emit('muidlePacket', { subCode, json });
+        } catch (e) {
+          console.error(`${LOG_PREFIX}handler for MUIdle packet threw:`, e);
+        }
+        bytes = bytes.subarray(length);
+        continue;
+      }
 
       const packetsByCode = packetsCacheByCode[packetCode] ?? [];
 

@@ -60,6 +60,7 @@ import { DebugMenuWindow } from '../../components/debugMenu';
 import { GmPanelWindow } from '../../components/gmPanel';
 import { MobileControls } from './components/mobileControls';
 import { LowHealthOverlay } from './components/lowHealthOverlay';
+import { MUIdleHud } from './components/muidle';
 
 // The active version's take on the windows that differ per version. Lazy so
 // the version UI chunk evaluates after the core app modules, not before.
@@ -128,6 +129,8 @@ const HUD = observer(() => {
       {}
       {/* Touch clients only: renders null on a mouse. */}
       <MobileControls />
+      {/* MUIdle: HUNT/MANUAL, idle settings, offline summary. */}
+      <MUIdleHud />
       {}
       <PickedItemCursor />
     </div>

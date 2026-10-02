@@ -6,6 +6,7 @@ import { calcMaxDurability, isJewel, itemDef } from '../common/itemStats';
 import { InventoryConstants } from '../common/inventoryConstants';
 import { PetCommandModeEnum } from '../common/packets/ClientToServerPackets';
 import { isAttackableEntity } from '../ecs/systems/attackSystem';
+import { canUseSkill } from '../skills/usability';
 import type { Entity, World } from '../ecs/world';
 import { ensureMuHelperWatching, MuHelperState } from './state';
 import type { MuHelperConfig } from './config';
@@ -429,6 +430,25 @@ function selectAttackSkill(world: World, hero: Entity, config: MuHelperConfig): 
   return isLearned(config.skills[0]) ? config.skills[0] : 0;
 }
 
+/**
+ * MUIdle HUNT: a helper started without a basic skill still hunts. The
+ * strongest learned single-target attack the hero can cast right now (mana,
+ * weapon and requirement checks are `canUseSkill`'s); 0 means none, and the
+ * caller falls back to a plain weapon swing.
+ */
+function autoAttackSkill(): number {
+  let best = 0;
+  let bestDamage = 0;
+  for (const learned of Store.skills) {
+    const def = skillDefinition(learned.number);
+    if (!def || def.damage <= 0 || def.type !== 'DirectHit' || def.target !== 'Explicit') continue;
+    if (def.damage <= bestDamage || !canUseSkill(def.num)) continue;
+    best = def.num;
+    bestDamage = def.damage;
+  }
+  return best;
+}
+
 /** `CMuHelper::Attack` (+ `SimulateComboAttack`) through the cast seam. */
 function attack(world: World, hero: Entity, config: MuHelperConfig): void {
   const huntDistance = distanceByRange(config.huntingRange);
@@ -454,7 +474,12 @@ function attack(world: World, hero: Entity, config: MuHelperConfig): void {
   } else {
     skillNum = selectAttackSkill(world, hero, config);
   }
-  if (skillNum <= 0) return;
+  if (skillNum <= 0) skillNum = autoAttackSkill();
+  if (skillNum <= 0) {
+    // The same seam a left-click on a monster uses: walk into reach, swing.
+    if (!world.castRequest) world.attackTarget = currentTarget;
+    return;
+  }
 
   castSkill(world, skillNum, currentTarget);
 }

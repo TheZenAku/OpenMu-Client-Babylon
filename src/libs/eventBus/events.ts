@@ -57,6 +57,8 @@ export type Events = CSEvents &
     chatMessage: { sender: string; message: string; whisper: boolean };
     /** PlayFanfareSound (0x0F): an event sound at a map position (0 ready / 1 start / 2 end - logic.ts plays it). */
     fanfare: { effectType: number; x: number; y: number };
+    /** A MUIdle packet (code 0xEE) from the game server: its sub code and JSON payload. */
+    muidlePacket: { subCode: number; json: string };
     keyPressed: string;
     keyReleased: string;
     /** First-person mouse look took (true) or gave back the pointer lock. */

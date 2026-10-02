@@ -1,0 +1,223 @@
+// MUIdle HUD: plain HTML over the canvas, sized for touch.
+@gold: #ffcc1a;
+@panel: rgba(12, 10, 8, 0.92);
+@line: rgba(255, 204, 26, 0.35);
+
+.muidle-strip {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  padding: 4px 12px;
+  border: 1px solid @line;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #eee;
+  font: 600 12px/18px system-ui, sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 40;
+
+  .muidle-strip-name {
+    color: @gold;
+  }
+}
+
+.muidle-hunt {
+  position: absolute;
+  right: 12px;
+  bottom: 92px;
+  display: flex;
+  gap: 6px;
+  z-index: 45;
+  pointer-events: auto;
+}
+
+.muidle-hunt-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 112px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid @line;
+  border-radius: 22px;
+  font: 800 15px/1 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  touch-action: manipulation;
+
+  &.wide {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .muidle-hunt-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &.is-hunting {
+    color: #7dff8a;
+    background: rgba(10, 60, 20, 0.85);
+    border-color: #3fbf55;
+
+    .muidle-hunt-dot {
+      animation: muidle-pulse 1.2s ease-in-out infinite;
+    }
+  }
+
+  &.is-manual {
+    color: #ddd;
+    background: rgba(40, 36, 30, 0.85);
+  }
+}
+
+@keyframes muidle-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.muidle-gear {
+  width: 44px;
+  height: 44px;
+  border: 2px solid @line;
+  border-radius: 50%;
+  background: rgba(40, 36, 30, 0.85);
+  color: @gold;
+  font-size: 20px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.muidle-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  pointer-events: auto;
+}
+
+.muidle-panel {
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 16px;
+  border: 1px solid @line;
+  border-radius: 10px;
+  background: @panel;
+  color: #eee;
+  font: 14px/1.4 system-ui, sans-serif;
+
+  h2 {
+    margin: 0 0 12px;
+    color: @gold;
+    font-size: 16px;
+    letter-spacing: 0.1em;
+    text-align: center;
+  }
+
+  button {
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid @line;
+    border-radius: 6px;
+    background: #2a241c;
+    color: #eee;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+}
+
+.muidle-row {
+  margin-bottom: 10px;
+}
+
+.muidle-link {
+  width: 100%;
+  margin-bottom: 10px;
+  color: @gold !important;
+}
+
+.muidle-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  cursor: pointer;
+
+  input {
+    width: 20px;
+    height: 20px;
+    accent-color: @gold;
+  }
+}
+
+.muidle-range {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+
+  input {
+    width: 100%;
+    accent-color: @gold;
+  }
+}
+
+.muidle-note {
+  margin: 6px 0 12px;
+  color: #aaa;
+  font-size: 12px;
+}
+
+.muidle-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+
+  .muidle-primary {
+    background: #6b4f12;
+    border-color: @gold;
+    color: #fff;
+    font-weight: 700;
+  }
+}
+
+.muidle-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  strong {
+    color: #fff;
+    text-align: right;
+  }
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+  .muidle-hunt {
+    bottom: 120px;
+  }
+
+  .muidle-hunt-button {
+    min-height: 52px;
+    font-size: 17px;
+  }
+
+  .muidle-gear {
+    width: 52px;
+    height: 52px;
+  }
+}
