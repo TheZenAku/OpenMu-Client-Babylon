@@ -1,6 +1,6 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import { LocalStorage } from '../libs/localStorage';
-import { CS_HOST, CS_PORT, WS_HOST, WS_PORT } from '../consts';
+import { CS_HOST, CS_PORT, SERVER_NAME, WS_HOST, WS_PORT, WS_SAME_HOST } from '../consts';
 import { versionByTag } from '../version';
 
 /**
@@ -271,7 +271,7 @@ export function matchesSearch(profile: ServerProfile, query: string): boolean {
 function defaultProfile(): ServerProfile {
   return {
     id: 'local',
-    name: 'Local (OpenMU)',
+    name: SERVER_NAME,
     csHost: CS_HOST,
     csPort: CS_PORT,
     wsUrl: normalizeWsUrl(`${WS_HOST}:${WS_PORT}`),
@@ -293,6 +293,9 @@ function defaultProfile(): ServerProfile {
  * player that none of them can play and only the owner understands.
  */
 function seedsDefaultProfile(): boolean {
+  // The proxy shares the page's host, so its loopback connect server is real
+  // for every player, wherever they browse from.
+  if (WS_SAME_HOST) return true;
   if (!isLoopback(CS_HOST)) return true;
   if (typeof location === 'undefined') return true;
 

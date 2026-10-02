@@ -161,6 +161,8 @@ export type ServerListState = 'idle' | 'loading' | 'ok' | 'error';
 function listUrl(): string | null {
   const fromEnv = import.meta.env.VITE_SERVER_LIST_URL as string | undefined;
 
+  // A private deployment (`VITE_SERVER_LIST_URL=off`) offers only its own world.
+  if (fromEnv === 'off') return null;
   if (typeof location === 'undefined') return fromEnv || DEFAULT_LIST_URL;
 
   const param = new URLSearchParams(location.search).get('list');
