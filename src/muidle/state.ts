@@ -87,6 +87,8 @@ class MUIdleStore {
   settings: IdleSettings | null = null;
   /** A finished offline session waiting to be shown. */
   summary: OfflineSummary | null = null;
+  /** Inventory slots of the items the player locked (never auto-sold), as the server mapped them. */
+  lockedSlots: number[] = [];
   settingsOpen = false;
 
   constructor() {
@@ -98,10 +100,6 @@ class MUIdleStore {
     return Store.muHelper.active;
   }
 
-  get lockedItems(): ReadonlySet<string> {
-    return new Set(this.settings?.lockedItems ?? []);
-  }
-
   onPacket(subCode: number, json: string): void {
     let data: unknown;
     try {
@@ -111,9 +109,15 @@ class MUIdleStore {
       return;
     }
     if (subCode === SUB_STATE) {
-      const state = data as { hunt?: boolean; resume?: boolean; settings?: Partial<IdleSettings> };
+      const state = data as {
+        hunt?: boolean;
+        resume?: boolean;
+        settings?: Partial<IdleSettings>;
+        lockedSlots?: number[];
+      };
       this.huntIntent = state.hunt === true;
       this.settings = { ...DEFAULT_IDLE_SETTINGS, ...(state.settings ?? {}) };
+      this.lockedSlots = Array.isArray(state.lockedSlots) ? state.lockedSlots : [];
       if (state.resume) this.scheduleResume();
     } else if (subCode === SUB_SUMMARY) {
       this.summary = data as OfflineSummary;
@@ -177,12 +181,13 @@ class MUIdleStore {
     Store.addNotification(mt('saved'), 'info');
   }
 
+  /** Locks/unlocks the item in an inventory slot; the server answers with the new state. */
   lockItem(slot: number, locked: boolean): void {
     this.send(SUB_LOCK_ITEM, { slot, locked });
   }
 
-  isLocked(itemId: string | undefined): boolean {
-    return !!itemId && this.lockedItems.has(itemId);
+  isSlotLocked(slot: number): boolean {
+    return this.lockedSlots.includes(slot);
   }
 
   dismissSummary(): void {

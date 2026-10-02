@@ -18,5 +18,7 @@
     "types": [
       "bun-types" // add Bun global
     ]
-  }
+  },
+  // The build output (`allowJs` would type-check its bundles and asset tree).
+  "exclude": ["node_modules", "dist", "dist-register"]
 }

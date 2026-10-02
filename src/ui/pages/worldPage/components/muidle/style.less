@@ -102,7 +102,7 @@
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.45);
-  z-index: 200;
+  z-index: 700; // over the game's modal message box (WINDOW_Z_MODAL = 600)
   pointer-events: auto;
 }
 
@@ -219,5 +219,45 @@
   .muidle-gear {
     width: 52px;
     height: 52px;
+  }
+}
+
+.muidle-locks {
+  margin: 4px 0 8px;
+
+  h3 {
+    margin: 8px 0 4px;
+    color: @gold;
+    font-size: 13px;
+  }
+
+  ul {
+    max-height: 180px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 2px 8px;
+    font-size: 13px;
+
+    &.is-locked span {
+      color: @gold;
+    }
+
+    button {
+      min-width: 40px;
+      min-height: 32px !important;
+      padding: 0 !important;
+      font-size: 16px;
+    }
   }
 }

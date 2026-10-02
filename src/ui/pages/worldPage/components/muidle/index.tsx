@@ -6,6 +6,7 @@ import { MUIdle, DEFAULT_IDLE_SETTINGS, type IdleSettings, type OfflineSummary }
 import { mt, type MUIdleTextKey } from '../../../../../muidle/text';
 import { toggleMuHelperWindow } from '../../../../../muHelper/state';
 import { combatPower } from '../../../../../muidle/combatPower';
+import { itemDisplayName } from '../../../../../common/itemTooltip';
 
 /**
  * MUIdle's HUD: the HUNT/MANUAL switch (always on screen, sized for a thumb),
@@ -88,6 +89,40 @@ const Toggle = ({
   </label>
 );
 
+/** First backpack slot: 0..11 are the equipped items, which are never sold anyway. */
+const FIRST_BACKPACK_SLOT = 12;
+
+/** The backpack with a lock per item: a locked item is never sold automatically. */
+const LockedItems = observer(() => {
+  const items = Store.playerData.items
+    .map((item, slot) => ({ item, slot }))
+    .filter(({ item, slot }) => item && slot >= FIRST_BACKPACK_SLOT);
+  if (!items.length) return null;
+  return (
+    <div className="muidle-locks">
+      <h3>{mt('lockedItems')}</h3>
+      <ul>
+        {items.map(({ item, slot }) => {
+          const locked = MUIdle.isSlotLocked(slot);
+          return (
+            <li key={slot} className={locked ? 'is-locked' : ''}>
+              <span>{itemDisplayName(item!)}</span>
+              <button
+                type="button"
+                aria-pressed={locked}
+                title={locked ? mt('unlock') : mt('lock')}
+                onClick={() => MUIdle.lockItem(slot, !locked)}
+              >
+                {locked ? '🔒' : '🔓'}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+});
+
 const SettingsPanel = observer(() => {
   const [draft, setDraft] = useState<IdleSettings | null>(null);
   if (!MUIdle.settingsOpen) return null;
@@ -140,6 +175,7 @@ const SettingsPanel = observer(() => {
           checked={current.autoBuyPotions}
           onChange={v => set({ autoBuyPotions: v })}
         />
+        <Toggle label={mt('autoBuild')} checked={current.autoBuild} onChange={v => set({ autoBuild: v })} />
         <label className="muidle-range">
           <span>{mt('sellMaxItemLevel', { level: current.sellMaxItemLevel })}</span>
           <input
@@ -151,6 +187,7 @@ const SettingsPanel = observer(() => {
           />
         </label>
         <p className="muidle-note">{mt('alwaysKept')}</p>
+        <LockedItems />
         <div className="muidle-actions">
           <button
             type="button"

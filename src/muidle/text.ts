@@ -19,6 +19,7 @@ const EN = {
   autoSell: 'Auto sell junk at merchants',
   autoRepair: 'Auto repair at merchants',
   autoBuyPotions: 'Auto buy potions',
+  autoBuild: 'Auto build (spend stat points by class)',
   sellMaxItemLevel: 'Junk = plain weapons/armor up to +{level}',
   alwaysKept: 'Never sold: equipped, excellent, ancient, socket, wings, jewels, locked items',
   save: 'Save',
@@ -47,6 +48,7 @@ const EN = {
   ok: 'OK',
   lock: 'Lock item',
   unlock: 'Unlock item',
+  lockedItems: 'Lock items (never auto-sold)',
   cp: 'CP',
 } as const;
 
@@ -66,6 +68,7 @@ const PT: Partial<Record<MUIdleTextKey, string>> = {
   autoSell: 'Vender lixo automaticamente',
   autoRepair: 'Reparar automaticamente no NPC',
   autoBuyPotions: 'Comprar poções automaticamente',
+  autoBuild: 'Distribuir pontos automaticamente (por classe)',
   sellMaxItemLevel: 'Lixo = armas/armaduras comuns até +{level}',
   alwaysKept: 'Nunca vendidos: equipados, excellent, ancient, socket, asas, joias, itens travados',
   save: 'Salvar',
@@ -94,6 +97,7 @@ const PT: Partial<Record<MUIdleTextKey, string>> = {
   ok: 'OK',
   lock: 'Travar item',
   unlock: 'Destravar item',
+  lockedItems: 'Travar itens (nunca vendidos automaticamente)',
 };
 
 export function mt(key: MUIdleTextKey, params?: Record<string, string | number>): string {
