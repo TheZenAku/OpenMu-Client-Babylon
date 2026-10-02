@@ -207,8 +207,11 @@
 }
 
 @media (max-width: 900px), (pointer: coarse) {
+  // Below the touch menu row at the top right: the event timers and the skill pad own the
+  // right edge further down.
   .muidle-hunt {
-    bottom: 120px;
+    top: 76px;
+    bottom: auto;
   }
 
   .muidle-hunt-button {
