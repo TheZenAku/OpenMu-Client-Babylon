@@ -59,6 +59,8 @@ export type IdleSettings = {
   bossesFirst: boolean;
   /** HUNT on AUTO prefers the monsters that drop the missing item of the class quest. */
   questItemsFirst: boolean;
+  /** HUNT accepts the class quests at their giver (paying the start fee) and hands them in. */
+  questsAuto: boolean;
   /** Auto build preset (Elf "support", MG "energy", DL "raven"); null for the class default. */
   buildPreset: string | null;
 };
@@ -94,6 +96,10 @@ export type QuestInfo = {
   canAccept?: boolean;
   /** Everything it needs is there: hand it in at the giver. */
   done?: boolean;
+  /** Zen the giver takes to start the quest. */
+  startZen?: number;
+  /** What HUNT does about the quest (server-judged). */
+  automation?: 'off' | 'manual' | 'handIn' | 'collecting' | 'level' | 'zen' | 'accept';
   giver?: { name: string; map: string | null; x: number; y: number } | null;
   items?: { name: string; have: number; need: number; minMonsterLevel: number | null; maxMonsterLevel: number | null; monster: string | null }[];
   kills?: { monster: string; have: number; need: number }[];
@@ -181,6 +187,7 @@ export const DEFAULT_IDLE_SETTINGS: IdleSettings = {
   eventOptOut: [],
   bossesFirst: true,
   questItemsFirst: true,
+  questsAuto: false,
   buildPreset: null,
 };
 
@@ -398,6 +405,10 @@ class MUIdleStore {
     const optOut = current.eventOptOut.filter(k => k !== key);
     if (!enrolled) optOut.push(key);
     this.saveSettings({ ...current, eventOptOut: optOut });
+  }
+
+  setQuestsAuto(on: boolean): void {
+    this.saveSettings({ ...(this.settings ?? DEFAULT_IDLE_SETTINGS), questsAuto: on });
   }
 
   setQuestItemsFirst(on: boolean): void {

@@ -17,6 +17,7 @@ const base: IdleSettings = {
   eventOptOut: [],
   bossesFirst: true,
   questItemsFirst: true,
+  questsAuto: false,
   buildPreset: null,
 };
 

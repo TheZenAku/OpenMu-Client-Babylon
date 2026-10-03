@@ -6,7 +6,7 @@ import type { IdleSettings } from './state';
  */
 
 /** What the hunt is doing right now, as the server tracks it (online and offline alike). */
-export type HuntActivityKind = 'idle' | 'hunting' | 'travelling' | 'warping' | 'shopping' | 'buff' | 'dead' | 'event';
+export type HuntActivityKind = 'idle' | 'hunting' | 'travelling' | 'warping' | 'shopping' | 'buff' | 'dead' | 'event' | 'quest';
 export type HuntActivity = {
   kind: HuntActivityKind;
   map: string | null;

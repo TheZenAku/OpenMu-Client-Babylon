@@ -133,6 +133,18 @@ const ClassQuest = observer(() => {
           </strong>
         </div>
       ))}
+      {!q.active && (q.startZen ?? 0) > 0 && (
+        <p className="muidle-note">{mt('questFee', { zen: (q.startZen ?? 0).toLocaleString() })}</p>
+      )}
+      <label className="muidle-toggle">
+        <input type="checkbox" checked={MUIdle.settings?.questsAuto ?? false} onChange={e => MUIdle.setQuestsAuto(e.target.checked)} />
+        {mt('questsAuto')}
+      </label>
+      {q.automation && q.automation !== 'off' && (
+        <p className={`muidle-note${q.automation === 'zen' || q.automation === 'manual' ? ' muidle-warn' : ''}`}>
+          {mt(`questAuto.${q.automation}` as MUIdleTextKey, { zen: (q.startZen ?? 0).toLocaleString(), level: q.minLevel ?? '-', giver: q.giver?.name ?? '-' })}
+        </p>
+      )}
       {(q.items ?? []).some(i => i.minMonsterLevel !== null) && (
         <label className="muidle-toggle">
           <input
