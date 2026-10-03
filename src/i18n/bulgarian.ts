@@ -1652,6 +1652,7 @@ export const bulgarianLayer: LanguageLayer = {
     'trade.offerChanged': 'Другата страна промени предложението',
     'keys.hideUi': 'Скрий интерфейса',
     'keys.sessionStats': 'Панел на сесията',
+    'keys.events': 'Събития',
     'session.title': 'Сесия',
     'session.time': 'Време',
     'session.exp': 'Опит',

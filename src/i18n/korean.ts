@@ -1620,6 +1620,7 @@ export const koreanLayer: LanguageLayer = {
     'trade.offerChanged': '상대가 거래 내용을 바꿨습니다',
     'keys.hideUi': '인터페이스 숨기기',
     'keys.sessionStats': '세션 창',
+    'keys.events': '이벤트',
     'session.title': '세션',
     'session.time': '시간',
     'session.exp': '경험치',

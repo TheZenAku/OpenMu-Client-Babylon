@@ -623,6 +623,7 @@ export const polishLayer: LanguageLayer = {
     'session.reset': 'Resetuj',
     'keys.minimap': 'Minimapa',
     'keys.sessionStats': 'Panel sesji',
+    'keys.events': 'Wydarzenia',
     'warp.favouriteHint': 'Prawy klik, aby oznaczyć tę mapę gwiazdką i trzymać ją na górze',
     'search.placeholder': 'Szukaj...',
     'search.hint': 'Pisz, aby wygasić wszystko, co nie pasuje. Esc czyści.',

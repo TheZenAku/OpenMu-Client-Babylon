@@ -1646,6 +1646,7 @@ export const russianLayer: LanguageLayer = {
     'trade.offerChanged': 'Другая сторона изменила предложение',
     'keys.hideUi': 'Скрыть интерфейс',
     'keys.sessionStats': 'Панель сессии',
+    'keys.events': 'События',
     'session.title': 'Сессия',
     'session.time': 'Время',
     'session.exp': 'Опыт',

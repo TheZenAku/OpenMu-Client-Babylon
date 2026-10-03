@@ -1632,6 +1632,7 @@ export const thaiLayer: LanguageLayer = {
     'trade.offerChanged': 'อีกฝ่ายเปลี่ยนข้อเสนอ',
     'keys.hideUi': 'ซ่อนหน้าจอ',
     'keys.sessionStats': 'แผงข้อมูลรอบนี้',
+    'keys.events': 'กิจกรรม',
     'session.title': 'รอบนี้',
     'session.time': 'เวลา',
     'session.exp': 'ค่าประสบการณ์',

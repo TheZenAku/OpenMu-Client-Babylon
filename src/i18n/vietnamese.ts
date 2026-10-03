@@ -614,6 +614,7 @@ export const vietnameseLayer: LanguageLayer = {
     'session.reset': 'Đặt lại',
     'keys.minimap': 'Bản đồ nhỏ',
     'keys.sessionStats': 'Bảng phiên chơi',
+    'keys.events': 'Sự kiện',
     'warp.favouriteHint': 'Nhấp chuột phải để đánh dấu sao và giữ bản đồ này ở đầu',
     'search.placeholder': 'Tìm...',
     'search.hint': 'Gõ để làm mờ mọi thứ không khớp. Esc để xóa.',

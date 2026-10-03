@@ -1665,6 +1665,7 @@ export const portugueseLayer: LanguageLayer = {
     'trade.offerChanged': 'O outro lado mudou a oferta',
     'keys.hideUi': 'Ocultar interface',
     'keys.sessionStats': 'Painel de sessão',
+    'keys.events': 'Eventos',
     'session.title': 'Sessão',
     'session.time': 'Tempo',
     'session.exp': 'Exp',

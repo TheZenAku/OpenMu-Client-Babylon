@@ -1679,6 +1679,7 @@ export const spanishLayer: LanguageLayer = {
     'trade.offerChanged': 'La otra parte cambió la oferta',
     'keys.hideUi': 'Ocultar interfaz',
     'keys.sessionStats': 'Panel de sesión',
+    'keys.events': 'Eventos',
     'session.title': 'Sesión',
     'session.time': 'Tiempo',
     'session.exp': 'Exp',

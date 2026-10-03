@@ -231,6 +231,54 @@
   }
 }
 
+.muidle-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.muidle-event-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px solid @line;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+
+  &.is-ready .muidle-event-status {
+    color: #8fd18f;
+  }
+}
+
+.muidle-event-name {
+  display: flex;
+  flex-direction: column;
+
+  strong {
+    color: @gold;
+  }
+
+  span {
+    color: #aaa;
+    font-size: 12px;
+  }
+}
+
+.muidle-event-status {
+  color: #f0b060;
+  font-size: 12px;
+}
+
+.muidle-event-join {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
 .muidle-summary-maps {
   margin-top: 8px;
 

@@ -16,6 +16,7 @@ import { mt, type MUIdleTextKey } from '../../../../../muidle/text';
 import { toggleMuHelperWindow } from '../../../../../muHelper/state';
 import { combatPower } from '../../../../../muidle/combatPower';
 import { itemDisplayName } from '../../../../../common/itemTooltip';
+import { EventsWindow } from './events';
 
 /**
  * MUIdle's HUD: the HUNT/MANUAL switch (always on screen, sized for a thumb),
@@ -323,6 +324,7 @@ export const MUIdleHud = observer(() => (
     <ActivityLine />
     <HuntButton />
     <SettingsPanel />
+    <EventsWindow />
     <SummaryModal />
   </>
 ));

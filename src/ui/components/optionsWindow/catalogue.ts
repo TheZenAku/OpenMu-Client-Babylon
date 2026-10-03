@@ -260,6 +260,7 @@ const WINDOW_KEYS: readonly KeyAction[] = [
   'emoteMenu',
   'muHelperConfig',
   'sessionStats',
+  'events',
   'options',
 ];
 

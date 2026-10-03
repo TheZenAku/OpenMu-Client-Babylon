@@ -13,6 +13,8 @@ const base: IdleSettings = {
   autoBuild: false,
   sellMaxItemLevel: 4,
   lockedItems: [],
+  eventsFirst: true,
+  eventOptOut: [],
 };
 
 describe('the hunting map setting', () => {

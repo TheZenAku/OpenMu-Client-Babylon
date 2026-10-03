@@ -1622,6 +1622,7 @@ export const japaneseLayer: LanguageLayer = {
     'trade.offerChanged': '相手が取引内容を変更しました',
     'keys.hideUi': 'UIを隠す',
     'keys.sessionStats': 'セッションパネル',
+    'keys.events': 'イベント',
     'session.title': 'セッション',
     'session.time': '時間',
     'session.exp': '経験値',

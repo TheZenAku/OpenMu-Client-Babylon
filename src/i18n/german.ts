@@ -1673,6 +1673,7 @@ export const germanLayer: LanguageLayer = {
     'trade.offerChanged': 'Die Gegenseite hat das Angebot geändert',
     'keys.hideUi': 'Oberfläche ausblenden',
     'keys.sessionStats': 'Sitzungsfenster',
+    'keys.events': 'Events',
     'session.title': 'Sitzung',
     'session.time': 'Zeit',
     'session.exp': 'Exp',

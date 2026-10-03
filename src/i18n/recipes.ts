@@ -698,6 +698,7 @@ export const EN_TEXT = {
   // ---- key bindings ------------------------------------------------------
   'keys.minimap': 'Minimap',
   'keys.sessionStats': 'Session panel',
+  'keys.events': 'Events',
   'warp.favouriteHint': 'Right click to star this map and keep it on top',
   // ---- find box ----------------------------------------------------------
   'search.placeholder': 'Find...',

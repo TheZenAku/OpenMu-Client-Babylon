@@ -28,6 +28,7 @@ export type KeyAction =
   | 'muHelperConfig'
   | 'hideUi'
   | 'sessionStats'
+  | 'events'
   | 'sortInventory'
   | 'targetNearest'
   | 'replyWhisper'
@@ -55,6 +56,7 @@ export const KEY_ACTION_LABEL_KEYS: Record<KeyAction, TextKey> = {
   muHelperConfig: 'keys.muHelperConfig',
   hideUi: 'keys.hideUi',
   sessionStats: 'keys.sessionStats',
+  events: 'keys.events',
   sortInventory: 'keys.sortInventory',
   targetNearest: 'keys.targetNearest',
   replyWhisper: 'keys.replyWhisper',
@@ -88,6 +90,8 @@ const DEFAULTS: KeyBindings = {
   // No original analog: the arrange run is this client's own.
   hideUi: 'KeyH',
   sessionStats: 'KeyU',
+  // MUIdle's Events window. E opens it in some idle games, but E is the third potion slot here.
+  events: 'KeyJ',
   sortInventory: 'KeyS',
   targetNearest: 'KeyN',
   replyWhisper: 'KeyY',

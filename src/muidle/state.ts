@@ -47,7 +47,17 @@ export type IdleSettings = {
   autoBuild: boolean;
   sellMaxItemLevel: number;
   lockedItems: string[];
+  /** HUNT enters an event when it opens and the character is ready for it (ticket, level, zen). */
+  eventsFirst: boolean;
+  /** The events (`bloodCastle`, `devilSquare`, `chaosCastle`) the player took out of that. */
+  eventOptOut: string[];
 };
+
+/** Why the character cannot join an event now, as the server judged it. */
+export type EventReason = 'level' | 'ticket' | 'zen' | 'master';
+
+/** An event MUIdle can join for the character: enrolled (not opted out) and ready or why not. */
+export type EventInfo = { key: string; enrolled: boolean; ready: boolean; reason: EventReason | null };
 
 export type OfflineSummary = {
   startedUtc: string;
@@ -95,6 +105,8 @@ export const DEFAULT_IDLE_SETTINGS: IdleSettings = {
   autoBuild: false,
   sellMaxItemLevel: 4,
   lockedItems: [],
+  eventsFirst: true,
+  eventOptOut: [],
 };
 
 class MUIdleStore {
@@ -110,7 +122,10 @@ class MUIdleStore {
   activity: HuntActivity | null = null;
   /** The maps the hunt can be pinned to, with why not; empty until the server sent them. */
   maps: HuntMapOption[] = [];
+  /** The events HUNT can join, as the server judged them for this character. */
+  events: EventInfo[] = [];
   settingsOpen = false;
+  eventsOpen = false;
 
   constructor() {
     makeAutoObservable(this);
@@ -137,12 +152,14 @@ class MUIdleStore {
         lockedSlots?: number[];
         activity?: HuntActivity;
         maps?: HuntMapOption[];
+        events?: EventInfo[];
         ground?: { x: number; y: number } | null;
       };
       this.huntIntent = state.hunt === true;
       this.settings = { ...DEFAULT_IDLE_SETTINGS, ...(state.settings ?? {}) };
       this.lockedSlots = Array.isArray(state.lockedSlots) ? state.lockedSlots : [];
       if (Array.isArray(state.maps)) this.maps = state.maps;
+      if (Array.isArray(state.events)) this.events = state.events;
       if (state.activity) this.activity = state.activity;
       if (state.resume) this.scheduleResume(state.ground ?? null);
     } else if (subCode === SUB_SUMMARY) {
@@ -256,6 +273,23 @@ class MUIdleStore {
 
   dismissSummary(): void {
     this.summary = null;
+  }
+
+  openEvents(open = !this.eventsOpen): void {
+    this.eventsOpen = open;
+    if (open) this.requestState();
+  }
+
+  /** Takes an event in or out of the automatic entry, and saves. */
+  setEventEnrolled(key: string, enrolled: boolean): void {
+    const current = this.settings ?? DEFAULT_IDLE_SETTINGS;
+    const optOut = current.eventOptOut.filter(k => k !== key);
+    if (!enrolled) optOut.push(key);
+    this.saveSettings({ ...current, eventOptOut: optOut });
+  }
+
+  setEventsFirst(on: boolean): void {
+    this.saveSettings({ ...(this.settings ?? DEFAULT_IDLE_SETTINGS), eventsFirst: on });
   }
 
   openSettings(open = !this.settingsOpen): void {

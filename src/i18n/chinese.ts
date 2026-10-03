@@ -1614,6 +1614,7 @@ export const chineseLayer: LanguageLayer = {
     'trade.offerChanged': '对方修改了交易内容',
     'keys.hideUi': '隐藏界面',
     'keys.sessionStats': '战绩面板',
+    'keys.events': '活动',
     'session.title': '本次游戏',
     'session.time': '时长',
     'session.exp': '经验',

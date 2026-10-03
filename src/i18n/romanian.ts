@@ -1660,6 +1660,7 @@ export const romanianLayer: LanguageLayer = {
     'trade.offerChanged': 'Cealaltă parte a schimbat oferta',
     'keys.hideUi': 'Ascunde interfața',
     'keys.sessionStats': 'Panou de sesiune',
+    'keys.events': 'Evenimente',
     'session.title': 'Sesiune',
     'session.time': 'Timp',
     'session.exp': 'Exp',

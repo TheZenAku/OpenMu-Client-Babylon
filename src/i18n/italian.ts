@@ -1667,6 +1667,7 @@ export const italianLayer: LanguageLayer = {
     'trade.offerChanged': 'L’altra parte ha cambiato l’offerta',
     'keys.hideUi': 'Nascondi interfaccia',
     'keys.sessionStats': 'Pannello sessione',
+    'keys.events': 'Eventi',
     'session.title': 'Sessione',
     'session.time': 'Tempo',
     'session.exp': 'Exp',
