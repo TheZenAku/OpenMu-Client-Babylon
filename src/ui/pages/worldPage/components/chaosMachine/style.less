@@ -43,6 +43,31 @@
       color: #dcdcdc;
     }
 
+    // The server's odds for the tray, on the last lines of the box (rate and Zen wrap apart).
+    .chaos-odds {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      bottom: 2px;
+      padding-top: 1px;
+      color: #8fe08f;
+      background-color: #282828e0;
+
+      &.short {
+        color: #ff8060;
+      }
+
+      &.refused {
+        color: #c8b090;
+      }
+
+      &.fits {
+        color: #ffcc1a;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+    }
+
     &.success {
       color: #ffff30;
     }

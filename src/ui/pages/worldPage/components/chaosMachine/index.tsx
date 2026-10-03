@@ -10,6 +10,7 @@ import { ItemGrid } from '../../../../components/itemGrid';
 import { QuickItemActions } from '../../../../../common/quickItemActions';
 import { useEventBus } from '../../../../../hooks/useEventBus';
 import { uiClick } from '../../../../../libs/sfx';
+import { MixOdds } from './mixOdds';
 import {
   COLUMNS,
   GRID_X,
@@ -110,6 +111,7 @@ export const ChaosMachine = observer(() => {
                 : ''}
           </div>
         )}
+        <MixOdds />
       </div>
 
       <ItemGrid

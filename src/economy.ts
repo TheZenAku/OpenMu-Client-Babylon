@@ -778,7 +778,8 @@ export const Economy = new (class _Economy {
     runInAction(() => {
       this.mixPending = false;
       this.mixItems = emptyGrid(MIX_SLOTS);
-      this.mixResult = result === E.Success ? 'success' : 'failed';
+      // Only a mix that ran says succeeded / failed; a refusal (Zen, level, items) changed nothing.
+      this.mixResult = result === E.Success ? 'success' : result === E.Failed ? 'failed' : null;
       if (result === E.Success && item) this.mixItems[0] = item;
     });
 

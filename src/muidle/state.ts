@@ -3,6 +3,7 @@ import { EventBus } from '../libs/eventBus';
 import { Store } from '../store';
 import { mt } from './text';
 import { huntMapMode, type HuntActivity, type HuntMapOption } from './huntMap';
+import { parseMixPreview, type MixPreview } from './mixOdds';
 
 export type { HuntActivity, HuntActivityKind, HuntMapMode, HuntMapOption, HuntMapReason } from './huntMap';
 export { huntMapMode, withHuntMapMode } from './huntMap';
@@ -31,11 +32,13 @@ EventBus.on('look.mapReady', () => {
 const SUB_STATE = 0x01;
 const SUB_SUMMARY = 0x02;
 const SUB_ACTIVITY = 0x03;
+const SUB_MIX_PREVIEW = 0x04;
 const SUB_SAVE_SETTINGS = 0x10;
 const SUB_REQUEST_STATE = 0x11;
 const SUB_LOCK_ITEM = 0x12;
 const SUB_HUNT_MODE = 0x13;
 const SUB_RESET = 0x14;
+const SUB_REQUEST_MIX_PREVIEW = 0x15;
 
 export type IdleSettings = {
   autoTravel: boolean;
@@ -185,6 +188,8 @@ class MUIdleStore {
   progression: ProgressionInfo | null = null;
   /** Today's daily contracts (UTC day). */
   contracts: ContractInfo[] = [];
+  /** The odds of the mix in the Chaos Machine, as the server last reported them. */
+  mixPreview: MixPreview | null = null;
   progressionOpen = false;
   settingsOpen = false;
   eventsOpen = false;
@@ -234,6 +239,8 @@ class MUIdleStore {
       this.summary = data as OfflineSummary;
     } else if (subCode === SUB_ACTIVITY) {
       this.activity = data as HuntActivity;
+    } else if (subCode === SUB_MIX_PREVIEW) {
+      this.mixPreview = parseMixPreview(data);
     }
   }
 
@@ -352,6 +359,11 @@ class MUIdleStore {
   requestReset(): void {
     this.send(SUB_RESET, {});
     this.progressionOpen = false;
+  }
+
+  /** Asks the server for the odds of a mix of the items in the Chaos Machine (`mixType`: the picked recipe). */
+  requestMixPreview(mixType: number): void {
+    this.send(SUB_REQUEST_MIX_PREVIEW, { mixType });
   }
 
   openEvents(open = !this.eventsOpen): void {

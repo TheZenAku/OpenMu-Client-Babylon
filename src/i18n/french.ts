@@ -420,10 +420,12 @@ export const frenchLayer: LanguageLayer = {
     'chaos.bloodCastleItems':
       'Les objets de Blood Castle ne sont pas corrects.',
     'chaos.bloodCastleZen': 'Pas assez de Zen pour l’invitation.',
+    'chaos.odds': 'Taux de réussite {rate}% · {zen} Zen',
+    'chaos.fits': 'Ces objets conviennent à : {recipe}',
     'mix.chaosWeapon': 'Arme Chaos',
     'mix.chaosWeapon.hint': 'Arme + Jewel of Chaos (+ Bless / Soul)',
     'mix.fruit': 'Fruit',
-    'mix.fruit.hint': 'Jewel of Creation + Jewel of Life',
+    'mix.fruit.hint': 'Jewel of Creation + Jewel of Chaos',
     'mix.dinorant': 'Dinorant',
     'mix.dinorant.hint': '10 Horn of Uniria + Jewel of Chaos',
     'mix.potionOfBless': 'Potion of Bless',
