@@ -87,6 +87,64 @@ const CombatPowerBreakdown = observer(() => {
   );
 });
 
+/** The class quest line: what the next quest needs and how far it is (accept and hand in at the giver). */
+const ClassQuest = observer(() => {
+  const q = MUIdle.quest;
+  if (!q) return null;
+  if (q.finished) {
+    return (
+      <>
+        <h3>{mt('classQuest')}</h3>
+        <p className="muidle-note">{mt('questLineDone')}</p>
+      </>
+    );
+  }
+  const status = q.done
+    ? mt('questReady')
+    : q.active
+      ? mt('questActive')
+      : q.canAccept
+        ? mt('questAccept')
+        : mt('questNext', { level: q.minLevel ?? '-' });
+  return (
+    <>
+      <h3>{mt('classQuest')}</h3>
+      <div className="muidle-summary-row">
+        <span>{q.name}</span>
+        <strong className={q.done ? 'muidle-me' : undefined}>{status}</strong>
+      </div>
+      {q.giver && (
+        <p className="muidle-note">
+          {mt('questGiver', { name: q.giver.name, map: q.giver.map ?? '-', x: q.giver.x, y: q.giver.y })}
+        </p>
+      )}
+      {(q.items ?? []).map(i => (
+        <div key={i.name} className="muidle-summary-row">
+          <span>
+            {i.name}
+            {i.monster
+              ? ` · ${mt('questDropBoss', { monster: i.monster })}`
+              : i.minMonsterLevel !== null
+                ? ` · ${mt('questDrop', { min: i.minMonsterLevel, max: i.maxMonsterLevel ?? i.minMonsterLevel })}`
+                : ''}
+          </span>
+          <strong>
+            {i.have}/{i.need}
+          </strong>
+        </div>
+      ))}
+      {(q.kills ?? []).map(k => (
+        <div key={k.monster} className="muidle-summary-row">
+          <span>{k.monster}</span>
+          <strong>
+            {k.have}/{k.need}
+          </strong>
+        </div>
+      ))}
+    </>
+  );
+});
+
 /**
  * MUIdle's Server Progression window: the season, the reset cap of the week
  * and when it rises, the character's resets, what the next reset needs, and
@@ -164,6 +222,7 @@ export const ProgressionWindow = observer(() => {
             {reason && <p className="muidle-note muidle-warn">{reason}</p>}
           </>
         )}
+        <ClassQuest />
         <CombatPowerBreakdown />
         <Ranking />
         <div className="muidle-actions">

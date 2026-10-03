@@ -83,6 +83,20 @@ export type ProgressionInfo = {
   bonus: { catchUp: number; newcomer: number; total: number } | null;
 };
 
+/** The class quest line as the server sees it (read-only; see QUEST_AUTOMATION.md). */
+export type QuestInfo = {
+  finished: boolean;
+  name?: string;
+  active?: boolean;
+  minLevel?: number;
+  canAccept?: boolean;
+  /** Everything it needs is there: hand it in at the giver. */
+  done?: boolean;
+  giver?: { name: string; map: string | null; x: number; y: number } | null;
+  items?: { name: string; have: number; need: number; minMonsterLevel: number | null; maxMonsterLevel: number | null; monster: string | null }[];
+  kills?: { monster: string; have: number; need: number }[];
+};
+
 /** One daily contract and how far it is (the server counts and pays). */
 export type ContractInfo = {
   kind: 'kills' | 'mapKills' | 'huntMinutes';
@@ -188,6 +202,8 @@ class MUIdleStore {
   progression: ProgressionInfo | null = null;
   /** Today's daily contracts (UTC day). */
   contracts: ContractInfo[] = [];
+  /** The class quest line; null until the server sent it. */
+  quest: QuestInfo | null = null;
   /** The odds of the mix in the Chaos Machine, as the server last reported them. */
   mixPreview: MixPreview | null = null;
   progressionOpen = false;
@@ -223,6 +239,7 @@ class MUIdleStore {
         bosses?: WorldBossInfo[];
         progression?: ProgressionInfo;
         contracts?: { day: string; contracts: ContractInfo[] };
+        quest?: QuestInfo | null;
         ground?: { x: number; y: number } | null;
       };
       this.huntIntent = state.hunt === true;
@@ -234,6 +251,7 @@ class MUIdleStore {
       if (state.progression) this.progression = state.progression;
       if (state.contracts && Array.isArray(state.contracts.contracts)) this.contracts = state.contracts.contracts;
       if (state.activity) this.activity = state.activity;
+      if (state.quest !== undefined) this.quest = state.quest;
       if (state.resume) this.scheduleResume(state.ground ?? null);
     } else if (subCode === SUB_SUMMARY) {
       this.summary = data as OfflineSummary;
