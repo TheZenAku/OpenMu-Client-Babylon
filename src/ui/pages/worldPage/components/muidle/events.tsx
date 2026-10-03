@@ -78,6 +78,31 @@ export const EventsWindow = observer(() => {
             );
           })}
         </div>
+        {MUIdle.bosses.length > 0 && (
+          <>
+            <h3>{mt('worldBosses')}</h3>
+            <div className="muidle-event-list">
+              {MUIdle.bosses.map(boss => (
+                <div key={boss.name} className={`muidle-event-row${boss.alive ? ' is-ready' : ''}`}>
+                  <div className="muidle-event-name">
+                    <strong>{boss.name}</strong>
+                    <span>{mt('bossReward', { zen: boss.rewardZen.toLocaleString(), level: boss.minimumLevel })}</span>
+                  </div>
+                  <span className="muidle-event-status">
+                    {boss.alive
+                      ? mt('bossAlive', { map: boss.map, x: boss.x ?? '?', y: boss.y ?? '?' })
+                      : boss.nextSpawnUtc
+                        ? mt('bossNext', {
+                            time: new Date(boss.nextSpawnUtc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                          }) + ` · ${boss.map}`
+                        : boss.map}
+                  </span>
+                  <span />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
         <div className="muidle-actions">
           <button type="button" className="muidle-primary" onClick={() => MUIdle.openEvents(false)}>
             {mt('close')}

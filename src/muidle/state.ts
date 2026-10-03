@@ -56,6 +56,18 @@ export type IdleSettings = {
 /** Why the character cannot join an event now, as the server judged it. */
 export type EventReason = 'level' | 'ticket' | 'zen' | 'master';
 
+/** A world boss: alive now (where) or when it comes next. */
+export type WorldBossInfo = {
+  name: string;
+  map: string;
+  minimumLevel: number;
+  rewardZen: number;
+  alive: boolean;
+  x: number | null;
+  y: number | null;
+  nextSpawnUtc: string | null;
+};
+
 /** An event MUIdle can join for the character: enrolled (not opted out) and ready or why not. */
 export type EventInfo = { key: string; enrolled: boolean; ready: boolean; reason: EventReason | null };
 
@@ -124,6 +136,8 @@ class MUIdleStore {
   maps: HuntMapOption[] = [];
   /** The events HUNT can join, as the server judged them for this character. */
   events: EventInfo[] = [];
+  /** The world bosses of the server. */
+  bosses: WorldBossInfo[] = [];
   settingsOpen = false;
   eventsOpen = false;
 
@@ -153,6 +167,7 @@ class MUIdleStore {
         activity?: HuntActivity;
         maps?: HuntMapOption[];
         events?: EventInfo[];
+        bosses?: WorldBossInfo[];
         ground?: { x: number; y: number } | null;
       };
       this.huntIntent = state.hunt === true;
@@ -160,6 +175,7 @@ class MUIdleStore {
       this.lockedSlots = Array.isArray(state.lockedSlots) ? state.lockedSlots : [];
       if (Array.isArray(state.maps)) this.maps = state.maps;
       if (Array.isArray(state.events)) this.events = state.events;
+      if (Array.isArray(state.bosses)) this.bosses = state.bosses;
       if (state.activity) this.activity = state.activity;
       if (state.resume) this.scheduleResume(state.ground ?? null);
     } else if (subCode === SUB_SUMMARY) {
