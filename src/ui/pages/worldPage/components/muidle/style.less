@@ -326,15 +326,17 @@
 }
 
 // A phone held upright: the minimap fills the top right where the row sits on a landscape screen,
-// so the row goes to the bottom right, just above the skill bar, which leaves that corner free.
+// so the row goes to the right edge just above the touch skill pad (bottom right, over the bar).
 @media (orientation: portrait) and (max-width: 600px) {
   .muidle-hunt {
     top: auto;
-    bottom: 64px;
+    bottom: 132px;
   }
 
-  // The strip and the activity line move to the top left and wrap in the room the minimap leaves.
+  // The strip and the activity line go to the top left, under the touch controls' corner button,
+  // and wrap in the room the minimap leaves.
   .muidle-strip {
+    top: 78px;
     left: 6px;
     transform: none;
     flex-wrap: wrap;
@@ -344,7 +346,7 @@
   }
 
   .muidle-activity {
-    top: 62px;
+    top: 132px;
     left: 8px;
     align-items: flex-start;
     max-width: calc(100vw - 214px);

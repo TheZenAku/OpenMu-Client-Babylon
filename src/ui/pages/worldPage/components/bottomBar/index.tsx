@@ -53,6 +53,8 @@ const SKILL_FAN_ID = 'skill-fan';
 
 const BAR_WIDTH = 640;
 const BAR_HEIGHT = 51;
+// Fitted to the viewport like a window, so a portrait phone shows the whole bar.
+MuWindows.setFixedSize(BAR_ID, { width: BAR_WIDTH, height: BAR_HEIGHT });
 const BAR_TOP = 480 - BAR_HEIGHT;
 
 const local = (screenY: number) => screenY - BAR_TOP;

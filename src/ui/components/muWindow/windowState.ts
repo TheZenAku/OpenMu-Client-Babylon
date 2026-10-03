@@ -103,6 +103,15 @@ export const MuWindows = new (class _MuWindows {
     return Math.min(wanted, this.fitScaleOf(id));
   }
 
+  /**
+   * The size of a piece of the HUD that is not a stacked window (the bottom
+   * bar): its scale then fits the viewport like a window's - a portrait
+   * phone narrower than the bar shrinks it - without joining the stack.
+   */
+  setFixedSize(id: string, size: WindowSize): void {
+    this.sizes.set(id, size);
+  }
+
   /** Every window back to its default corner and size. */
   resetAll(): void {
     runInAction(() => {
