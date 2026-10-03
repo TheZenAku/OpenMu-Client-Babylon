@@ -3,6 +3,7 @@ import { Store } from '../store';
 import { InventoryConstants } from '../common/inventoryConstants';
 import { buildEscrowRequest, parseEscrowResult, type EscrowResult } from '../common/escrowWire';
 import { t } from '../i18n';
+import { MUIdle } from '../muidle/state';
 import { Marketplace, type BagEntry } from './state';
 
 /**
@@ -17,10 +18,11 @@ import { Marketplace, type BagEntry } from './state';
 function bagEntries(): BagEntry[] {
   const items = Store.playerData.items;
   const start = InventoryConstants.EquippableSlotsCount;
+  const locked = new Set(MUIdle.lockedSlots);
   const out: BagEntry[] = [];
   for (let slot = start; slot < items.length; slot++) {
     const item = items[slot];
-    if (item) out.push({ item, slot });
+    if (item) out.push({ item, slot, locked: locked.has(slot) || undefined });
   }
   return out;
 }

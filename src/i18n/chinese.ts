@@ -1908,6 +1908,7 @@ export const chineseLayer: LanguageLayer = {
     'marketplace.escrow.moneyCap': '你的 Zen 已达上限，花掉一些后再领取。',
     'marketplace.escrow.failed': '市场无法完成该操作。',
     'marketplace.escrow.notSold': '该商品尚未售出。',
+    'marketplace.escrow.refused': '该物品已锁定。解锁后才能出售。',
 
     'gm.title': 'Game Master',
     'gm.tabPlate': 'GM',

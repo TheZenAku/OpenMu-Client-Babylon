@@ -1959,6 +1959,7 @@ export const portugueseLayer: LanguageLayer = {
     'marketplace.escrow.moneyCap': 'Você não pode carregar mais Zen. Gaste um pouco e receba de novo.',
     'marketplace.escrow.failed': 'O mercado não conseguiu fazer isso.',
     'marketplace.escrow.notSold': 'Esse anúncio não foi vendido.',
+    'marketplace.escrow.refused': 'Esse item está bloqueado. Desbloqueie-o para vender.',
 
     'gm.title': 'Game Master',
     'gm.tabPlate': 'GM',

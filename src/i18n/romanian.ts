@@ -1954,6 +1954,7 @@ export const romanianLayer: LanguageLayer = {
     'marketplace.escrow.moneyCap': 'Nu poți purta mai mult Zen. Cheltuiește ceva și încasează din nou.',
     'marketplace.escrow.failed': 'Piața nu a putut face asta.',
     'marketplace.escrow.notSold': 'Anunțul nu s-a vândut.',
+    'marketplace.escrow.refused': 'Obiectul este blocat. Deblochează-l ca să-l vinzi.',
 
     'gm.title': 'Game Master',
     'gm.tabPlate': 'GM',

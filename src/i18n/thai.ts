@@ -1926,6 +1926,7 @@ export const thaiLayer: LanguageLayer = {
     'marketplace.escrow.moneyCap': 'คุณถือ Zen เพิ่มไม่ได้แล้ว ใช้ไปบ้างแล้วรับใหม่',
     'marketplace.escrow.failed': 'ตลาดทำรายการนี้ไม่ได้',
     'marketplace.escrow.notSold': 'ประกาศนั้นยังไม่ได้ขาย',
+    'marketplace.escrow.refused': 'ไอเทมนั้นถูกล็อกอยู่ ปลดล็อกก่อนจึงจะขายได้',
 
     'gm.title': 'Game Master',
     'gm.tabPlate': 'GM',

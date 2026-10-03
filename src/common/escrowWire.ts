@@ -41,6 +41,8 @@ export const EscrowStatus = {
   moneyCap: 10,
   failed: 11,
   notSold: 12,
+  /** A listing plugin kept the item in the bag (MUIdle: the player locked it). */
+  refused: 13,
 } as const;
 export type EscrowStatusName = keyof typeof EscrowStatus;
 

@@ -1940,6 +1940,7 @@ export const russianLayer: LanguageLayer = {
     'marketplace.escrow.moneyCap': 'Больше Zen нести нельзя. Потратьте часть и заберите снова.',
     'marketplace.escrow.failed': 'Рынок не смог это сделать.',
     'marketplace.escrow.notSold': 'Этот лот не продан.',
+    'marketplace.escrow.refused': 'Этот предмет заблокирован. Разблокируйте его, чтобы продать.',
 
     'gm.title': 'Game Master',
     'gm.tabPlate': 'GM',

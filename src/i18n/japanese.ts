@@ -1916,6 +1916,7 @@ export const japaneseLayer: LanguageLayer = {
     'marketplace.escrow.moneyCap': 'これ以上 Zen を持てません。少し使ってからもう一度受け取ってください。',
     'marketplace.escrow.failed': 'マーケットが処理できませんでした。',
     'marketplace.escrow.notSold': 'その出品はまだ売れていません。',
+    'marketplace.escrow.refused': 'そのアイテムはロックされています。売るにはロックを解除してください。',
 
     'gm.title': 'Game Master',
     'gm.tabPlate': 'GM',

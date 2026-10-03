@@ -1946,6 +1946,7 @@ export const bulgarianLayer: LanguageLayer = {
     'marketplace.escrow.moneyCap': 'Не можеш да носиш повече Zen. Похарчи малко и прибери пак.',
     'marketplace.escrow.failed': 'Пазарът не успя да го направи.',
     'marketplace.escrow.notSold': 'Тази обява не е продадена.',
+    'marketplace.escrow.refused': 'Този предмет е заключен. Отключете го, за да го продадете.',
 
     'gm.title': 'Game Master',
     'gm.tabPlate': 'GM',

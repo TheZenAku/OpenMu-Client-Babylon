@@ -1914,6 +1914,7 @@ export const koreanLayer: LanguageLayer = {
     'marketplace.escrow.moneyCap': '더 이상 Zen을 가질 수 없습니다. 일부를 쓰고 다시 받으세요.',
     'marketplace.escrow.failed': '거래소가 처리하지 못했습니다.',
     'marketplace.escrow.notSold': '그 매물은 아직 팔리지 않았습니다.',
+    'marketplace.escrow.refused': '그 아이템은 잠겨 있습니다. 판매하려면 잠금을 해제하세요.',
 
     'gm.title': 'Game Master',
     'gm.tabPlate': 'GM',

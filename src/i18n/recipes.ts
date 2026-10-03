@@ -2059,6 +2059,7 @@ export const EN_TEXT = {
   'marketplace.escrow.moneyCap': 'You cannot carry more Zen. Spend some and collect again.',
   'marketplace.escrow.failed': 'The market could not do that.',
   'marketplace.escrow.notSold': 'That listing has not sold.',
+  'marketplace.escrow.refused': 'That item is locked. Unlock it to sell it.',
 
   // ---- the game master panel (`gmPanel.ts`, `common/gmCommands.ts`) -------
   // Map names are not here: `gmMaps.ts` carries the server's own

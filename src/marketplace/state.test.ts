@@ -146,6 +146,16 @@ describe('listing an item', () => {
     await store.listForSale();
     expect(api.list).not.toHaveBeenCalled();
   });
+
+  it('keeps a locked item in the bag and says why', async () => {
+    store.syncFromGame(5000, [{ item, slot: 20, locked: true }], 'Tester');
+
+    expect(store.listRefusal(0)).toBe('marketplace.escrow.refused');
+    store.pickForSale(0);
+    expect(store.sellPick).toBeNull();
+    expect(store.flash).toBe(escrowStatusText('refused'));
+    expect(api.list).not.toHaveBeenCalled();
+  });
 });
 
 describe('buying', () => {

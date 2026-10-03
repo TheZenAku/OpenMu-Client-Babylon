@@ -24,7 +24,8 @@ export const PAGE_SIZE_GRID = 12;
 export const PAGE_SIZE_LIST = 10;
 
 /** An item in the bag with the slot it sits in, which is what a listing names. */
-export type BagEntry = { item: Item; slot: number };
+/** A bag item. `locked`: the player locked it in the Idle settings, so it stays in the bag. */
+export type BagEntry = { item: Item; slot: number; locked?: boolean };
 
 /** The service, as the store calls it. The real one is `./api`; tests and the harness swap it. */
 export type MarketApi = Pick<
@@ -520,15 +521,25 @@ export class MarketplaceStore {
     await this.refresh();
   }
 
-  /** What cannot cross to another player cannot be listed either; the game server would refuse it. */
-  canList(index: number): boolean {
+  /**
+   * Why a bag item cannot be listed, or null when it can. The game server refuses both anyway:
+   * what cannot cross to another player, and what the player locked.
+   */
+  listRefusal(index: number): TextKey | null {
     const entry = this.inventory[index];
-    return !!entry && !isTradeBanned(entry.item);
+    if (!entry || isTradeBanned(entry.item)) return 'marketplace.escrow.notTradable';
+    if (entry.locked) return 'marketplace.escrow.refused';
+    return null;
+  }
+
+  canList(index: number): boolean {
+    return this.listRefusal(index) === null;
   }
 
   pickForSale(index: number | null): void {
-    if (index !== null && !this.canList(index)) {
-      this.flash = t('marketplace.escrow.notTradable');
+    const refusal = index === null ? null : this.listRefusal(index);
+    if (refusal) {
+      this.flash = t(refusal);
       return;
     }
     this.sellPick = index;
@@ -573,7 +584,7 @@ export class MarketplaceStore {
   async listForSale(): Promise<void> {
     const index = this.sellPick;
     const entry = index === null ? null : this.inventory[index];
-    if (!entry || this.sellPriceValue <= 0 || this.busy || isTradeBanned(entry.item)) return;
+    if (!entry || this.sellPriceValue <= 0 || this.busy || !this.canList(index as number)) return;
     const { item, slot } = entry;
     const name = displayName(item);
 

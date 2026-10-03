@@ -1920,6 +1920,7 @@ export const polishLayer: LanguageLayer = {
     'marketplace.escrow.moneyCap': 'Nie możesz nosić więcej Zen. Wydaj trochę i odbierz ponownie.',
     'marketplace.escrow.failed': 'Targowisko nie mogło tego zrobić.',
     'marketplace.escrow.notSold': 'Ta oferta nie została sprzedana.',
+    'marketplace.escrow.refused': 'Ten przedmiot jest zablokowany. Odblokuj go, aby go sprzedać.',
     'gm.title': 'Game Master',
     'gm.tabPlate': 'GM',
     'gm.tabHint': 'Panel Game Mastera ({key})',

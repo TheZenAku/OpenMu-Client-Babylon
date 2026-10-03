@@ -1906,6 +1906,7 @@ export const vietnameseLayer: LanguageLayer = {
     'marketplace.escrow.moneyCap': 'Bạn không thể mang thêm Zen. Hãy tiêu bớt rồi nhận lại.',
     'marketplace.escrow.failed': 'Chợ không thể thực hiện việc đó.',
     'marketplace.escrow.notSold': 'Món hàng đó chưa được bán.',
+    'marketplace.escrow.refused': 'Vật phẩm đó đang bị khóa. Hãy mở khóa để bán.',
     'gm.title': 'Game Master',
     'gm.tabPlate': 'GM',
     'gm.tabHint': 'Bảng Game Master ({key})',

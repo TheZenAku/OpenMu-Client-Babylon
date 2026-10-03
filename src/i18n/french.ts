@@ -1961,6 +1961,7 @@ export const frenchLayer: LanguageLayer = {
     'marketplace.escrow.moneyCap': 'Vous ne pouvez pas porter plus de Zen. Dépensez un peu et encaissez à nouveau.',
     'marketplace.escrow.failed': 'Le marché n’a pas pu le faire.',
     'marketplace.escrow.notSold': 'Cette annonce n’a pas été vendue.',
+    'marketplace.escrow.refused': 'Cet objet est verrouillé. Déverrouillez-le pour le vendre.',
 
     'gm.title': 'Game Master',
     'gm.tabPlate': 'GM',
