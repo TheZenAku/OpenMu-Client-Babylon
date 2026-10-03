@@ -325,6 +325,34 @@
   }
 }
 
+// A phone held upright: the minimap fills the top right where the row sits on a landscape screen,
+// so the row goes to the bottom right, just above the skill bar, which leaves that corner free.
+@media (orientation: portrait) and (max-width: 600px) {
+  .muidle-hunt {
+    top: auto;
+    bottom: 64px;
+  }
+
+  // The strip and the activity line move to the top left and wrap in the room the minimap leaves.
+  .muidle-strip {
+    left: 6px;
+    transform: none;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+    max-width: calc(100vw - 214px);
+    white-space: normal;
+  }
+
+  .muidle-activity {
+    top: 62px;
+    left: 8px;
+    align-items: flex-start;
+    max-width: calc(100vw - 214px);
+    transform: none;
+    text-align: left;
+  }
+}
+
 .muidle-locks {
   margin: 4px 0 8px;
 
