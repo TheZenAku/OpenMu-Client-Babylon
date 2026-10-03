@@ -2,7 +2,7 @@ import { makeAutoObservable, runInAction } from 'mobx';
 import { EventBus } from '../libs/eventBus';
 import { Store } from '../store';
 import { mt } from './text';
-import type { HuntActivity, HuntMapOption } from './huntMap';
+import { huntMapMode, type HuntActivity, type HuntMapOption } from './huntMap';
 
 export type { HuntActivity, HuntActivityKind, HuntMapMode, HuntMapOption, HuntMapReason } from './huntMap';
 export { huntMapMode, withHuntMapMode } from './huntMap';
@@ -147,8 +147,8 @@ class MUIdleStore {
    * for the map, then for the hero to stand outside the safezone.
    *
    * With a `ground` (the server warped the character to its pinned map) the
-   * hero first walks there - on the new map, so after that map has loaded -
-   * with the helper paused, which would otherwise fight in town on the way.
+   * hero first walks there, with the helper paused, which would otherwise
+   * fight in town on the way.
    */
   private scheduleResume(ground: { x: number; y: number } | null = null): void {
     if (resumeTimer) clearInterval(resumeTimer);
@@ -158,7 +158,9 @@ class MUIdleStore {
       const waited = Date.now() - started;
       const hero = Store.world?.playerEntity;
       if (ground) {
-        if (mapReadyAt <= started || !hero) {
+        // The state comes after the map entry, so the map may have loaded before it; a walk sent
+        // before the terrain is there goes nowhere and is simply sent again below.
+        if (mapReadyAt === 0 || !hero) {
           if (waited > 30_000) ground = null;
           return;
         }
@@ -205,6 +207,13 @@ class MUIdleStore {
     if (Store.isOffline) return;
     const hunting = Store.muHelper.active;
     if (!hunting && Store.world?.playerEntity?.attributeSystem?.isAboveZero('inSafeZone')) {
+      // With a pinned map the server takes the hunt there (warp, then a walk out of town) and
+      // HUNT starts on arrival; otherwise there is nothing to fight in town.
+      if (this.settings?.autoTravel && typeof huntMapMode(this.settings) === 'number') {
+        this.huntIntent = true;
+        this.send(SUB_HUNT_MODE, { hunt: true });
+        return;
+      }
       Store.addNotification(mt('safeZone'), 'error');
       return;
     }
