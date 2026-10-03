@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { forgetSignupsBefore, recordAccount, recordSignup, signupsSince } from './db';
 import { BurstLimit, bucketFor, clientIp } from '../../src/common/rateLimit';
 import { isReservedName } from '../../src/common/reservedNames';
+import { CLASS_LINES, ranking } from './ranking';
 
 /**
  * The account-creation endpoint behind `register.ignies.net`.
@@ -260,6 +261,17 @@ Bun.serve({
   async fetch(req, server) {
     const url = new URL(req.url);
     const cors = corsHeaders(req);
+
+    // The public ranking board (read-only, cached a minute; see ranking.ts).
+    if (url.pathname === '/api/ranking' && req.method === 'GET') {
+      try {
+        const line = url.searchParams.get('line') ?? undefined;
+        return json(await ranking(sql as never, line && line in CLASS_LINES ? line : undefined), 200, cors);
+      } catch (error) {
+        console.error('register: ranking failed', error);
+        return json({ error: 'Ranking unavailable.' }, 503, cors);
+      }
+    }
 
     if (url.pathname !== '/api/register') {
       return json({ error: 'Not found' }, 404, cors);

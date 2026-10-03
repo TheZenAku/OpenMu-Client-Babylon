@@ -22,6 +22,10 @@ export default defineConfig({
         target: `http://127.0.0.1:${process.env.REGISTER_API_PORT ?? 3100}`,
         changeOrigin: false,
       },
+      '/api/ranking': {
+        target: `http://127.0.0.1:${process.env.REGISTER_API_PORT ?? 3100}`,
+        changeOrigin: false,
+      },
       '/api/market': {
         target: `http://127.0.0.1:${process.env.MARKETPLACE_API_PORT ?? 3300}`,
         changeOrigin: false,

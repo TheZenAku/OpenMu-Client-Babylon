@@ -5,6 +5,7 @@
 // Serves dist/ on WEB_HOST:WEB_PORT (default 0.0.0.0:45100) and forwards the
 // same-origin API paths the dev server proxies in vite.config.ts:
 //   /api/register/* -> 127.0.0.1:REGISTER_API_PORT
+//   /api/ranking    -> 127.0.0.1:REGISTER_API_PORT (the public ranking board)
 //   /api/market/*   -> 127.0.0.1:MARKETPLACE_API_PORT
 // Both services listen on loopback only; the browser reaches them through here.
 //
@@ -28,6 +29,7 @@ if (!(await INDEX.exists())) {
 
 const API_ROUTES: [prefix: string, port: number][] = [
   ['/api/register', REGISTER_PORT],
+  ['/api/ranking', REGISTER_PORT],
   ['/api/market', MARKET_PORT],
 ];
 

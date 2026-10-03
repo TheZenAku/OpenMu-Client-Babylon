@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Store } from '../../../../../store';
 import { isKey } from '../../../../../common/keyBindings';
 import { useEventBus } from '../../../../../hooks/useEventBus';
@@ -7,6 +7,55 @@ import { MUIdle } from '../../../../../muidle/state';
 import { mt, type MUIdleTextKey } from '../../../../../muidle/text';
 import { combatPowerParts, weakestSlot } from '../../../../../muidle/combatPower';
 import { itemDisplayName } from '../../../../../common/itemTooltip';
+
+type RankingEntry = { rank: number; name: string; classNumber: number; level: number; resets: number; masterLevel: number };
+const LINES = ['all', 'wizard', 'knight', 'elf', 'gladiator', 'lord', 'summoner', 'fighter'] as const;
+
+/** The public ranking board (server: /api/ranking, top 100, a minute old at most). */
+const Ranking = observer(() => {
+  const [line, setLine] = useState<(typeof LINES)[number]>('all');
+  const [entries, setEntries] = useState<RankingEntry[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let live = true;
+    setFailed(false);
+    fetch(`/api/ranking${line === 'all' ? '' : `?line=${line}`}`)
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((data: { entries: RankingEntry[] }) => live && setEntries(data.entries))
+      .catch(() => live && setFailed(true));
+    return () => {
+      live = false;
+    };
+  }, [line]);
+  const me = Store.playerData.name;
+  const mine = entries?.find(e => e.name === me);
+  return (
+    <>
+      <h3>{mt('ranking')}</h3>
+      <label className="muidle-select">
+        <select value={line} onChange={e => setLine(e.target.value as (typeof LINES)[number])}>
+          {LINES.map(l => (
+            <option key={l} value={l}>
+              {mt(`line.${l}` as MUIdleTextKey)}
+            </option>
+          ))}
+        </select>
+      </label>
+      {failed && <p className="muidle-note muidle-warn">{mt('rankingUnavailable')}</p>}
+      {mine && <p className="muidle-note">{mt('rankingYou', { rank: mine.rank })}</p>}
+      <div className="muidle-cp-slots">
+        {(entries ?? []).slice(0, 20).map(e => (
+          <div key={e.name} className={`muidle-summary-row${e.name === me ? ' muidle-me' : ''}`}>
+            <span>
+              #{e.rank} {e.name}
+            </span>
+            <strong>{mt('rankingRow', { resets: e.resets, level: e.level })}</strong>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+});
 
 const SLOT_NAMES = ['L-hand', 'R-hand', 'helm', 'armor', 'pants', 'gloves', 'boots', 'wings', 'pet', 'pendant', 'ring', 'ring'];
 
@@ -116,6 +165,7 @@ export const ProgressionWindow = observer(() => {
           </>
         )}
         <CombatPowerBreakdown />
+        <Ranking />
         <div className="muidle-actions">
           {confirming ? (
             <>
