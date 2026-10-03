@@ -5,6 +5,38 @@ import { isKey } from '../../../../../common/keyBindings';
 import { useEventBus } from '../../../../../hooks/useEventBus';
 import { MUIdle } from '../../../../../muidle/state';
 import { mt, type MUIdleTextKey } from '../../../../../muidle/text';
+import { combatPowerParts, weakestSlot } from '../../../../../muidle/combatPower';
+import { itemDisplayName } from '../../../../../common/itemTooltip';
+
+const SLOT_NAMES = ['L-hand', 'R-hand', 'helm', 'armor', 'pants', 'gloves', 'boots', 'wings', 'pet', 'pendant', 'ring', 'ring'];
+
+/** Where the Combat Power comes from, and where the next is cheapest (an indicator, see COMBAT_POWER.md). */
+const CombatPowerBreakdown = observer(() => {
+  const parts = combatPowerParts();
+  const hint = weakestSlot(parts);
+  const weak = hint && !hint.empty ? parts.slots[hint.slot] : null;
+  return (
+    <>
+      <h3>{mt('cpBreakdown', { total: parts.total.toLocaleString() })}</h3>
+      <p className="muidle-note">{mt('cpBase', { level: parts.level, stats: parts.stats, vitals: parts.vitals })}</p>
+      <div className="muidle-cp-slots">
+        {parts.slots.map(s => (
+          <div key={s.slot} className="muidle-summary-row">
+            <span>{SLOT_NAMES[s.slot]}</span>
+            <strong>{s.item ? `${itemDisplayName(s.item)} · ${s.power}` : mt('cpEmpty')}</strong>
+          </div>
+        ))}
+      </div>
+      {hint && (
+        <p className="muidle-note">
+          {hint.empty
+            ? mt('cpHintEmpty', { slot: SLOT_NAMES[hint.slot] })
+            : mt('cpHintWeak', { item: weak?.item ? itemDisplayName(weak.item) : '-', power: weak?.power ?? 0 })}
+        </p>
+      )}
+    </>
+  );
+});
 
 /**
  * MUIdle's Server Progression window: the season, the reset cap of the week
@@ -83,6 +115,7 @@ export const ProgressionWindow = observer(() => {
             {reason && <p className="muidle-note muidle-warn">{reason}</p>}
           </>
         )}
+        <CombatPowerBreakdown />
         <div className="muidle-actions">
           {confirming ? (
             <>
