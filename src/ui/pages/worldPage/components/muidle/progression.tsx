@@ -59,6 +59,18 @@ export const ProgressionWindow = observer(() => {
                 {p.resetCap ? ` / ${p.resetCap}` : ''}
               </strong>
             </div>
+            <div className="muidle-summary-row">
+              <span>{mt('xpBonus')}</span>
+              <strong>
+                {p.bonus && p.bonus.total > 0
+                  ? mt('xpBonusParts', {
+                      total: Math.round(p.bonus.total * 100),
+                      catchUp: Math.round(p.bonus.catchUp * 100),
+                      newcomer: Math.round(p.bonus.newcomer * 100),
+                    })
+                  : mt('xpBonusNone')}
+              </strong>
+            </div>
             {p.requiredLevel !== null && (
               <div className="muidle-summary-row">
                 <span>{mt('resetNeeds')}</span>

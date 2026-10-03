@@ -74,6 +74,8 @@ export type ProgressionInfo = {
   levelAfterReset: number | null;
   canReset: boolean;
   reason: 'disabled' | 'level' | 'cap' | 'zen' | null;
+  /** The catch-up and newcomer experience bonus the server gives, as fractions (0.1 = +10 %). */
+  bonus: { catchUp: number; newcomer: number; total: number } | null;
 };
 
 /** A world boss: alive now (where) or when it comes next. */
