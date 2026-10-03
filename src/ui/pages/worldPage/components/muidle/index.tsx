@@ -1,5 +1,5 @@
 import './style.less';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Store } from '../../../../../store';
 import {
@@ -18,6 +18,7 @@ import { combatPower } from '../../../../../muidle/combatPower';
 import { itemDisplayName } from '../../../../../common/itemTooltip';
 import { EventsWindow } from './events';
 import { ProgressionWindow } from './progression';
+import { Performance, type PerformanceMode } from '../../../../../muidle/performance';
 
 /**
  * MUIdle's HUD: the HUNT/MANUAL switch (always on screen, sized for a thumb),
@@ -68,6 +69,11 @@ const ActivityLine = observer(() => {
     </div>
   );
 });
+
+const PerformanceSampler = () => {
+  usePerformanceSampler();
+  return null;
+};
 
 const StatusStrip = observer(() => {
   // The HUD only exists on the world page; `playerData` is observable (the
@@ -205,6 +211,19 @@ const SettingsPanel = observer(() => {
         >
           {mt('progression')} (B)
         </button>
+        <label className="muidle-select">
+          <span>{mt('performance')}</span>
+          <select value={Performance.mode} onChange={e => Performance.setMode(e.target.value as PerformanceMode)}>
+            {(['full', 'reduced', 'minimum', 'auto'] as const).map(mode => (
+              <option key={mode} value={mode}>
+                {mt(`perf.${mode}` as MUIdleTextKey)}
+              </option>
+            ))}
+          </select>
+        </label>
+        {Performance.mode === 'auto' && (
+          <p className="muidle-note">{mt('perfAutoNow', { level: mt(`perf.${Performance.autoLevel}` as MUIdleTextKey) })}</p>
+        )}
         <Toggle label={mt('autoTravel')} checked={current.autoTravel} onChange={v => set({ autoTravel: v })} />
         <label className="muidle-select">
           <span>{mt('huntMap')}</span>
@@ -329,8 +348,20 @@ const SummaryModal = observer(() => {
   );
 });
 
+/** Feeds the automatic performance mode one frame-rate sample a second. */
+function usePerformanceSampler(): void {
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const engine = Store.world?.scene.getEngine();
+      if (engine) Performance.sample(engine.getFps());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+}
+
 export const MUIdleHud = observer(() => (
   <>
+    <PerformanceSampler />
     <StatusStrip />
     <ActivityLine />
     <HuntButton />
