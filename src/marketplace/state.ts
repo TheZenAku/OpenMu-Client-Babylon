@@ -700,8 +700,8 @@ export class MarketplaceStore {
     if (characterName) this.characterName = characterName;
     this.zen = zen;
     this.inventory = inventory;
-    // The picked bag entry may have left the bag (listed, or moved in game).
-    if (this.sellPick !== null && this.sellPick >= inventory.length) this.sellPick = null;
+    // The picked bag entry may have left the bag (listed, or moved in game), or been locked meanwhile.
+    if (this.sellPick !== null && (this.sellPick >= inventory.length || !this.canList(this.sellPick))) this.sellPick = null;
   }
 }
 

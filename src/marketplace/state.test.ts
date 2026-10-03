@@ -147,6 +147,13 @@ describe('listing an item', () => {
     expect(api.list).not.toHaveBeenCalled();
   });
 
+  it('drops the pick when the picked item gets locked', () => {
+    store.pickForSale(0);
+    expect(store.sellPick).toBe(0);
+    store.syncFromGame(5000, [{ item, slot: 20, locked: true }], 'Tester');
+    expect(store.sellPick).toBeNull();
+  });
+
   it('keeps a locked item in the bag and says why', async () => {
     store.syncFromGame(5000, [{ item, slot: 20, locked: true }], 'Tester');
 
