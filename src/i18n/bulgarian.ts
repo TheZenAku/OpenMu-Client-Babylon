@@ -1653,6 +1653,7 @@ export const bulgarianLayer: LanguageLayer = {
     'keys.hideUi': 'Скрий интерфейса',
     'keys.sessionStats': 'Панел на сесията',
     'keys.events': 'Събития',
+    'keys.progression': 'Прогрес на сървъра',
     'session.title': 'Сесия',
     'session.time': 'Време',
     'session.exp': 'Опит',

@@ -1621,6 +1621,7 @@ export const koreanLayer: LanguageLayer = {
     'keys.hideUi': '인터페이스 숨기기',
     'keys.sessionStats': '세션 창',
     'keys.events': '이벤트',
+    'keys.progression': '서버 진행도',
     'session.title': '세션',
     'session.time': '시간',
     'session.exp': '경험치',

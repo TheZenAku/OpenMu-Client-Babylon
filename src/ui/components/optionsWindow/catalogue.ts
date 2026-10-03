@@ -261,6 +261,7 @@ const WINDOW_KEYS: readonly KeyAction[] = [
   'muHelperConfig',
   'sessionStats',
   'events',
+  'progression',
   'options',
 ];
 

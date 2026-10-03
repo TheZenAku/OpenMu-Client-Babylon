@@ -1674,6 +1674,7 @@ export const germanLayer: LanguageLayer = {
     'keys.hideUi': 'Oberfläche ausblenden',
     'keys.sessionStats': 'Sitzungsfenster',
     'keys.events': 'Events',
+    'keys.progression': 'Server-Fortschritt',
     'session.title': 'Sitzung',
     'session.time': 'Zeit',
     'session.exp': 'Exp',

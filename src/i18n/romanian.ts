@@ -1661,6 +1661,7 @@ export const romanianLayer: LanguageLayer = {
     'keys.hideUi': 'Ascunde interfața',
     'keys.sessionStats': 'Panou de sesiune',
     'keys.events': 'Evenimente',
+    'keys.progression': 'Progresul serverului',
     'session.title': 'Sesiune',
     'session.time': 'Timp',
     'session.exp': 'Exp',

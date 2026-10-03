@@ -17,6 +17,7 @@ import { toggleMuHelperWindow } from '../../../../../muHelper/state';
 import { combatPower } from '../../../../../muidle/combatPower';
 import { itemDisplayName } from '../../../../../common/itemTooltip';
 import { EventsWindow } from './events';
+import { ProgressionWindow } from './progression';
 
 /**
  * MUIdle's HUD: the HUNT/MANUAL switch (always on screen, sized for a thumb),
@@ -194,6 +195,16 @@ const SettingsPanel = observer(() => {
         >
           {mt('helperSettings')}
         </button>
+        <button
+          type="button"
+          className="muidle-link"
+          onClick={() => {
+            close();
+            MUIdle.openProgression(true);
+          }}
+        >
+          {mt('progression')} (B)
+        </button>
         <Toggle label={mt('autoTravel')} checked={current.autoTravel} onChange={v => set({ autoTravel: v })} />
         <label className="muidle-select">
           <span>{mt('huntMap')}</span>
@@ -325,6 +336,7 @@ export const MUIdleHud = observer(() => (
     <HuntButton />
     <SettingsPanel />
     <EventsWindow />
+    <ProgressionWindow />
     <SummaryModal />
   </>
 ));

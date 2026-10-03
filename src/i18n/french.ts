@@ -1668,6 +1668,7 @@ export const frenchLayer: LanguageLayer = {
     'keys.hideUi': 'Masquer l’interface',
     'keys.sessionStats': 'Panneau de session',
     'keys.events': 'Événements',
+    'keys.progression': 'Progression du serveur',
     'session.title': 'Session',
     'session.time': 'Durée',
     'session.exp': 'Exp',

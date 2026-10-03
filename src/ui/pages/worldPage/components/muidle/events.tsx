@@ -57,7 +57,7 @@ export const EventsWindow = observer(() => {
               ? ''
               : info.ready
                 ? mt('eventReady')
-                : mt(`eventReason.${info.reason ?? 'level'}` as MUIdleTextKey);
+                : mt(`eventReason.${info.reason ?? 'level'}` as MUIdleTextKey, { item: info.item ?? '' });
             return (
               <div key={row.key} className={`muidle-event-row${info?.ready ? ' is-ready' : ''}`}>
                 <div className="muidle-event-name">

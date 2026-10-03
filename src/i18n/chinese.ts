@@ -1615,6 +1615,7 @@ export const chineseLayer: LanguageLayer = {
     'keys.hideUi': '隐藏界面',
     'keys.sessionStats': '战绩面板',
     'keys.events': '活动',
+    'keys.progression': '服务器进度',
     'session.title': '本次游戏',
     'session.time': '时长',
     'session.exp': '经验',

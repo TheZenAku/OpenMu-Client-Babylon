@@ -1633,6 +1633,7 @@ export const thaiLayer: LanguageLayer = {
     'keys.hideUi': 'ซ่อนหน้าจอ',
     'keys.sessionStats': 'แผงข้อมูลรอบนี้',
     'keys.events': 'กิจกรรม',
+    'keys.progression': 'ความคืบหน้าเซิร์ฟเวอร์',
     'session.title': 'รอบนี้',
     'session.time': 'เวลา',
     'session.exp': 'ค่าประสบการณ์',

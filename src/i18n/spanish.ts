@@ -1680,6 +1680,7 @@ export const spanishLayer: LanguageLayer = {
     'keys.hideUi': 'Ocultar interfaz',
     'keys.sessionStats': 'Panel de sesión',
     'keys.events': 'Eventos',
+    'keys.progression': 'Progreso del servidor',
     'session.title': 'Sesión',
     'session.time': 'Tiempo',
     'session.exp': 'Exp',

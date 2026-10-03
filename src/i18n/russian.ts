@@ -1647,6 +1647,7 @@ export const russianLayer: LanguageLayer = {
     'keys.hideUi': 'Скрыть интерфейс',
     'keys.sessionStats': 'Панель сессии',
     'keys.events': 'События',
+    'keys.progression': 'Прогресс сервера',
     'session.title': 'Сессия',
     'session.time': 'Время',
     'session.exp': 'Опыт',

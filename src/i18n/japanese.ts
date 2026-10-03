@@ -1623,6 +1623,7 @@ export const japaneseLayer: LanguageLayer = {
     'keys.hideUi': 'UIを隠す',
     'keys.sessionStats': 'セッションパネル',
     'keys.events': 'イベント',
+    'keys.progression': 'サーバー進行',
     'session.title': 'セッション',
     'session.time': '時間',
     'session.exp': '経験値',

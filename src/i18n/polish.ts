@@ -624,6 +624,7 @@ export const polishLayer: LanguageLayer = {
     'keys.minimap': 'Minimapa',
     'keys.sessionStats': 'Panel sesji',
     'keys.events': 'Wydarzenia',
+    'keys.progression': 'Postęp serwera',
     'warp.favouriteHint': 'Prawy klik, aby oznaczyć tę mapę gwiazdką i trzymać ją na górze',
     'search.placeholder': 'Szukaj...',
     'search.hint': 'Pisz, aby wygasić wszystko, co nie pasuje. Esc czyści.',

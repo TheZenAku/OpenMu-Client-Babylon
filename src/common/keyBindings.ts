@@ -29,6 +29,7 @@ export type KeyAction =
   | 'hideUi'
   | 'sessionStats'
   | 'events'
+  | 'progression'
   | 'sortInventory'
   | 'targetNearest'
   | 'replyWhisper'
@@ -57,6 +58,7 @@ export const KEY_ACTION_LABEL_KEYS: Record<KeyAction, TextKey> = {
   hideUi: 'keys.hideUi',
   sessionStats: 'keys.sessionStats',
   events: 'keys.events',
+  progression: 'keys.progression',
   sortInventory: 'keys.sortInventory',
   targetNearest: 'keys.targetNearest',
   replyWhisper: 'keys.replyWhisper',
@@ -92,6 +94,8 @@ const DEFAULTS: KeyBindings = {
   sessionStats: 'KeyU',
   // MUIdle's Events window. E opens it in some idle games, but E is the third potion slot here.
   events: 'KeyJ',
+  // MUIdle's Server Progression window (season, reset cap, reset).
+  progression: 'KeyB',
   sortInventory: 'KeyS',
   targetNearest: 'KeyN',
   replyWhisper: 'KeyY',

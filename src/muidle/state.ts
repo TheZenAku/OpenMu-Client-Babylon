@@ -35,6 +35,7 @@ const SUB_SAVE_SETTINGS = 0x10;
 const SUB_REQUEST_STATE = 0x11;
 const SUB_LOCK_ITEM = 0x12;
 const SUB_HUNT_MODE = 0x13;
+const SUB_RESET = 0x14;
 
 export type IdleSettings = {
   autoTravel: boolean;
@@ -56,7 +57,24 @@ export type IdleSettings = {
 };
 
 /** Why the character cannot join an event now, as the server judged it. */
-export type EventReason = 'level' | 'ticket' | 'zen' | 'master';
+export type EventReason = 'level' | 'ticket' | 'zen' | 'master' | 'equipment';
+
+/** The season and the character's next reset, as the server computed them. */
+export type ProgressionInfo = {
+  season: number;
+  week: number;
+  /** The most resets allowed this week; null without a limit. */
+  resetCap: number | null;
+  nextRaiseUtc: string | null;
+  resetsPerWeek: number;
+  resets: number;
+  level: number;
+  requiredLevel: number | null;
+  requiredZen: number | null;
+  levelAfterReset: number | null;
+  canReset: boolean;
+  reason: 'disabled' | 'level' | 'cap' | 'zen' | null;
+};
 
 /** A world boss: alive now (where) or when it comes next. */
 export type WorldBossInfo = {
@@ -71,7 +89,14 @@ export type WorldBossInfo = {
 };
 
 /** An event MUIdle can join for the character: enrolled (not opted out) and ready or why not. */
-export type EventInfo = { key: string; enrolled: boolean; ready: boolean; reason: EventReason | null };
+export type EventInfo = {
+  key: string;
+  enrolled: boolean;
+  ready: boolean;
+  reason: EventReason | null;
+  /** The equipped item the event refuses, when that is the reason. */
+  item?: string | null;
+};
 
 export type OfflineSummary = {
   startedUtc: string;
@@ -141,6 +166,9 @@ class MUIdleStore {
   events: EventInfo[] = [];
   /** The world bosses of the server. */
   bosses: WorldBossInfo[] = [];
+  /** The season and the next reset; null until the server sent them. */
+  progression: ProgressionInfo | null = null;
+  progressionOpen = false;
   settingsOpen = false;
   eventsOpen = false;
 
@@ -171,6 +199,7 @@ class MUIdleStore {
         maps?: HuntMapOption[];
         events?: EventInfo[];
         bosses?: WorldBossInfo[];
+        progression?: ProgressionInfo;
         ground?: { x: number; y: number } | null;
       };
       this.huntIntent = state.hunt === true;
@@ -179,6 +208,7 @@ class MUIdleStore {
       if (Array.isArray(state.maps)) this.maps = state.maps;
       if (Array.isArray(state.events)) this.events = state.events;
       if (Array.isArray(state.bosses)) this.bosses = state.bosses;
+      if (state.progression) this.progression = state.progression;
       if (state.activity) this.activity = state.activity;
       if (state.resume) this.scheduleResume(state.ground ?? null);
     } else if (subCode === SUB_SUMMARY) {
@@ -292,6 +322,17 @@ class MUIdleStore {
 
   dismissSummary(): void {
     this.summary = null;
+  }
+
+  openProgression(open = !this.progressionOpen): void {
+    this.progressionOpen = open;
+    if (open) this.requestState();
+  }
+
+  /** Asks the server to reset the character; its reset feature checks and does everything. */
+  requestReset(): void {
+    this.send(SUB_RESET, {});
+    this.progressionOpen = false;
   }
 
   openEvents(open = !this.eventsOpen): void {

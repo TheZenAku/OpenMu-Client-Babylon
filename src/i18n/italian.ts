@@ -1668,6 +1668,7 @@ export const italianLayer: LanguageLayer = {
     'keys.hideUi': 'Nascondi interfaccia',
     'keys.sessionStats': 'Pannello sessione',
     'keys.events': 'Eventi',
+    'keys.progression': 'Progressione del server',
     'session.title': 'Sessione',
     'session.time': 'Tempo',
     'session.exp': 'Exp',

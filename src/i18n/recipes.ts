@@ -699,6 +699,7 @@ export const EN_TEXT = {
   'keys.minimap': 'Minimap',
   'keys.sessionStats': 'Session panel',
   'keys.events': 'Events',
+  'keys.progression': 'Server progression',
   'warp.favouriteHint': 'Right click to star this map and keep it on top',
   // ---- find box ----------------------------------------------------------
   'search.placeholder': 'Find...',
