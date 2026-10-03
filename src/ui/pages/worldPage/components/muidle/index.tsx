@@ -287,6 +287,25 @@ const SummaryModal = observer(() => {
         <SummaryRow label="potions" value={compact(s.potionsUsed)} />
         {s.deaths > 0 && <SummaryRow label="deaths" value={compact(s.deaths)} />}
         <SummaryRow label="maps" value={s.mapsVisited.join(', ') || '-'} />
+        {s.mapRates && s.mapRates.length > 0 && (
+          <div className="muidle-summary-maps">
+            <h3>{mt('perMap')}</h3>
+            {s.mapRates
+              .filter(r => r.minutes >= 1)
+              .sort((a, b) => b.minutes - a.minutes)
+              .map(r => (
+                <div key={r.map} className="muidle-summary-row">
+                  <span>
+                    {r.map} · {duration(r.minutes * 60_000)}
+                  </span>
+                  <strong>
+                    {compact(r.experience)} XP ({mt('perMinute', { value: compact(r.experience / r.minutes) })}) ·{' '}
+                    {compact(r.zen)} zen{r.deaths > 0 ? ` · ${r.deaths} ${mt('deaths').toLowerCase()}` : ''}
+                  </strong>
+                </div>
+              ))}
+          </div>
+        )}
         <SummaryRow label="endReason" value={mt(reasonKey)} />
         <div className="muidle-actions">
           <button type="button" className="muidle-primary" onClick={() => MUIdle.dismissSummary()}>

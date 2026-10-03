@@ -70,6 +70,18 @@ export type OfflineSummary = {
   potionsUsed: number;
   deaths: number;
   mapsVisited: string[];
+  /** What each map earned (servers before the per-map breakdown do not send it). */
+  mapRates?: MapRate[];
+};
+
+/** What one map earned during the offline session. */
+export type MapRate = {
+  map: string;
+  minutes: number;
+  experience: number;
+  zen: number;
+  kills: number;
+  deaths: number;
 };
 
 export const DEFAULT_IDLE_SETTINGS: IdleSettings = {
