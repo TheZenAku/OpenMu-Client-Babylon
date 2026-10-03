@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vitest';
 import { classNumberOf, rank } from './ranking';
 
 const rows = [
