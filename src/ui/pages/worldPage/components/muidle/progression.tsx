@@ -133,6 +133,16 @@ const ClassQuest = observer(() => {
           </strong>
         </div>
       ))}
+      {(q.items ?? []).some(i => i.minMonsterLevel !== null) && (
+        <label className="muidle-toggle">
+          <input
+            type="checkbox"
+            checked={MUIdle.settings?.questItemsFirst ?? true}
+            onChange={e => MUIdle.setQuestItemsFirst(e.target.checked)}
+          />
+          {mt('questItemsFirst')}
+        </label>
+      )}
       {(q.kills ?? []).map(k => (
         <div key={k.monster} className="muidle-summary-row">
           <span>{k.monster}</span>

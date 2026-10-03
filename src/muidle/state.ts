@@ -57,6 +57,8 @@ export type IdleSettings = {
   eventOptOut: string[];
   /** HUNT goes to a live world boss of the character's level. */
   bossesFirst: boolean;
+  /** HUNT on AUTO prefers the monsters that drop the missing item of the class quest. */
+  questItemsFirst: boolean;
   /** Auto build preset (Elf "support", MG "energy", DL "raven"); null for the class default. */
   buildPreset: string | null;
 };
@@ -178,6 +180,7 @@ export const DEFAULT_IDLE_SETTINGS: IdleSettings = {
   eventsFirst: true,
   eventOptOut: [],
   bossesFirst: true,
+  questItemsFirst: true,
   buildPreset: null,
 };
 
@@ -395,6 +398,10 @@ class MUIdleStore {
     const optOut = current.eventOptOut.filter(k => k !== key);
     if (!enrolled) optOut.push(key);
     this.saveSettings({ ...current, eventOptOut: optOut });
+  }
+
+  setQuestItemsFirst(on: boolean): void {
+    this.saveSettings({ ...(this.settings ?? DEFAULT_IDLE_SETTINGS), questItemsFirst: on });
   }
 
   setBossesFirst(on: boolean): void {
