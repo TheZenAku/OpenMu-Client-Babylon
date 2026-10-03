@@ -97,6 +97,31 @@ function json(body: unknown, status = 200, cors: Record<string, string> = {}): R
   });
 }
 
+/**
+ * What a player is shown of a listing. Account names are half a login and stay in
+ * the service: seller and buyer go out as character names (the buyer only to the
+ * two parties), and the escrow box and item ids not at all.
+ */
+export function wire(listing: store.Listing, viewer: string) {
+  const seller = listing.seller === viewer;
+  return {
+    id: listing.id,
+    seller: listing.sellerCharacter,
+    price: listing.price,
+    item: listing.item,
+    category: listing.category,
+    state: listing.state,
+    buyer: seller || listing.buyer === viewer ? listing.buyerCharacter : null,
+    listedAt: listing.listedAt,
+    proceeds: seller ? listing.proceeds : null,
+  };
+}
+
+function wireById(id: string, viewer: string) {
+  const listing = store.byId(id);
+  return listing ? wire(listing, viewer) : null;
+}
+
 async function readBody(req: Request): Promise<Record<string, unknown>> {
   try {
     const body = await req.json();
@@ -265,7 +290,7 @@ export function createApp(deps: AppDeps): App {
           limit: Number(url.searchParams.get('limit') ?? 50),
           offset: Number(url.searchParams.get('offset') ?? 0),
         });
-        return json(page, 200, cors);
+        return json({ ...page, listings: page.listings.map(l => wire(l, auth.account)) }, 200, cors);
       }
 
       if (path === '/api/market/history' && req.method === 'GET') {
@@ -284,7 +309,7 @@ export function createApp(deps: AppDeps): App {
         if ('error' in auth) return auth.error;
 
         return json(
-          { listings: store.bySeller(auth.account), balance: store.owed(auth.account) },
+          { listings: store.bySeller(auth.account).map(l => wire(l, auth.account)), balance: store.owed(auth.account) },
           200,
           cors
         );
@@ -350,7 +375,7 @@ export function createApp(deps: AppDeps): App {
           account: auth.account,
           character,
         });
-        return json({ listing, token }, 201, cors);
+        return json({ listing: wire(listing, auth.account), token }, 201, cors);
       }
 
       const action = path.match(/^\/api\/market\/listings\/([\w-]+)\/(settle|claim|release|cancel)$/);
@@ -378,7 +403,7 @@ export function createApp(deps: AppDeps): App {
               console.error(`marketplace: listing ${id}: the posted item bytes are not the box's item; ignored`);
             }
           }
-          return json({ listing: store.byId(id) }, 200, cors);
+          return json({ listing: wireById(id, auth.account) }, 200, cors);
         }
 
         if (commits.hammering(ip)) return json({ error: TOO_MANY }, 429, cors);
@@ -410,7 +435,7 @@ export function createApp(deps: AppDeps): App {
             account: auth.account,
             character,
           });
-          return json({ listing: store.byId(id), token }, 200, cors);
+          return json({ listing: wireById(id, auth.account), token }, 200, cors);
         }
 
         // ---- release: claimed -> active, by the claimant ---------------
@@ -423,10 +448,10 @@ export function createApp(deps: AppDeps): App {
             // The box no longer holds the item: the purchase went through,
             // or something else did. The box says which.
             const after = await reconcileWith(listing, box);
-            return json({ error: 'That purchase already went through.', listing: after }, 409, cors);
+            return json({ error: 'That purchase already went through.', listing: wire(after, auth.account) }, 409, cors);
           }
           store.release(id, auth.account, 'the buyer let it go');
-          return json({ listing: store.byId(id) }, 200, cors);
+          return json({ listing: wireById(id, auth.account) }, 200, cors);
         }
 
         // ---- cancel: pending -> cancelled, active -> returning ---------
@@ -440,7 +465,7 @@ export function createApp(deps: AppDeps): App {
           const box = await boxOf(current);
           if (!box.exists) {
             store.cancelPending(id, auth.account, 'the seller changed their mind');
-            return json({ listing: store.byId(id), token: null }, 200, cors);
+            return json({ listing: wireById(id, auth.account), token: null }, 200, cors);
           }
           // The item did go in; carry on as a cancel of an active listing.
           current = await reconcileWith(current, box);
@@ -470,7 +495,7 @@ export function createApp(deps: AppDeps): App {
           account: auth.account,
           character,
         });
-        return json({ listing: store.byId(id), token }, 200, cors);
+        return json({ listing: wireById(id, auth.account), token }, 200, cors);
       }
 
       // ---- collecting ----------------------------------------------------

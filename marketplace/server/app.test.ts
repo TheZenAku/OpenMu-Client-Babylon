@@ -91,7 +91,8 @@ const anItem = { group: 14, num: 13, lvl: 0 };
 async function list(seller = 'alice', price = 1000) {
   const { status, body } = await call('POST', '/listings', { ...as(seller), slot: 20, price, category: 'jewels', item: anItem });
   expect(status).toBe(201);
-  return body as { listing: store.Listing; token: string };
+  // The service's own row: what the route answers is the public view, without the box or item ids.
+  return { listing: store.byId(body.listing.id) as store.Listing, token: body.token as string };
 }
 
 /** Lists, has the plugin put the item in the box, and settles: on sale. */
@@ -100,7 +101,7 @@ async function onSale(seller = 'alice', price = 1000) {
   boxes.set(listing.boxId, holding(randomUUID()));
   const settled = await call('POST', `/listings/${listing.id}/settle`, { ticket: as(seller).ticket });
   expect(settled.body.listing.state).toBe('active');
-  return settled.body.listing as store.Listing;
+  return store.byId(listing.id) as store.Listing;
 }
 
 function backdate(id: string, by: number) {
@@ -154,7 +155,8 @@ describe('listing', () => {
     const bytes = [13, 0, 255, 0, 0, 0xe0, 0, 0, 0, 0, 0, 0];
     const { status, body } = await call('POST', `/listings/${listing.id}/settle`, { ticket: as('bob').ticket, item: bytes });
     expect(status).toBe(200);
-    expect(body.listing).toMatchObject({ state: 'active', itemId });
+    expect(body.listing.state).toBe('active');
+    expect(store.byId(listing.id)).toMatchObject({ state: 'active', itemId });
     expect(body.listing.item.raw).toEqual(bytes);
     expect((await call('GET', '/listings', as('bob'))).body.total).toBe(1);
   });
@@ -170,6 +172,21 @@ describe('listing', () => {
     boxes.set(listing.boxId, holding(randomUUID(), 12, 7, 3));
     const { body } = await call('POST', `/listings/${listing.id}/settle`, { ticket: as('alice').ticket });
     expect(body.listing.item).toMatchObject({ group: 12, num: 7, lvl: 3 });
+  });
+});
+
+describe('what players see', () => {
+  test('listings name characters, never accounts, and keep the escrow ids in the service', async () => {
+    const { status, body } = await call('POST', '/listings', { ...as('alice'), character: 'AliceDK', slot: 20, price: 1000, category: 'jewels', item: anItem });
+    expect(status).toBe(201);
+    boxes.set(store.byId(body.listing.id)!.boxId, holding(randomUUID()));
+    await call('POST', `/listings/${body.listing.id}/settle`, { ticket: as('alice').ticket });
+
+    const seen = (await call('GET', '/listings', as('bob'))).body.listings[0];
+    expect(seen).toMatchObject({ seller: 'AliceDK', buyer: null, proceeds: null });
+    expect(JSON.stringify(seen)).not.toContain('alice');
+    expect(seen.boxId).toBeUndefined();
+    expect(seen.itemId).toBeUndefined();
   });
 });
 
@@ -209,7 +226,9 @@ describe('buying', () => {
     await call('POST', `/listings/${listing.id}/claim`, as('bob'));
     boxes.set(listing.boxId, paid(950));
     const { body } = await call('POST', `/listings/${listing.id}/settle`, { ticket: as('bob').ticket });
-    expect(body.listing).toMatchObject({ state: 'sold', proceeds: 950, buyer: 'bob' });
+    // The proceeds are the seller's business: the buyer is told it sold, not what the seller keeps.
+    expect(body.listing).toMatchObject({ state: 'sold', proceeds: null, buyer: 'bob' });
+    expect(store.byId(listing.id)).toMatchObject({ state: 'sold', proceeds: 950 });
     expect((await call('GET', '/mine', as('alice'))).body.balance).toBe(950);
   });
 
