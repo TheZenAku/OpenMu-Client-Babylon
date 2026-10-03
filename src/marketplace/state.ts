@@ -246,6 +246,9 @@ export class MarketplaceStore {
     this.page = 0;
     this.confirming = null;
     if (tab === 'history') void this.loadHistory();
+    // Other players list, sell and cancel while the window stays open: without a re-read the
+    // catalogue kept a cancelled row at its old price, and "buy" went for a listing long gone.
+    if (tab === 'browse' || tab === 'mine') void this.refresh();
   }
 
   setCategory(category: CategoryId): void {

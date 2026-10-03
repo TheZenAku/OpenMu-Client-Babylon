@@ -123,6 +123,15 @@ describe('listing an item', () => {
     expect(store.busy).toBe(false);
   });
 
+  it('re-reads the catalogue when the player comes back to it', async () => {
+    store.setTab('sell');
+    expect(api.browse).not.toHaveBeenCalled();
+    store.setTab('browse');
+    expect(api.browse).toHaveBeenCalledTimes(1);
+    store.setTab('mine');
+    expect(api.browse).toHaveBeenCalledTimes(2);
+  });
+
   it('will not pick what cannot cross to another player, so no listing is opened for it', async () => {
     const wizardsRing = { group: 13, num: 20, lvl: 1 } as ApiListing['item'];
     store.syncFromGame(5000, [{ item: wizardsRing, slot: 12 }, { item, slot: 20 }], 'Tester');
