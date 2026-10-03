@@ -78,6 +78,16 @@ export type ProgressionInfo = {
   bonus: { catchUp: number; newcomer: number; total: number } | null;
 };
 
+/** One daily contract and how far it is (the server counts and pays). */
+export type ContractInfo = {
+  kind: 'kills' | 'mapKills' | 'huntMinutes';
+  target: number;
+  progress: number;
+  mapName: string | null;
+  rewardZen: number;
+  rewarded: boolean;
+};
+
 /** A world boss: alive now (where) or when it comes next. */
 export type WorldBossInfo = {
   name: string;
@@ -170,6 +180,8 @@ class MUIdleStore {
   bosses: WorldBossInfo[] = [];
   /** The season and the next reset; null until the server sent them. */
   progression: ProgressionInfo | null = null;
+  /** Today's daily contracts (UTC day). */
+  contracts: ContractInfo[] = [];
   progressionOpen = false;
   settingsOpen = false;
   eventsOpen = false;
@@ -202,6 +214,7 @@ class MUIdleStore {
         events?: EventInfo[];
         bosses?: WorldBossInfo[];
         progression?: ProgressionInfo;
+        contracts?: { day: string; contracts: ContractInfo[] };
         ground?: { x: number; y: number } | null;
       };
       this.huntIntent = state.hunt === true;
@@ -211,6 +224,7 @@ class MUIdleStore {
       if (Array.isArray(state.events)) this.events = state.events;
       if (Array.isArray(state.bosses)) this.bosses = state.bosses;
       if (state.progression) this.progression = state.progression;
+      if (state.contracts && Array.isArray(state.contracts.contracts)) this.contracts = state.contracts.contracts;
       if (state.activity) this.activity = state.activity;
       if (state.resume) this.scheduleResume(state.ground ?? null);
     } else if (subCode === SUB_SUMMARY) {

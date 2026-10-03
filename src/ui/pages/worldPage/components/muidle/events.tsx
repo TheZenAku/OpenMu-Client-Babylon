@@ -78,6 +78,27 @@ export const EventsWindow = observer(() => {
             );
           })}
         </div>
+        {MUIdle.contracts.length > 0 && (
+          <>
+            <h3>{mt('dailyContracts')}</h3>
+            <div className="muidle-event-list">
+              {MUIdle.contracts.map(c => (
+                <div key={c.kind} className={`muidle-event-row${c.rewarded ? ' is-ready' : ''}`}>
+                  <div className="muidle-event-name">
+                    <strong>
+                      {mt(`contract.${c.kind}` as MUIdleTextKey, { target: c.target, map: c.mapName ?? '' })}
+                    </strong>
+                    <span>+{c.rewardZen.toLocaleString()} zen</span>
+                  </div>
+                  <span className="muidle-event-status">
+                    {c.rewarded ? mt('contractDone') : `${c.progress} / ${c.target}`}
+                  </span>
+                  <span />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
         {MUIdle.bosses.length > 0 && (
           <>
             <h3>{mt('worldBosses')}</h3>
