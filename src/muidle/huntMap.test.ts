@@ -15,6 +15,7 @@ const base: IdleSettings = {
   lockedItems: [],
   eventsFirst: true,
   eventOptOut: [],
+  bossesFirst: true,
 };
 
 describe('the hunting map setting', () => {

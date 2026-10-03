@@ -81,6 +81,14 @@ export const EventsWindow = observer(() => {
         {MUIdle.bosses.length > 0 && (
           <>
             <h3>{mt('worldBosses')}</h3>
+            <label className="muidle-toggle">
+              <input
+                type="checkbox"
+                checked={settings.bossesFirst}
+                onChange={e => MUIdle.setBossesFirst(e.target.checked)}
+              />
+              <span>{mt('bossesFirst')}</span>
+            </label>
             <div className="muidle-event-list">
               {MUIdle.bosses.map(boss => (
                 <div key={boss.name} className={`muidle-event-row${boss.alive ? ' is-ready' : ''}`}>

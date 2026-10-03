@@ -51,6 +51,8 @@ export type IdleSettings = {
   eventsFirst: boolean;
   /** The events (`bloodCastle`, `devilSquare`, `chaosCastle`) the player took out of that. */
   eventOptOut: string[];
+  /** HUNT goes to a live world boss of the character's level. */
+  bossesFirst: boolean;
 };
 
 /** Why the character cannot join an event now, as the server judged it. */
@@ -119,6 +121,7 @@ export const DEFAULT_IDLE_SETTINGS: IdleSettings = {
   lockedItems: [],
   eventsFirst: true,
   eventOptOut: [],
+  bossesFirst: true,
 };
 
 class MUIdleStore {
@@ -302,6 +305,10 @@ class MUIdleStore {
     const optOut = current.eventOptOut.filter(k => k !== key);
     if (!enrolled) optOut.push(key);
     this.saveSettings({ ...current, eventOptOut: optOut });
+  }
+
+  setBossesFirst(on: boolean): void {
+    this.saveSettings({ ...(this.settings ?? DEFAULT_IDLE_SETTINGS), bossesFirst: on });
   }
 
   setEventsFirst(on: boolean): void {
