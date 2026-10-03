@@ -16,6 +16,13 @@ import postgres from 'postgres';
 export const DATABASE_URL =
   process.env.DATABASE_URL || 'postgres://postgres:admin@127.0.0.1:5432/openmu';
 
+/**
+ * Item and monster definitions live in the `config` schema, which OpenMU's
+ * account role cannot read. They are read (only read) through the config
+ * role's connection; without one, the data connection is used for both.
+ */
+export const CONFIG_DATABASE_URL = process.env.CONFIG_DATABASE_URL || DATABASE_URL;
+
 export type BoxItem = {
   id: string;
   group: number;
@@ -41,11 +48,12 @@ export interface Boxes {
 type BoxRow = {
   money: number;
   item_id: string | null;
-  group: number | null;
-  number: number | null;
+  definition_id: string | null;
   level: number | null;
   durability: number | null;
 };
+
+type Definition = { group: number; number: number };
 
 export type PostgresBoxes = Boxes & {
   sql: ReturnType<typeof postgres>;
@@ -54,19 +62,31 @@ export type PostgresBoxes = Boxes & {
   end(): Promise<void>;
 };
 
-export function postgresBoxes(url = DATABASE_URL): PostgresBoxes {
+export function postgresBoxes(url = DATABASE_URL, configUrl = CONFIG_DATABASE_URL): PostgresBoxes {
   const sql = postgres(url);
+  const configSql = configUrl === url ? sql : postgres(configUrl);
+  // Definitions do not change while the game server runs.
+  const definitions = new Map<string, Definition>();
+
+  async function definition(id: string): Promise<Definition> {
+    const cached = definitions.get(id);
+    if (cached) return cached;
+    const [row] = await configSql<{ group: number; number: number }[]>`
+      SELECT "Group" AS "group", "Number" AS "number" FROM config."ItemDefinition" WHERE "Id" = ${id}`;
+    const found = row ? { group: Number(row.group), number: Number(row.number) } : { group: -1, number: -1 };
+    if (row) definitions.set(id, found);
+    return found;
+  }
 
   return {
     sql,
 
     async state(boxId: string): Promise<BoxState> {
       const rows = await sql<BoxRow[]>`
-        SELECT s."Money" AS money, i."Id" AS item_id, d."Group" AS "group",
-               d."Number" AS "number", i."Level" AS level, i."Durability" AS durability
+        SELECT s."Money" AS money, i."Id" AS item_id, i."DefinitionId" AS definition_id,
+               i."Level" AS level, i."Durability" AS durability
         FROM data."ItemStorage" s
         LEFT JOIN data."Item" i ON i."ItemStorageId" = s."Id"
-        LEFT JOIN config."ItemDefinition" d ON d."Id" = i."DefinitionId"
         WHERE s."Id" = ${boxId}
         ORDER BY i."ItemSlot"`;
       if (rows.length === 0) return NO_BOX;
@@ -76,14 +96,15 @@ export function postgresBoxes(url = DATABASE_URL): PostgresBoxes {
         console.error(`marketplace: box ${boxId} holds ${items.length} items; using the first`);
       }
       const first = items[0];
+      const def = first?.definition_id ? await definition(first.definition_id) : { group: -1, number: -1 };
       return {
         exists: true,
         money: Number(rows[0].money ?? 0),
         item: first
           ? {
               id: first.item_id as string,
-              group: Number(first.group ?? -1),
-              number: Number(first.number ?? -1),
+              group: def.group,
+              number: def.number,
               level: Number(first.level ?? 0),
               durability: Number(first.durability ?? 0),
             }
@@ -92,16 +113,25 @@ export function postgresBoxes(url = DATABASE_URL): PostgresBoxes {
     },
 
     async unowned() {
+      const merchants = (
+        await configSql<{ id: string }[]>`
+          SELECT "MerchantStoreId" AS id FROM config."MonsterDefinition" WHERE "MerchantStoreId" IS NOT NULL`
+      ).map(r => r.id);
       const rows = await sql<{ id: string; money: number; items: number }[]>`
         SELECT s."Id" AS id, s."Money" AS money,
                (SELECT count(*) FROM data."Item" i WHERE i."ItemStorageId" = s."Id") AS items
         FROM data."ItemStorage" s
         WHERE NOT EXISTS (SELECT 1 FROM data."Account" a WHERE a."VaultId" = s."Id")
-          AND NOT EXISTS (SELECT 1 FROM data."Character" c WHERE c."InventoryId" = s."Id")
-          AND NOT EXISTS (SELECT 1 FROM config."MonsterDefinition" m WHERE m."MerchantStoreId" = s."Id")`;
-      return rows.map(r => ({ id: r.id, money: Number(r.money), items: Number(r.items) }));
+          AND NOT EXISTS (SELECT 1 FROM data."Character" c WHERE c."InventoryId" = s."Id")`;
+      const merchantSet = new Set(merchants);
+      return rows
+        .filter(r => !merchantSet.has(r.id))
+        .map(r => ({ id: r.id, money: Number(r.money), items: Number(r.items) }));
     },
 
-    end: () => sql.end({ timeout: 5 }),
+    end: async () => {
+      await sql.end({ timeout: 5 });
+      if (configSql !== sql) await configSql.end({ timeout: 5 });
+    },
   };
 }
