@@ -685,6 +685,16 @@
     border-color: @mp-gold;
     box-shadow: 0 0 0 1px fade(@mp-gold, 40%) inset;
   }
+
+  // Cannot cross to another player (bound to the character).
+  &.is-banned {
+    cursor: not-allowed;
+    opacity: 0.4;
+
+    &:hover {
+      border-color: rgba(224, 188, 106, 0.18);
+    }
+  }
 }
 
 .mp-sell-split {

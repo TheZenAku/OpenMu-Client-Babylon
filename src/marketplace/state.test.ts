@@ -122,6 +122,21 @@ describe('listing an item', () => {
     expect(store.flash).toBe('The game did not answer.');
     expect(store.busy).toBe(false);
   });
+
+  it('will not pick what cannot cross to another player, so no listing is opened for it', async () => {
+    const wizardsRing = { group: 13, num: 20, lvl: 1 } as ApiListing['item'];
+    store.syncFromGame(5000, [{ item: wizardsRing, slot: 12 }, { item, slot: 20 }], 'Tester');
+
+    expect(store.canList(0)).toBe(false);
+    expect(store.canList(1)).toBe(true);
+    store.pickForSale(0);
+    expect(store.sellPick).toBeNull();
+    expect(store.flash).toBe(escrowStatusText('notTradable'));
+
+    store.setSellPrice('10');
+    await store.listForSale();
+    expect(api.list).not.toHaveBeenCalled();
+  });
 });
 
 describe('buying', () => {

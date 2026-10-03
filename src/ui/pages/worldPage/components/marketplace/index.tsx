@@ -343,9 +343,9 @@ const SellTab = observer(() => {
           {bag.map(({ item, index }) => (
             <button
               key={`${item.group}-${item.num}-${index}`}
-              className={`mp-sell-slot${sellPick === index ? ' is-on' : ''}`}
+              className={`mp-sell-slot${sellPick === index ? ' is-on' : ''}${Marketplace.canList(index) ? '' : ' is-banned'}`}
               onClick={() => Marketplace.pickForSale(sellPick === index ? null : index)}
-              title={displayName(item)}
+              title={Marketplace.canList(index) ? displayName(item) : `${displayName(item)} - ${t('marketplace.escrow.notTradable')}`}
             >
               <ItemIcon item={item} />
             </button>

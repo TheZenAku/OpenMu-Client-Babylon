@@ -5,6 +5,7 @@ import { CATEGORIES, categoryOf, displayName, type CategoryId } from './categori
 import { isOnSale, mergeCatalogue } from './catalogue';
 import { buildMockListings, type Listing } from './mockListings';
 import type { EscrowResult, EscrowStatusName } from '../common/escrowWire';
+import { isTradeBanned } from '../common/itemStorage';
 import type { Item } from '../ecs/world';
 import { i18n, t, type TextKey } from '../i18n';
 
@@ -516,7 +517,17 @@ export class MarketplaceStore {
     await this.refresh();
   }
 
+  /** What cannot cross to another player cannot be listed either; the game server would refuse it. */
+  canList(index: number): boolean {
+    const entry = this.inventory[index];
+    return !!entry && !isTradeBanned(entry.item);
+  }
+
   pickForSale(index: number | null): void {
+    if (index !== null && !this.canList(index)) {
+      this.flash = t('marketplace.escrow.notTradable');
+      return;
+    }
     this.sellPick = index;
     this.sellPrice = '';
   }
@@ -559,7 +570,7 @@ export class MarketplaceStore {
   async listForSale(): Promise<void> {
     const index = this.sellPick;
     const entry = index === null ? null : this.inventory[index];
-    if (!entry || this.sellPriceValue <= 0 || this.busy) return;
+    if (!entry || this.sellPriceValue <= 0 || this.busy || isTradeBanned(entry.item)) return;
     const { item, slot } = entry;
     const name = displayName(item);
 
