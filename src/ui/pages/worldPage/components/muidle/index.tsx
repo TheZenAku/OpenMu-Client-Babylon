@@ -2,7 +2,16 @@ import './style.less';
 import { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Store } from '../../../../../store';
-import { MUIdle, DEFAULT_IDLE_SETTINGS, type IdleSettings, type OfflineSummary } from '../../../../../muidle/state';
+import {
+  MUIdle,
+  DEFAULT_IDLE_SETTINGS,
+  huntMapMode,
+  withHuntMapMode,
+  type HuntActivity,
+  type HuntMapOption,
+  type IdleSettings,
+  type OfflineSummary,
+} from '../../../../../muidle/state';
 import { mt, type MUIdleTextKey } from '../../../../../muidle/text';
 import { toggleMuHelperWindow } from '../../../../../muHelper/state';
 import { combatPower } from '../../../../../muidle/combatPower';
@@ -30,6 +39,33 @@ function duration(ms: number): string {
   const s = total % 60;
   return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
+
+function mapReasonText(option: Pick<HuntMapOption, 'reason' | 'minLevel' | 'fare'>): string {
+  if (!option.reason) return '';
+  return mt(`mapReason.${option.reason}` as MUIdleTextKey, { level: option.minLevel, zen: compact(option.fare) });
+}
+
+function activityText(activity: HuntActivity): string {
+  return mt(`activity.${activity.kind}` as MUIdleTextKey, { map: activity.map ?? '' });
+}
+
+/** What the hunt is doing now, and why it is not on the chosen map when it is not. */
+const ActivityLine = observer(() => {
+  const activity = MUIdle.activity;
+  if (!activity) return null;
+  const pinned = MUIdle.settings?.preferredMap ?? null;
+  const option = pinned === null ? undefined : MUIdle.maps.find(m => m.number === pinned);
+  return (
+    <div className="muidle-activity" aria-live="polite">
+      <span>{activityText(activity)}</span>
+      {activity.pinnedReason && option && (
+        <span className="muidle-activity-warn">
+          {mt('pinnedUnavailable', { reason: mapReasonText({ ...option, reason: activity.pinnedReason }) })}
+        </span>
+      )}
+    </div>
+  );
+});
 
 const StatusStrip = observer(() => {
   // The HUD only exists on the world page; `playerData` is observable (the
@@ -158,11 +194,24 @@ const SettingsPanel = observer(() => {
           {mt('helperSettings')}
         </button>
         <Toggle label={mt('autoTravel')} checked={current.autoTravel} onChange={v => set({ autoTravel: v })} />
-        <Toggle
-          label={mt('autoMapSelection')}
-          checked={current.autoMapSelection}
-          onChange={v => set({ autoMapSelection: v })}
-        />
+        <label className="muidle-select">
+          <span>{mt('huntMap')}</span>
+          <select
+            value={String(huntMapMode(current))}
+            onChange={e => {
+              const value = e.target.value;
+              set(withHuntMapMode(current, value === 'auto' || value === 'manual' ? value : Number(value)));
+            }}
+          >
+            <option value="auto">{mt('huntMap.auto')}</option>
+            <option value="manual">{mt('huntMap.manual')}</option>
+            {MUIdle.maps.map(m => (
+              <option key={m.number} value={m.number} disabled={!m.available}>
+                {m.available ? m.name : `${m.name} - ${mapReasonText(m)}`}
+              </option>
+            ))}
+          </select>
+        </label>
         <Toggle
           label={mt('keepHuntingAfterDeath')}
           checked={current.keepHuntingAfterDeath}
@@ -252,6 +301,7 @@ const SummaryModal = observer(() => {
 export const MUIdleHud = observer(() => (
   <>
     <StatusStrip />
+    <ActivityLine />
     <HuntButton />
     <SettingsPanel />
     <SummaryModal />
