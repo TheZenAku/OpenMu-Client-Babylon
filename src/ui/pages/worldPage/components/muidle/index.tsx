@@ -43,6 +43,14 @@ function duration(ms: number): string {
   return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
+/** The build presets of a class line (value null = the class default), or none. */
+function buildPresets(charClass: number): { value: string | null; label: MUIdleTextKey }[] {
+  if (charClass >= 8 && charClass <= 11) return [{ value: null, label: 'build.elfDefault' }, { value: 'support', label: 'build.support' }];
+  if (charClass >= 12 && charClass <= 15) return [{ value: null, label: 'build.strength' }, { value: 'energy', label: 'build.energy' }];
+  if (charClass >= 16 && charClass <= 19) return [{ value: null, label: 'build.strength' }, { value: 'raven', label: 'build.raven' }];
+  return [];
+}
+
 function mapReasonText(option: Pick<HuntMapOption, 'reason' | 'minLevel' | 'fare'>): string {
   if (!option.reason) return '';
   return mt(`mapReason.${option.reason}` as MUIdleTextKey, { level: option.minLevel, zen: compact(option.fare) });
@@ -256,6 +264,18 @@ const SettingsPanel = observer(() => {
           onChange={v => set({ autoBuyPotions: v })}
         />
         <Toggle label={mt('autoBuild')} checked={current.autoBuild} onChange={v => set({ autoBuild: v })} />
+        {current.autoBuild && buildPresets(Store.playerData.charClass).length > 0 && (
+          <label className="muidle-select">
+            <span>{mt('buildPreset')}</span>
+            <select value={current.buildPreset ?? ''} onChange={e => set({ buildPreset: e.target.value || null })}>
+              {buildPresets(Store.playerData.charClass).map(p => (
+                <option key={p.value ?? 'default'} value={p.value ?? ''}>
+                  {mt(p.label)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="muidle-range">
           <span>{mt('sellMaxItemLevel', { level: current.sellMaxItemLevel })}</span>
           <input

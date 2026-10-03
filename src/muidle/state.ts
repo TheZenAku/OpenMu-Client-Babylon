@@ -54,6 +54,8 @@ export type IdleSettings = {
   eventOptOut: string[];
   /** HUNT goes to a live world boss of the character's level. */
   bossesFirst: boolean;
+  /** Auto build preset (Elf "support", MG "energy", DL "raven"); null for the class default. */
+  buildPreset: string | null;
 };
 
 /** Why the character cannot join an event now, as the server judged it. */
@@ -159,6 +161,7 @@ export const DEFAULT_IDLE_SETTINGS: IdleSettings = {
   eventsFirst: true,
   eventOptOut: [],
   bossesFirst: true,
+  buildPreset: null,
 };
 
 class MUIdleStore {
