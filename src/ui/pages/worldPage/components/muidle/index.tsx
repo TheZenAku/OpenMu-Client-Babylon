@@ -57,7 +57,11 @@ function mapReasonText(option: Pick<HuntMapOption, 'reason' | 'minLevel' | 'fare
 }
 
 function activityText(activity: HuntActivity): string {
-  return mt(`activity.${activity.kind}` as MUIdleTextKey, { map: activity.map ?? '' });
+  return mt(`activity.${activity.kind}` as MUIdleTextKey, {
+    map: activity.map ?? '',
+    have: compact(activity.pause?.have ?? 0),
+    need: compact(activity.pause?.need ?? 0),
+  });
 }
 
 /** What the hunt is doing now, and why it is not on the chosen map when it is not. */

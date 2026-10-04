@@ -6,12 +6,14 @@ import type { IdleSettings } from './state';
  */
 
 /** What the hunt is doing right now, as the server tracks it (online and offline alike). */
-export type HuntActivityKind = 'idle' | 'hunting' | 'travelling' | 'warping' | 'shopping' | 'buff' | 'dead' | 'event' | 'quest';
+export type HuntActivityKind = 'idle' | 'hunting' | 'travelling' | 'warping' | 'shopping' | 'buff' | 'dead' | 'event' | 'quest' | 'paused';
 export type HuntActivity = {
   kind: HuntActivityKind;
   map: string | null;
   /** Why the pinned map is not where the hunt is (`level`, `zen`, `noWarp`, `requirement`), if so. */
   pinnedReason: HuntMapReason | null;
+  /** Why HUNT is paused (`zen`: the MU Helper fee), with the player's Zen and the fee. */
+  pause?: { reason: 'zen'; have: number; need: number } | null;
 };
 
 /** Why a map cannot be the hunting map right now. */
