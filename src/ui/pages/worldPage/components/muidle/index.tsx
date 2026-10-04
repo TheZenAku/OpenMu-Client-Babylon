@@ -78,6 +78,11 @@ const ActivityLine = observer(() => {
           {mt('pinnedUnavailable', { reason: mapReasonText({ ...option, reason: activity.pinnedReason }) })}
         </span>
       )}
+      {activity.notes?.map(note => (
+        <span key={note.reason} className="muidle-activity-warn">
+          {mt(`note.${note.reason}` as MUIdleTextKey, { have: compact(note.have), need: compact(note.need) })}
+        </span>
+      ))}
     </div>
   );
 });

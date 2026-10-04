@@ -14,7 +14,12 @@ export type HuntActivity = {
   pinnedReason: HuntMapReason | null;
   /** Why HUNT is paused (`zen`: the MU Helper fee), with the player's Zen and the fee. */
   pause?: { reason: 'zen'; have: number; need: number } | null;
+  /** Why HUNT does not do what it would: no safer map, a fare it cannot pay, a quest waiting for zen. */
+  notes?: HuntNote[];
 };
+
+/** A server note under the activity; `have`/`need` are Zen where the reason has amounts. */
+export type HuntNote = { reason: 'noSafeMap' | 'noFare' | 'questZen'; have: number; need: number };
 
 /** Why a map cannot be the hunting map right now. */
 export type HuntMapReason = 'level' | 'zen' | 'noWarp' | 'requirement';
