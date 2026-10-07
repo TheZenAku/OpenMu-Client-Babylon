@@ -145,7 +145,8 @@ const ClassQuest = observer(() => {
           {mt(`questAuto.${q.automation}` as MUIdleTextKey, { zen: (q.startZen ?? 0).toLocaleString(), level: q.minLevel ?? '-', giver: q.giver?.name ?? '-' })}
         </p>
       )}
-      {(q.items ?? []).some(i => i.minMonsterLevel !== null) && (
+      {/* A drop band or a monster of its own (Evidence of Strength: three bosses) - HUNT goes there. */}
+      {(q.items ?? []).some(i => i.minMonsterLevel !== null || !!i.monster) && (
         <label className="muidle-toggle">
           <input
             type="checkbox"
