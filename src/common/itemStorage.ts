@@ -26,6 +26,14 @@ export { StorageKind, TRADE_COLUMNS, TRADE_ROWS, TRADE_SLOTS };
  */
 export const CHAOS_CARD_WIRE_STORAGE = 9;
 
+/**
+ * `STORAGE_TYPE::TRAINER` / OpenMU `Storages.PetTrainer`: the Pet Trainer's
+ * tray on the wire (Dark Horse, Dark Raven). Like the card tray it is the
+ * chaos machine's temporary storage on the server and `StorageKind.ChaosMachine`
+ * locally; only the move packets carry this byte while the trainer is open.
+ */
+export const PET_TRAINER_WIRE_STORAGE = 5;
+
 /** `COLUMN_*_INVENTORY` / `ROW_*_INVENTORY` (_define.h:150-155). */
 export const VAULT_COLUMNS = InventoryConstants.RowSize;
 export const VAULT_ROWS = InventoryConstants.WarehouseRows;

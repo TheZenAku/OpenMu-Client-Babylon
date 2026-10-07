@@ -830,6 +830,7 @@ export const vietnameseLayer: LanguageLayer = {
     'chaosCard.title': 'Chaos Card',
     'chaosCard.hint1': 'Đặt một Chaos Card vào khay',
     'chaosCard.hint2': 'rồi nhấn kết hợp để mở.',
+    'trainer.title': 'Huấn luyện viên',
     'cashShop.title': 'Cửa hàng Cash',
     'cashShop.tab.wings': 'Cánh',
     'cashShop.tab.quest': 'Nhiệm vụ',

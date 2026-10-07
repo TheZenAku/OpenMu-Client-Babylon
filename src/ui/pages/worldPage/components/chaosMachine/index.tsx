@@ -2,7 +2,7 @@ import './style.less';
 import { t } from '../../../../../i18n';
 import { observer } from 'mobx-react-lite';
 import { Store } from '../../../../../store';
-import { Economy, MIX_MENU } from '../../../../../economy';
+import { Economy, mixMenuOf } from '../../../../../economy';
 import { StorageKind } from '../../../../../common/itemStorage';
 import { MuButton } from '../../../../components/muButton';
 import { MuItemWindow, MuTableFrame } from '../../../../components/muWindow';
@@ -53,13 +53,17 @@ export const ChaosMachine = observer(() => {
   if (!Economy.mixOpen) return null;
 
   const picked = Store.pickedItem;
-  // The Chaos Card Master shares this window (`MIXTYPE_CHAOS_CARD` in the
-  // original's CNewUIMixInventory): no recipe menu, its own title and hint.
+  // The Chaos Card Master and the Pet Trainer share this window (`MIXTYPE_CHAOS_CARD`,
+  // `MIXTYPE_TRAINER` in the original's CNewUIMixInventory): the card master has no
+  // recipe menu and its own hint, the trainer its own two recipes; each its title.
   const cardMode = Economy.mixKind === 'chaosCard';
-  const selected = cardMode
-    ? undefined
-    : MIX_MENU.find(entry => entry.type === Economy.mixType);
-  const title = cardMode ? t('chaosCard.title') : t(TITLE);
+  const menu = mixMenuOf(Economy.mixKind);
+  const selected = menu.find(entry => entry.type === Economy.mixType);
+  const title = cardMode
+    ? t('chaosCard.title')
+    : Economy.mixKind === 'petTrainer'
+      ? t('trainer.title')
+      : t(TITLE);
 
   const column = 1 + (Store.inventoryEnabled ? 1 : 0) + (Store.characterInfoEnabled ? 1 : 0);
 
@@ -149,7 +153,7 @@ export const ChaosMachine = observer(() => {
             data-no-drag="true"
             style={{ left: MENU_X, top: MENU_Y, width: MENU_WIDTH, height: MENU_HEIGHT }}
           >
-            {MIX_MENU.map(entry => (
+            {menu.map(entry => (
               <div
                 key={entry.type}
                 className={`chaos-menu-row${entry.type === Economy.mixType ? ' active' : ''}`}

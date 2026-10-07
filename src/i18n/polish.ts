@@ -841,6 +841,7 @@ export const polishLayer: LanguageLayer = {
     'chaosCard.title': 'Chaos Card',
     'chaosCard.hint1': 'Włóż Chaos Card do tacy',
     'chaosCard.hint2': 'i naciśnij Połącz, aby ją otworzyć.',
+    'trainer.title': 'Treser',
     'cashShop.title': 'Sklep premium',
     'cashShop.tab.wings': 'Skrzydła',
     'cashShop.tab.quest': 'Zadania',

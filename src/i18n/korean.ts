@@ -484,6 +484,7 @@ export const koreanLayer: LanguageLayer = {
     'chaosCard.title': '카오스 카드',
     'chaosCard.hint1': '카오스 카드를 칸에 넣고',
     'chaosCard.hint2': '조합을 누르면 열립니다.',
+    'trainer.title': '조련사',
     'cashShop.title': '캐시샵',
     'cashShop.tab.wings': '날개',
     'cashShop.tab.quest': '퀘스트',

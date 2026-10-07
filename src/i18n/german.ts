@@ -501,6 +501,7 @@ export const germanLayer: LanguageLayer = {
     'chaosCard.title': 'Chaos Card',
     'chaosCard.hint1': 'Lege eine Chaos Card in das Fach',
     'chaosCard.hint2': 'und drücke Kombinieren, um sie zu öffnen.',
+    'trainer.title': 'Tiertrainer',
     'cashShop.title': 'Cash-Shop',
     'cashShop.tab.wings': 'Flügel',
     'cashShop.tab.quest': 'Quest',

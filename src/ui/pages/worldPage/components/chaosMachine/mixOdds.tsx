@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { t, type TextKey } from '../../../../../i18n';
-import { Economy, MIX_MENU } from '../../../../../economy';
+import { Economy, mixMenuOf } from '../../../../../economy';
 import { Store } from '../../../../../store';
 import { MUIdle } from '../../../../../muidle/state';
 import { mixOddsView, traySignature } from '../../../../../muidle/mixOdds';
@@ -20,8 +20,6 @@ const REFUSAL: Record<string, TextKey> = {
   NotEnoughMoneyForBloodCastle: 'chaos.bloodCastleZen',
 };
 
-const LISTED = MIX_MENU.map(entry => entry.type as number);
-
 const group = (value: number) => Math.max(0, Math.floor(value)).toLocaleString('en-US');
 
 /**
@@ -32,9 +30,11 @@ const group = (value: number) => Math.max(0, Math.floor(value)).toLocaleString('
 export const MixOdds = observer(() => {
   const picked = Economy.mixType as number;
   const tray = traySignature(Economy.mixItems);
+  // The goblin's or the trainer's recipes; the card master has none to ask about.
+  const menu = mixMenuOf(Economy.mixKind);
   const asking =
     Economy.mixOpen &&
-    Economy.mixKind === 'chaosMachine' &&
+    menu.length > 0 &&
     !Economy.mixPending &&
     !Economy.mixResult &&
     !Store.isOffline &&
@@ -48,7 +48,7 @@ export const MixOdds = observer(() => {
   }, [asking, picked, tray]);
 
   if (!asking) return null;
-  const view = mixOddsView(MUIdle.mixPreview, picked, LISTED);
+  const view = mixOddsView(MUIdle.mixPreview, picked, menu.map(entry => entry.type as number));
   if (!view) return null;
 
   if (view.kind === 'odds') {
@@ -61,7 +61,7 @@ export const MixOdds = observer(() => {
   }
 
   if (view.kind === 'fits') {
-    const entry = MIX_MENU.find(e => (e.type as number) === view.mixType)!;
+    const entry = menu.find(e => (e.type as number) === view.mixType)!;
     return (
       <div
         className="chaos-odds fits"

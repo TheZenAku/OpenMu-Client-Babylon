@@ -503,6 +503,7 @@ export const portugueseLayer: LanguageLayer = {
     'chaosCard.title': 'Chaos Card',
     'chaosCard.hint1': 'Coloque uma Chaos Card na bandeja',
     'chaosCard.hint2': 'e aperte combinar para abrir.',
+    'trainer.title': 'Treinador de pets',
     'cashShop.title': 'Loja Cash',
     'cashShop.tab.wings': 'Asas',
     'cashShop.tab.quest': 'Missão',

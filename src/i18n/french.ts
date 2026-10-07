@@ -495,6 +495,7 @@ export const frenchLayer: LanguageLayer = {
     'chaosCard.title': 'Chaos Card',
     'chaosCard.hint1': 'Placez une Chaos Card dans le plateau',
     'chaosCard.hint2': 'puis lancez la combinaison pour l’ouvrir.',
+    'trainer.title': 'Dresseur',
     'cashShop.title': 'Boutique Cash',
     'cashShop.tab.wings': 'Ailes',
     'cashShop.tab.quest': 'Quête',

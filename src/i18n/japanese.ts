@@ -485,6 +485,7 @@ export const japaneseLayer: LanguageLayer = {
     'chaosCard.title': 'カオスカード',
     'chaosCard.hint1': 'カオスカードをトレイに入れて',
     'chaosCard.hint2': '組合ボタンを押すと開きます。',
+    'trainer.title': 'ペットトレーナー',
     'cashShop.title': 'キャッシュショップ',
     'cashShop.tab.wings': '翼',
     'cashShop.tab.quest': 'クエスト',

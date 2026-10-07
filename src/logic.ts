@@ -238,6 +238,7 @@ import { ChatRooms } from './chatRooms';
 import { FRIEND_OFFLINE } from './common/messenger';
 import {
   CHAOS_CARD_WIRE_STORAGE,
+  PET_TRAINER_WIRE_STORAGE,
   PERSONAL_SHOP_SLOTS,
   StorageKind,
   localIndexOf,
@@ -3655,10 +3656,10 @@ EventBus.on('ItemMoved', packet => {
   NetStats.markAnswered('itemMove');
   const p = new ItemMovedPacket(packet);
 
-  // The Chaos Card Master's tray is the same local grid as the chaos
-  // machine; only the wire byte differs (itemStorage.ts).
+  // The Chaos Card Master's and the Pet Trainer's trays are the same local
+  // grid as the chaos machine; only the wire byte differs (itemStorage.ts).
   const storage = (
-    p.TargetStorageType === CHAOS_CARD_WIRE_STORAGE
+    p.TargetStorageType === CHAOS_CARD_WIRE_STORAGE || p.TargetStorageType === PET_TRAINER_WIRE_STORAGE
       ? StorageKind.ChaosMachine
       : p.TargetStorageType
   ) as StorageKind;
@@ -3804,6 +3805,10 @@ EventBus.on('NpcWindowResponse', packet => {
       Store.dropNpcTalk();
       Economy.openMix('chaosCard');
       break;
+    case NpcWindowResponseNpcWindowEnum.PetTrainer:
+      Store.dropNpcTalk();
+      Economy.openMix('petTrainer');
+      break;
     case NpcWindowResponseNpcWindowEnum.DevilSquare:
       Store.dropNpcTalk();
       events.openDevilSquare();
@@ -3850,7 +3855,8 @@ EventBus.on('StoreItemList', packet => {
     item: ItemSerializer.DeserializeItem(new Uint8Array(entry.ItemData.buffer)),
   }));
 
-  if (p.Type === StoreItemListItemWindowEnum.ChaosMachine) {
+  // A failed Pet Trainer mix sends its tray back as ResurrectionFailed (OpenMU ItemCraftAction).
+  if (p.Type === StoreItemListItemWindowEnum.ChaosMachine || p.Type === StoreItemListItemWindowEnum.ResurrectionFailed) {
     Economy.setMixItems(entries);
     return;
   }

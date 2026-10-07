@@ -497,6 +497,7 @@ export const italianLayer: LanguageLayer = {
     'chaosCard.title': 'Chaos Card',
     'chaosCard.hint1': 'Metti una Chaos Card nel vassoio',
     'chaosCard.hint2': 'e premi combina per aprirla.',
+    'trainer.title': 'Addestratore',
     'cashShop.title': 'Negozio Cash',
     'cashShop.tab.wings': 'Ali',
     'cashShop.tab.quest': 'Missione',

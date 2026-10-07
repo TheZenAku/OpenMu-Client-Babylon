@@ -936,6 +936,7 @@ export const EN_TEXT = {
   'chaosCard.title': 'Chaos Card',
   'chaosCard.hint1': 'Put a Chaos Card into the tray',
   'chaosCard.hint2': 'and press combine to open it.',
+  'trainer.title': 'Pet Trainer',
   'cashShop.title': 'Cash Shop',
   'cashShop.tab.wings': 'Wings',
   'cashShop.tab.quest': 'Quest',

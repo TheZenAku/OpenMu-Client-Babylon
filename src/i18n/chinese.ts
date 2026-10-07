@@ -480,6 +480,7 @@ export const chineseLayer: LanguageLayer = {
     'chaosCard.title': '混沌卡片',
     'chaosCard.hint1': '把混沌卡片放入格子',
     'chaosCard.hint2': '然后点击合成即可开启。',
+    'trainer.title': '宠物训练师',
     'cashShop.title': '商城',
     'cashShop.tab.wings': '翅膀',
     'cashShop.tab.quest': '任务',

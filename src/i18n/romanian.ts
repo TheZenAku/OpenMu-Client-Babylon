@@ -496,6 +496,7 @@ export const romanianLayer: LanguageLayer = {
     'chaosCard.title': 'Chaos Card',
     'chaosCard.hint1': 'Pune o Chaos Card în tavă',
     'chaosCard.hint2': 'și apasă combinare ca s-o deschizi.',
+    'trainer.title': 'Dresor',
     'cashShop.title': 'Magazin Cash',
     'cashShop.tab.wings': 'Aripi',
     'cashShop.tab.quest': 'Misiune',

@@ -8,6 +8,7 @@ import { playUiSound } from './libs/sfx';
 import { Notices } from './common/notices';
 import {
   CHAOS_CARD_WIRE_STORAGE,
+  PET_TRAINER_WIRE_STORAGE,
   MIX_SLOTS,
   PERSONAL_SHOP_SLOTS,
   StorageKind,
@@ -275,6 +276,13 @@ export const MIX_MENU: MixMenuEntry[] = [
     labelKey: 'mix.secromicon',
     hintKey: 'mix.secromicon.hint',
   },
+];
+
+/**
+ * The Pet Trainer's craftings (`ChaosMixes.cs` registers them on the trainer,
+ * not the goblin: picked at the goblin they always answer IncorrectMixItems).
+ */
+export const TRAINER_MENU: MixMenuEntry[] = [
   {
     type: MIX_NUMBER.darkHorse,
     labelKey: 'mix.darkHorse',
@@ -286,6 +294,14 @@ export const MIX_MENU: MixMenuEntry[] = [
     hintKey: 'mix.darkRaven.hint',
   },
 ];
+
+/** The recipe menu of the open tray: the goblin's, the trainer's, or none (Chaos Card Master). */
+export function mixMenuOf(kind: MixKind): MixMenuEntry[] {
+  return kind === 'chaosMachine' ? MIX_MENU : kind === 'petTrainer' ? TRAINER_MENU : [];
+}
+
+/** Which NPC owns the mix tray. */
+export type MixKind = 'chaosMachine' | 'chaosCard' | 'petTrainer';
 
 export type TradePartner = { name: string; level: number; guildId: number };
 
@@ -346,11 +362,12 @@ export const Economy = new (class _Economy {
   /** `MIX_FINISHED`: what the last attempt did, for the result line. */
   mixResult: 'success' | 'failed' | null = null;
   /**
-   * Which NPC owns the tray: the goblin (`MIXTYPE_GOBLIN_*`) or the Chaos
-   * Card Master (`MIXTYPE_CHAOS_CARD`, same window in the original's
-   * `CNewUIMixInventory`). Decides the storage byte the move packets carry.
+   * Which NPC owns the tray: the goblin (`MIXTYPE_GOBLIN_*`), the Chaos
+   * Card Master (`MIXTYPE_CHAOS_CARD`) or the Pet Trainer (`MIXTYPE_TRAINER`),
+   * one window in the original's `CNewUIMixInventory`. Decides the storage
+   * byte the move packets carry and the recipe menu.
    */
-  mixKind: 'chaosMachine' | 'chaosCard' = 'chaosMachine';
+  mixKind: MixKind = 'chaosMachine';
 
   // ---- trade (CNewUITrade) -------------------------------------------------
 
@@ -662,11 +679,14 @@ export const Economy = new (class _Economy {
   // Chaos machine
   // =========================================================================
 
-  /** `NpcWindowResponse(ChaosMachine / ChaosCardCombination)` → `OpeningProcess`. */
-  openMix(kind: 'chaosMachine' | 'chaosCard' = 'chaosMachine'): void {
+  /** `NpcWindowResponse(ChaosMachine / ChaosCardCombination / PetTrainer)` → `OpeningProcess`. */
+  openMix(kind: MixKind = 'chaosMachine'): void {
     runInAction(() => {
       this.mixOpen = true;
       this.mixKind = kind;
+      // The pick of another NPC's menu means nothing here: its first recipe instead.
+      const menu = mixMenuOf(kind);
+      if (menu.length && !menu.some(entry => entry.type === this.mixType)) this.mixType = menu[0].type;
       this.mixItems = emptyGrid(MIX_SLOTS);
       this.mixPending = false;
       this.mixResult = null;
@@ -677,13 +697,16 @@ export const Economy = new (class _Economy {
   /**
    * The `ItemMoveRequest` storage byte of the open tray: the shared local
    * model is `StorageKind.ChaosMachine`, but the Chaos Card Master's window
-   * moves items under `CHAOS_CARD_WIRE_STORAGE` (OpenMU only allows storage
-   * 9 while the ChaosCardCombination window is the open one).
+   * moves items under `CHAOS_CARD_WIRE_STORAGE` and the Pet Trainer's under
+   * `PET_TRAINER_WIRE_STORAGE` (OpenMU only allows each while its window is
+   * the open one).
    */
   get mixWireStorage(): number {
     return this.mixKind === 'chaosCard'
       ? CHAOS_CARD_WIRE_STORAGE
-      : StorageKind.ChaosMachine;
+      : this.mixKind === 'petTrainer'
+        ? PET_TRAINER_WIRE_STORAGE
+        : StorageKind.ChaosMachine;
   }
 
   setMixItems(entries: { slot: number; item: Item }[]): void {

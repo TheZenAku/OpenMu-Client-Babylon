@@ -493,6 +493,7 @@ export const bulgarianLayer: LanguageLayer = {
     'chaosCard.title': 'Chaos Card',
     'chaosCard.hint1': 'Сложи Chaos Card в таблата',
     'chaosCard.hint2': 'и натисни комбиниране, за да я отвориш.',
+    'trainer.title': 'Треньор на любимци',
     'cashShop.title': 'Cash магазин',
     'cashShop.tab.wings': 'Крила',
     'cashShop.tab.quest': 'Задача',

@@ -492,6 +492,7 @@ export const russianLayer: LanguageLayer = {
     'chaosCard.title': 'Chaos Card',
     'chaosCard.hint1': 'Положите Chaos Card на поднос',
     'chaosCard.hint2': 'и нажмите комбинировать, чтобы открыть её.',
+    'trainer.title': 'Дрессировщик',
     'cashShop.title': 'Cash-магазин',
     'cashShop.tab.wings': 'Крылья',
     'cashShop.tab.quest': 'Задание',

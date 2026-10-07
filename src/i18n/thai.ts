@@ -492,6 +492,7 @@ export const thaiLayer: LanguageLayer = {
     'chaosCard.title': 'การ์ดเคออส',
     'chaosCard.hint1': 'วางการ์ดเคออสลงในถาด',
     'chaosCard.hint2': 'แล้วกดผสมเพื่อเปิดการ์ด',
+    'trainer.title': 'ผู้ฝึกสัตว์เลี้ยง',
     'cashShop.title': 'แคชช็อป',
     'cashShop.tab.wings': 'ปีก',
     'cashShop.tab.quest': 'เควสต์',
