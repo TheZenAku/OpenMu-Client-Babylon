@@ -19,7 +19,11 @@ export type HuntActivity = {
 };
 
 /** A server note under the activity; `have`/`need` are Zen where the reason has amounts. */
-export type HuntNote = { reason: 'noSafeMap' | 'noFare' | 'questZen' | 'deadlyHere'; have: number; need: number };
+export type HuntNote = {
+  reason: 'noSafeMap' | 'noFare' | 'questZen' | 'deadlyHere' | 'questMonsterDeadly';
+  have: number;
+  need: number;
+};
 
 /** Why a map cannot be the hunting map right now. */
 export type HuntMapReason = 'level' | 'zen' | 'noWarp' | 'requirement';
