@@ -481,7 +481,7 @@ export const japaneseLayer: LanguageLayer = {
     'mix.darkHorse': 'ダークホース',
     'mix.darkHorse.hint': 'ダークホースの魂 + ブレス 5 + ソウル 5 + カオス + 創造',
     'mix.darkRaven': 'ダークレイブン',
-    'mix.darkRaven.hint': 'ダークレイブンの魂 + ブレス 5 + ソウル 5 + カオス + 創造',
+    'mix.darkRaven.hint': 'ダークレイブンの魂 + ブレス 2 + ソウル 2 + カオス + 創造',
     'chaosCard.title': 'カオスカード',
     'chaosCard.hint1': 'カオスカードをトレイに入れて',
     'chaosCard.hint2': '組合ボタンを押すと開きます。',

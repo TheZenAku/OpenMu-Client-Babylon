@@ -503,7 +503,7 @@ export const spanishLayer: LanguageLayer = {
       'Spirit of Dark Horse + 5 Bless + 5 Soul + Chaos + Creation',
     'mix.darkRaven': 'Dark Raven',
     'mix.darkRaven.hint':
-      'Spirit of Dark Raven + 5 Bless + 5 Soul + Chaos + Creation',
+      'Spirit of Dark Raven + 2 Bless + 2 Soul + Chaos + Creation',
     'chaosCard.title': 'Chaos Card',
     'chaosCard.hint1': 'Pon una Chaos Card en la bandeja',
     'chaosCard.hint2': 'y pulsa combinar para abrirla.',

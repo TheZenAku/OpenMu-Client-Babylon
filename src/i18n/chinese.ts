@@ -476,7 +476,7 @@ export const chineseLayer: LanguageLayer = {
     'mix.darkHorse': '暗黑战马',
     'mix.darkHorse.hint': '暗黑战马之魂 + 5 祝福 + 5 灵魂 + 混沌 + 创造',
     'mix.darkRaven': '暗黑乌鸦',
-    'mix.darkRaven.hint': '暗黑乌鸦之魂 + 5 祝福 + 5 灵魂 + 混沌 + 创造',
+    'mix.darkRaven.hint': '暗黑乌鸦之魂 + 2 祝福 + 2 灵魂 + 混沌 + 创造',
     'chaosCard.title': '混沌卡片',
     'chaosCard.hint1': '把混沌卡片放入格子',
     'chaosCard.hint2': '然后点击合成即可开启。',

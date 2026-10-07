@@ -480,7 +480,7 @@ export const koreanLayer: LanguageLayer = {
     'mix.darkHorse': '다크 호스',
     'mix.darkHorse.hint': '다크 호스의 영혼 + 블레스 5 + 소울 5 + 카오스 + 창조',
     'mix.darkRaven': '다크 레이븐',
-    'mix.darkRaven.hint': '다크 레이븐의 영혼 + 블레스 5 + 소울 5 + 카오스 + 창조',
+    'mix.darkRaven.hint': '다크 레이븐의 영혼 + 블레스 2 + 소울 2 + 카오스 + 창조',
     'chaosCard.title': '카오스 카드',
     'chaosCard.hint1': '카오스 카드를 칸에 넣고',
     'chaosCard.hint2': '조합을 누르면 열립니다.',

@@ -488,7 +488,7 @@ export const thaiLayer: LanguageLayer = {
       'Spirit of Dark Horse + Bless 5 + Soul 5 + Chaos + Creation',
     'mix.darkRaven': 'ดาร์คเรเวน',
     'mix.darkRaven.hint':
-      'Spirit of Dark Raven + Bless 5 + Soul 5 + Chaos + Creation',
+      'Spirit of Dark Raven + Bless 2 + Soul 2 + Chaos + Creation',
     'chaosCard.title': 'การ์ดเคออส',
     'chaosCard.hint1': 'วางการ์ดเคออสลงในถาด',
     'chaosCard.hint2': 'แล้วกดผสมเพื่อเปิดการ์ด',
