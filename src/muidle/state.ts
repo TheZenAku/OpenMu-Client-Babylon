@@ -2,7 +2,7 @@ import { makeAutoObservable, runInAction } from 'mobx';
 import { EventBus } from '../libs/eventBus';
 import { Store } from '../store';
 import { mt } from './text';
-import { huntMapMode, type HuntActivity, type HuntMapOption } from './huntMap';
+import { type HuntActivity, type HuntMapOption } from './huntMap';
 import { parseMixPreview, type MixPreview } from './mixOdds';
 
 export type { HuntActivity, HuntActivityKind, HuntMapMode, HuntMapOption, HuntMapReason } from './huntMap';
@@ -339,14 +339,10 @@ class MUIdleStore {
     if (Store.isOffline) return;
     const hunting = Store.muHelper.active;
     if (!hunting && Store.world?.playerEntity?.attributeSystem?.isAboveZero('inSafeZone')) {
-      // With a pinned map the server takes the hunt there (warp, then a walk out of town) and
-      // HUNT starts on arrival; otherwise there is nothing to fight in town.
-      if (this.settings?.autoTravel && typeof huntMapMode(this.settings) === 'number') {
-        this.huntIntent = true;
-        this.send(SUB_HUNT_MODE, { hunt: true });
-        return;
-      }
-      Store.addNotification(mt('safeZone'), 'error');
+      // The server takes the hunt out of town - a warp to a pinned map, else a walk to a hunting
+      // ground of this map - and HUNT starts on arrival (the helper does not run in a safezone).
+      this.huntIntent = true;
+      this.send(SUB_HUNT_MODE, { hunt: true });
       return;
     }
     // The server flips `muHelper.active` with its answer; the intent is
