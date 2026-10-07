@@ -17,9 +17,18 @@ import {
  */
 export const MuHelperState = observable({
   windowOpen: false,
-  config: defaultMuHelperConfig() as MuHelperConfig,
-  draft: defaultMuHelperConfig() as MuHelperConfig,
+  config: huntDefaults() as MuHelperConfig,
+  draft: huntDefaults() as MuHelperConfig,
 });
+
+/**
+ * Until the character's saved configuration arrives: the original defaults, but with the Dark Raven
+ * attacking (mode 1) - what HUNT does offline for a character without a saved configuration
+ * (`HuntMuHelperSettings` on the server), so a raven fights the same online and offline.
+ */
+function huntDefaults(): MuHelperConfig {
+  return { ...defaultMuHelperConfig(), useDarkRaven: true, darkRavenMode: 1 };
+}
 
 /** Canonical clone: what survives the wire is what the copy holds. */
 function cloneConfig(config: MuHelperConfig): MuHelperConfig {
