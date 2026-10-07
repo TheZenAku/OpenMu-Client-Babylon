@@ -425,7 +425,9 @@ class MUIdleStore {
 
   openSettings(open = !this.settingsOpen): void {
     this.settingsOpen = open;
-    if (open && !this.settings) this.requestState();
+    // Every time: the map choices are judged by the server for the character as it is now - its
+    // level, zen and equipment (new wings open Icarus) - not as it was at login.
+    if (open) this.requestState();
   }
 
   private send(subCode: number, payload: unknown): void {
