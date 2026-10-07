@@ -27,7 +27,7 @@ const CODE = 0xee;
 let resumeTimer: ReturnType<typeof setInterval> | null = null;
 let mapReadyAt = 0;
 EventBus.on('look.mapReady', () => {
-  mapReadyAt = Date.now();
+  mapReadyAt = performance.now();
 });
 const SUB_STATE = 0x01;
 const SUB_SUMMARY = 0x02;
@@ -288,10 +288,10 @@ class MUIdleStore {
    */
   private scheduleResume(ground: { x: number; y: number } | null = null): void {
     if (resumeTimer) clearInterval(resumeTimer);
-    const started = Date.now();
+    const started = performance.now();
     let walkIssuedAt = 0;
     resumeTimer = setInterval(() => {
-      const waited = Date.now() - started;
+      const waited = performance.now() - started;
       const hero = Store.world?.playerEntity;
       if (ground) {
         // The state comes after the map entry, so the map may have loaded before it; a walk sent
@@ -305,8 +305,8 @@ class MUIdleStore {
         if (!arrived && waited < 60_000) {
           if (Store.muHelper.active) Store.toggleMuHelper();
           // Re-issued now and then: a long route is walked in stretches.
-          if (Date.now() - walkIssuedAt > 8_000) {
-            walkIssuedAt = Date.now();
+          if (performance.now() - walkIssuedAt > 8_000) {
+            walkIssuedAt = performance.now();
             const move = hero.playerMoveTo;
             move.point.x = ground.x;
             move.point.y = ground.y;
@@ -317,7 +317,7 @@ class MUIdleStore {
         }
         ground = null;
       }
-      const ready = mapReadyAt > 0 && Date.now() - mapReadyAt > 1500;
+      const ready = mapReadyAt > 0 && performance.now() - mapReadyAt > 1500;
       if (Store.muHelper.active || waited > 90_000) {
         clearInterval(resumeTimer!);
         resumeTimer = null;
