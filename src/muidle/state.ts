@@ -224,9 +224,13 @@ class MUIdleStore {
     makeAutoObservable(this);
   }
 
-  /** HUNT is the MU Helper running - as the server last said. */
+  /**
+   * HUNT is on: the MU Helper runs (as the server last said), or HUNT is the character's intent and
+   * on its way - walking to a ground, paused for the fee - with the helper not running yet. The
+   * button then stops it rather than starting it a second time.
+   */
   get hunting(): boolean {
-    return Store.muHelper.active;
+    return Store.muHelper.active || this.huntIntent;
   }
 
   onPacket(subCode: number, json: string): void {
@@ -330,26 +334,35 @@ class MUIdleStore {
       }
       clearInterval(resumeTimer!);
       resumeTimer = null;
-      this.toggleHunt();
+      this.startHunt();
     }, 1000);
   }
 
   /** The HUNT/MANUAL button. */
   toggleHunt(): void {
     if (Store.isOffline) return;
-    const hunting = Store.muHelper.active;
-    if (!hunting && Store.world?.playerEntity?.attributeSystem?.isAboveZero('inSafeZone')) {
-      // The server takes the hunt out of town - a warp to a pinned map, else a walk to a hunting
-      // ground of this map - and HUNT starts on arrival (the helper does not run in a safezone).
-      this.huntIntent = true;
-      this.send(SUB_HUNT_MODE, { hunt: true });
-      return;
-    }
+    if (this.hunting) this.stopHunt();
+    else this.startHunt();
+  }
+
+  private startHunt(): void {
     // The server flips `muHelper.active` with its answer; the intent is
     // stored right away so a disconnect a second later still knows it.
+    this.huntIntent = true;
+    this.send(SUB_HUNT_MODE, { hunt: true });
+    // In town the server takes the hunt out first - a warp to a pinned map, else a walk to a hunting
+    // ground of this map - and HUNT starts on arrival (the helper does not run in a safezone).
+    if (Store.muHelper.active || Store.world?.playerEntity?.attributeSystem?.isAboveZero('inSafeZone')) return;
     Store.toggleMuHelper();
-    this.huntIntent = !hunting;
-    this.send(SUB_HUNT_MODE, { hunt: !hunting });
+  }
+
+  private stopHunt(): void {
+    // Also a hunt still on its way: no resume may start it again.
+    if (resumeTimer) clearInterval(resumeTimer);
+    resumeTimer = null;
+    if (Store.muHelper.active) Store.toggleMuHelper();
+    this.huntIntent = false;
+    this.send(SUB_HUNT_MODE, { hunt: false });
   }
 
   requestState(): void {
