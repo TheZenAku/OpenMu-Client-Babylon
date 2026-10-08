@@ -44,6 +44,12 @@ const THEMED: Record<string, { glyph?: string; primary?: boolean }> = {
   'newui_btn_empty_small.OZT': {},
   'newui_btn_empty_big.OZT': {},
   'newui_guild_tab04.OZT': {},
+  // The five buttons of the main bar (their tooltips name them).
+  'partCharge1/newui_menu_Bt05.OZJ': { glyph: '⚖' },
+  'partCharge1/newui_menu_Bt01.OZJ': { glyph: '♜' },
+  'partCharge1/newui_menu_Bt02.OZJ': { glyph: '▤' },
+  'partCharge1/newui_menu_Bt03.OZJ': { glyph: '✉' },
+  'partCharge1/newui_menu_Bt04.OZJ': { glyph: '⚙' },
 };
 
 export const MuButton = ({

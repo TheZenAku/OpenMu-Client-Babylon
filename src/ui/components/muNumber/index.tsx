@@ -1,15 +1,9 @@
 import type { CSSProperties } from 'react';
-import { useMuSprite } from '../muSprite';
 
-const NUMBER_FILE = 'newui_number1.OZT';
-
-const GLYPH_COUNT = 10;
-
+/** The original digit sheet's glyph box at a scale (`newui_number1.OZT`), kept for the positions. */
 function glyphSize(scale: number) {
   return { width: 12 * (scale - 0.3), height: 16 * (scale - 0.3) };
 }
-
-const ADVANCE_RATIO = 0.8;
 
 type MuNumberProps = {
   value: number;
@@ -22,6 +16,10 @@ type MuNumberProps = {
   style?: CSSProperties;
 };
 
+/**
+ * A number centred on `x`, as the original's digit sprites were - drawn as text in the Vael theme's
+ * label face (gilt, tabular figures) instead of the bitmap sheet.
+ */
 export const MuNumber = ({
   value,
   x,
@@ -31,45 +29,33 @@ export const MuNumber = ({
   className,
   style,
 }: MuNumberProps) => {
-  const sprite = useMuSprite(NUMBER_FILE);
-
   if (scale < 0.3) return null;
 
-  const { width, height } = glyphSize(scale);
+  const { height } = glyphSize(scale);
   const digits = String(Math.trunc(value)).padStart(minDigits, '0');
-  const advance = width * ADVANCE_RATIO;
-
-  const backgroundSize = `${GLYPH_COUNT * width}px ${height}px`;
 
   return (
     <div
-      className={className}
+      className={`vael-number${className ? ` ${className}` : ''}`}
       style={{
         position: 'absolute',
-        left: x - (width * digits.length) / 2,
+        left: x,
         top: y,
         height,
+        lineHeight: `${height}px`,
+        fontSize: Math.max(6, height * 0.72),
+        transform: 'translateX(-50%)',
+        fontFamily: 'var(--v-font-label)',
+        fontWeight: 500,
+        fontVariantNumeric: 'tabular-nums',
+        color: 'var(--v-gilt-bright)',
+        textShadow: '0 1px 2px oklch(0% 0 0 / 0.9)',
+        whiteSpace: 'nowrap',
+        pointerEvents: 'none',
         ...style,
       }}
     >
-      {sprite &&
-        [...digits].map((digit, i) => (
-          <span
-            key={i}
-            style={{
-              position: 'absolute',
-              left: i * advance,
-              top: 0,
-              width,
-              height,
-              backgroundImage: `url(${sprite.url})`,
-              backgroundSize,
-              backgroundPosition: `${-Number(digit) * width}px 0`,
-              backgroundRepeat: 'no-repeat',
-              imageRendering: 'auto',
-            }}
-          />
-        ))}
+      {digits}
     </div>
   );
 };

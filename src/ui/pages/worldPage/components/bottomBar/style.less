@@ -246,3 +246,98 @@
     color: #fff;
   }
 }
+
+// ---------------------------------------------------------------------------
+// MUIdle Vael theme: the bar is drawn in CSS instead of the original's sprite
+// art (frame pieces, orbs, skill boxes, exp strip). Positions stay the
+// original's; only the look changes.
+@import (reference) '../../../../theme/vael.less';
+
+.bottom-bar {
+  background: linear-gradient(180deg, oklch(19% 0.007 265 / 0.97), oklch(11% 0.004 265 / 0.98));
+  border-top: 1px solid var(--v-border-strong);
+  box-shadow: 0 -8px 22px oklch(0% 0 0 / 0.55), inset 0 1px 0 oklch(100% 0 0 / 0.04);
+
+  .vael-gauge {
+    background: oklch(9% 0.004 265);
+    border: 1px solid var(--v-border);
+    box-sizing: border-box;
+
+    .gauge-fill {
+      right: 0;
+      transition: height 200ms ease-out;
+    }
+
+    &.hp .gauge-fill {
+      background: linear-gradient(0deg, var(--v-blood-deep), var(--v-blood-bright));
+      box-shadow: 0 0 8px var(--v-blood-glow);
+    }
+
+    &.mp .gauge-fill {
+      background: linear-gradient(0deg, oklch(42% 0.07 78), var(--v-gilt));
+      box-shadow: 0 0 8px var(--v-gilt-glow);
+    }
+
+    &.sd .gauge-fill {
+      background: linear-gradient(0deg, oklch(38% 0.03 250), oklch(74% 0.04 250));
+    }
+
+    &.ag .gauge-fill {
+      background: linear-gradient(0deg, oklch(38% 0.06 140), oklch(70% 0.09 140));
+    }
+
+    .gauge-label {
+      position: absolute;
+      top: 2px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-family: var(--v-font-label);
+      font-size: 4.5px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      color: var(--v-gilt-bright);
+      text-shadow: 0 1px 1px oklch(0% 0 0 / 0.9);
+      pointer-events: none;
+    }
+  }
+
+  // Every skill box and potion slot is a tile (the recess was part of the art).
+  .skill-slot,
+  .consumable-item {
+    .vael-tile();
+    box-sizing: border-box;
+  }
+
+  .skill-slot:hover,
+  .consumable-item:hover {
+    border-color: var(--v-border-strong);
+  }
+
+  .vael-slot {
+    box-sizing: border-box;
+
+    &.lit {
+      .vael-tile-active();
+    }
+  }
+
+  .skill-hotkey,
+  .skill-hotkey-target {
+    font-family: var(--v-font-label);
+    color: var(--v-gilt);
+  }
+
+  .exp-track {
+    position: absolute;
+    background: oklch(9% 0.004 265);
+    border: 1px solid oklch(77% 0.09 78 / 0.15);
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  .exp-fill {
+    background: var(--v-gilt-gradient);
+    box-shadow: 0 0 6px var(--v-gilt-glow);
+  }
+}

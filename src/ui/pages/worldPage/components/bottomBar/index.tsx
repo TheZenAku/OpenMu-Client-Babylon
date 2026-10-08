@@ -1,10 +1,10 @@
 import { uiClick } from '../../../../../libs/sfx';
 import { t } from '../../../../../i18n';
+import { mt } from '../../../../../muidle/text';
 import './style.less';
 import { observer } from 'mobx-react-lite';
 import { Store } from '../../../../../store';
 import { ItemIcon } from '../../../../components/itemIcon';
-import { MuSpriteFrame } from '../../../../components/muSprite';
 import { MuButton } from '../../../../components/muButton';
 import { MuNumber } from '../../../../components/muNumber';
 import { Item } from '../../../../../ecs/world';
@@ -59,11 +59,6 @@ const BAR_TOP = 480 - BAR_HEIGHT;
 
 const local = (screenY: number) => screenY - BAR_TOP;
 
-const FRAME_PIECES = [
-  { file: 'newui_menu01.OZJ', x: 0, width: 256 },
-  { file: 'newui_menu02.OZJ', x: 256, width: 128 },
-  { file: 'partCharge1/newui_menu03.OZJ', x: 384, width: 256 },
-];
 
 const HOTKEY_X = 10;
 const HOTKEY_STEP = 38;
@@ -95,32 +90,33 @@ const EXP_NUMBER_X = 635;
 const EXP_NUMBER_Y = local(469);
 const EXP_SUB_BARS = 10;
 
+/**
+ * A vital gauge in the Vael theme: a sunken tile filled from the bottom - blood for life, gilt for
+ * mana, pale for SD and AG - with its label (the reference's "VIDA" / "MANA").
+ */
 const Gauge = ({
-  file,
+  kind,
   x,
   y,
   width,
   height,
   fill,
+  label,
 }: {
-  file: string;
+  kind: 'hp' | 'sd' | 'ag' | 'mp';
   x: number;
   y: number;
   width: number;
   height: number;
   fill: number;
+  label?: string;
 }) => {
   const filled = Math.max(0, Math.min(1, fill));
 
   return (
-    <div className="gauge" style={{ left: x, top: y, width, height }}>
-      <MuSpriteFrame
-        file={file}
-        className="gauge-fill"
-        width={width}
-        height={Math.round(filled * height)}
-        style={{ backgroundPosition: 'left bottom' }}
-      />
+    <div className={`gauge vael-gauge ${kind}`} style={{ left: x, top: y, width, height }}>
+      <div className="gauge-fill" style={{ height: `${filled * 100}%` }} />
+      {label && <span className="gauge-label">{label}</span>}
     </div>
   );
 };
@@ -249,15 +245,14 @@ export const ExpBar = observer(() => {
 
   return (
     <>
-      <MuSpriteFrame
-        file="newui_Exbar.OZJ"
+      <div className="exp-track" style={{ left: EXP_X, top: EXP_Y, width: EXP_WIDTH, height: EXP_HEIGHT }} />
+      <div
         className="exp-fill"
         style={{
           left: EXP_X,
           top: EXP_Y,
           width: Math.round(progress * EXP_WIDTH),
           height: EXP_HEIGHT,
-          backgroundSize: '100% 100%',
         }}
       />
       <MuNumber
@@ -287,9 +282,6 @@ export const ExpBar = observer(() => {
 const SKILL_ICON_INSET_X = 6;
 const SKILL_ICON_INSET_Y = 6;
 
-/** IMAGE_SKILLBOX / IMAGE_SKILLBOX_USE: the empty box, and the lit copy. */
-const SKILLBOX_SPRITE = 'newui_skillbox.OZJ';
-const SKILLBOX_USE_SPRITE = 'newui_skillbox2.OZJ';
 
 /**
  * Which hot-key slot each of the five boxes shows, per page
@@ -519,13 +511,11 @@ const SkillSlots = observer(() => {
     },
   });
 
-  /** IMAGE_SKILLBOX / IMAGE_SKILLBOX_USE: the box under a fan or lit slot. */
+  /** IMAGE_SKILLBOX / IMAGE_SKILLBOX_USE: the box under a fan or lit slot - a Vael tile, lit in blood. */
   const boxArt = (lit: boolean) => (
-    <MuSpriteFrame
-      file={lit ? SKILLBOX_USE_SPRITE : SKILLBOX_SPRITE}
-      className="skill-box-art"
-      width={SKILL_SLOT_WIDTH}
-      height={SKILL_SLOT_HEIGHT}
+    <div
+      className={`skill-box-art vael-slot${lit ? ' lit' : ''}`}
+      style={{ width: SKILL_SLOT_WIDTH, height: SKILL_SLOT_HEIGHT }}
     />
   );
 
@@ -729,7 +719,8 @@ const Orbs = observer(() => {
   return (
     <>
       <Gauge
-        file="newui_menu_red.OZJ"
+        kind="hp"
+        label={mt('hud.life')}
         x={158}
         y={local(480 - 48)}
         width={45}
@@ -739,7 +730,7 @@ const Orbs = observer(() => {
       <MuNumber value={playerData.currentHP} x={158 + 25} y={local(480 - 18)} />
 
       <Gauge
-        file="newui_menu_SD.OZJ"
+        kind="sd"
         x={204}
         y={local(480 - 49)}
         width={16}
@@ -749,7 +740,7 @@ const Orbs = observer(() => {
       <MuNumber value={playerData.currentSD} x={204 + 15} y={local(480 - 18)} />
 
       <Gauge
-        file="newui_menu_AG.OZJ"
+        kind="ag"
         x={256 + 128 + 36}
         y={local(480 - 49)}
         width={16}
@@ -763,7 +754,8 @@ const Orbs = observer(() => {
       />
 
       <Gauge
-        file="newui_menu_blue.OZJ"
+        kind="mp"
+        label={mt('hud.mana')}
         x={256 + 128 + 53}
         y={local(480 - 48)}
         width={45}
@@ -797,17 +789,7 @@ export const BottomBar = observer(() => {
         transformOrigin: '50% 100%',
       }}
     >
-      {FRAME_PIECES.map(piece => (
-        <MuSpriteFrame
-          key={piece.file}
-          file={piece.file}
-          className="frame-piece"
-          width={piece.width}
-          height={BAR_HEIGHT}
-          style={{ left: piece.x, top: 0 }}
-        />
-      ))}
-
+      {/* The Vael theme draws the bar's frame in CSS (style.less) instead of FRAME_PIECES. */}
       <Orbs />
 
       <ConsumableItems />
