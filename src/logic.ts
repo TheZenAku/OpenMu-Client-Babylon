@@ -3702,9 +3702,12 @@ function storeStorageOf(storage: StorageKind, wireSlot: number): StorageKind {
 EventBus.on('ItemMoveRequestFailed', () => {
   // A refusal is still an answer, so it times the same round trip.
   NetStats.markAnswered('itemMove');
+  const merge = Store.pendingStackMerge;
+  Store.pendingStackMerge = false;
   console.warn('ItemMoveRequestFailed - rolling the item back');
   Store.rollbackItemMove();
-  Store.addNotification(t('notify.cannotMoveItem'), 'error');
+  // A merge onto a stack is answered with this packet too (Store.pendingStackMerge): no error.
+  if (!merge) Store.addNotification(t('notify.cannotMoveItem'), 'error');
 });
 
 EventBus.on('ItemAddedToInventory', packet => {

@@ -412,6 +412,7 @@ export const Inventory = observer(() => {
         const square = squareAt(event.clientX, event.clientY);
         const entry = square >= 0 ? squares[square] : null;
         if (entry && entry.slot !== picked.fromSlot && mergesWith(picked.item, entry.item)) {
+          Store.pendingStackMerge = true;
           Store.placePickedItem(entry.slot);
           return;
         }

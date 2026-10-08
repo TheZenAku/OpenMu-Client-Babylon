@@ -34,12 +34,15 @@ function fitTransform(item: Item): string | undefined {
 }
 
 /**
- * MUIdle: items drawn larger than the original draws them. The Jewel of Chaos is drawn at
- * `o->Scale` 0.002 against the other jewels' 0.0035 (itemIconScale.ts), which left it a speck beside
- * them; the owner asked for it at the jewels' size, so it gets their scale.
+ * MUIdle: items drawn larger than the original draws them. The Jewel of Chaos is a thin crystal the
+ * original draws at `o->Scale` 0.002 against the other jewels' 0.0035 (itemIconScale.ts), which left
+ * it a speck beside them; the owner asked for it at the jewels' size. Measured on the pack's
+ * pictures, its opaque box is 15% of its picture's height against Bless' 20% (which the fit's zoom
+ * of 3.97 draws at 79% of the square), so it takes a zoom of 5.3 - 2.35 times its fit - to stand as
+ * tall as the other jewels.
  */
 const ICON_SIZE_OVERRIDE: Readonly<Record<string, number>> = {
-  '12_15': 0.0035 / 0.002,
+  '12_15': 2.35,
 };
 
 /**

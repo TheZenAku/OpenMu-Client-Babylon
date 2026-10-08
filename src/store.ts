@@ -1031,6 +1031,12 @@ export const Store = new (class _Store {
 
   pickedItem: PickedItem | null = null;
 
+  /**
+   * A carried stack was dropped on the same item to merge (D28). The server answers a merge with the
+   * move refusal (the carried item goes back), then removes or shrinks it - not an error to show.
+   */
+  pendingStackMerge = false;
+
   /** Q/W/E/R consumable kinds (`CNewUIItemHotKey`); unbound = the key's default potion. */
   itemHotkeys: ItemHotkey[] = Array.from({ length: HOTKEY_COUNT }, () => UNBOUND_HOTKEY);
 
