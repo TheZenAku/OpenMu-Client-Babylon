@@ -442,3 +442,41 @@
 .muidle-panel input[type='checkbox'] {
   accent-color: var(--v-blood-bright);
 }
+
+// The split dialog of the inventory (inventory/splitStack.tsx, Shift + click on a stack).
+.split-stack {
+  width: min(340px, calc(100vw - 32px));
+
+  .split-stack-item {
+    margin: 0 0 10px;
+    color: var(--v-text);
+
+    strong {
+      color: var(--v-gilt-bright);
+      font-family: var(--v-font-label);
+    }
+  }
+
+  .split-stack-amount {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    .vael-label();
+    font-size: 10px;
+
+    input {
+      .vael-well();
+      min-height: 36px;
+      padding: 0 10px;
+      color: var(--v-gilt-bright);
+      font: 600 16px var(--v-font-label);
+      letter-spacing: 0;
+    }
+  }
+
+  input[type='range'] {
+    width: 100%;
+    margin: 12px 0 4px;
+    accent-color: var(--v-blood-bright);
+  }
+}

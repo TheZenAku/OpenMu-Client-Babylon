@@ -116,3 +116,15 @@
     box-shadow: inset 0 0 0 1px rgba(255, 80, 60, 0.95);
   }
 }
+
+// The pieces of a stack in any item grid (vault, trade, chaos machine): as the inventory shows them.
+.mu-grid-item .mu-grid-stack {
+  position: absolute;
+  right: 1px;
+  bottom: 0;
+  font: 700 9px/9px var(--v-font-label);
+  letter-spacing: -0.02em;
+  color: var(--v-gilt-bright);
+  text-shadow: 1px 1px 0 #000, -1px 0 1px #000, 0 -1px 1px #000;
+  pointer-events: none;
+}

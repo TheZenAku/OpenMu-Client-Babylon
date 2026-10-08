@@ -7,6 +7,7 @@ import { Store } from '../../../store';
 import { ItemIcon } from '../itemIcon';
 import { ItemTooltip, type TooltipContext } from '../itemTooltip';
 import { MuSpriteFrame } from '../muSprite';
+import { stackCount } from '../../../common/itemStacks';
 import { MuTableFrame } from '../muWindow';
 import { stableKeyOf } from '../partyBars/stableKey';
 
@@ -218,6 +219,8 @@ const GridItem = memo(function GridItem({
       }}
     >
       <ItemIcon item={entry.item} />
+      {/* The pieces of a stack, as the inventory shows them (D28). */}
+      {stackCount(entry.item) > 1 && <span className="mu-grid-stack">{stackCount(entry.item)}</span>}
       {price !== undefined && (
         <span className={`mu-grid-price${price > 0 ? '' : ' unset'}`}>
           {price > 0 ? price.toLocaleString('en-US') : '?'}

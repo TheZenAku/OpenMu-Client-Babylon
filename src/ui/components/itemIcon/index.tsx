@@ -30,8 +30,17 @@ function fitTransform(item: Item): string | undefined {
   const fit = ITEM_ICON_FIT[levelKey];
   if (!fit) return undefined;
   const [zoom, dx, dy] = fit;
-  return `scale(${zoom}) translate(${dx * 100}%, ${dy * 100}%)`;
+  return `scale(${zoom * (ICON_SIZE_OVERRIDE[key] ?? 1)}) translate(${dx * 100}%, ${dy * 100}%)`;
 }
+
+/**
+ * MUIdle: items drawn larger than the original draws them. The Jewel of Chaos is drawn at
+ * `o->Scale` 0.002 against the other jewels' 0.0035 (itemIconScale.ts), which left it a speck beside
+ * them; the owner asked for it at the jewels' size, so it gets their scale.
+ */
+const ICON_SIZE_OVERRIDE: Readonly<Record<string, number>> = {
+  '12_15': 0.0035 / 0.002,
+};
 
 /**
  * An item's icon from the pre-rendered pack (itemIconPack.ts).

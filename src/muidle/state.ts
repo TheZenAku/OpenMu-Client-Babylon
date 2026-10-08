@@ -39,6 +39,7 @@ const SUB_LOCK_ITEM = 0x12;
 const SUB_HUNT_MODE = 0x13;
 const SUB_RESET = 0x14;
 const SUB_REQUEST_MIX_PREVIEW = 0x15;
+const SUB_SPLIT_STACK = 0x16;
 
 export type IdleSettings = {
   autoTravel: boolean;
@@ -375,6 +376,11 @@ class MUIdleStore {
   }
 
   /** Locks/unlocks the item in an inventory slot; the server answers with the new state. */
+  /** Split `amount` pieces off the stack in an inventory slot onto a free square (the server checks it all). */
+  splitStack(slot: number, amount: number): void {
+    this.send(SUB_SPLIT_STACK, { slot, amount });
+  }
+
   lockItem(slot: number, locked: boolean): void {
     this.send(SUB_LOCK_ITEM, { slot, locked });
   }

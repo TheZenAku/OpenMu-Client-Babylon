@@ -21,6 +21,8 @@ import {
   canRegisterItemHotkey,
 } from '../../../../../common/itemHotkeys';
 import { isUpgradeJewel } from '../../../../../common/jewelUpgrade';
+import { mergesWith, stackCount } from '../../../../../common/itemStacks';
+import { SplitStackDialog, type SplitRequest } from './splitStack';
 import {
   equipDestination,
   isEquipable,
@@ -164,11 +166,6 @@ function isConsumable(item: Item): boolean {
   return (n >= 0 && n <= 10) || (n >= 35 && n <= 40);
 }
 
-function stackCount(item: Item): number {
-  if (item.group !== POTION_GROUP) return 0;
-  return item.durability ?? 0;
-}
-
 const EquipmentSlot = observer(
   ({
     slot,
@@ -261,6 +258,7 @@ export const Inventory = observer(() => {
 
   const [target, setTarget] = useState<{ column: number; row: number } | null>(null);
   const [hover, setHover] = useState<HoverInfo | null>(null);
+  const [split, setSplit] = useState<SplitRequest | null>(null);
 
   const picked = Store.pickedItem;
   const pickedSize = picked ? itemSize(picked.item) : null;
@@ -408,6 +406,17 @@ export const Inventory = observer(() => {
     if (event.button !== 0) return;
 
     if (picked && pickedSize) {
+      // A stack dropped on the same item merges into it (the server's full / partial stack), before
+      // the jewel rule below would try to use one jewel on the other.
+      if (picked.fromStorage === StorageKind.Inventory) {
+        const square = squareAt(event.clientX, event.clientY);
+        const entry = square >= 0 ? squares[square] : null;
+        if (entry && entry.slot !== picked.fromSlot && mergesWith(picked.item, entry.item)) {
+          Store.placePickedItem(entry.slot);
+          return;
+        }
+      }
+
       // ApplyJewels (NewUIMyInventory.cpp:2055): a carried jewel clicked on
       // an occupied square is used on that item instead of moved.
       if (isUpgradeJewel(picked.item)) {
@@ -450,6 +459,12 @@ export const Inventory = observer(() => {
 
     if (event.ctrlKey) {
       QuickItemActions.fromInventory(entry.slot);
+      return;
+    }
+
+    // Shift + click on a stack: split pieces off it (D28) - the mixes take a set number of jewels.
+    if (event.shiftKey && stackCount(entry.item) > 1) {
+      setSplit({ slot: entry.slot, item: entry.item });
       return;
     }
 
@@ -708,6 +723,7 @@ export const Inventory = observer(() => {
 
       {}
       {}
+      {split && <SplitStackDialog request={split} onClose={() => setSplit(null)} />}
     </MuItemWindow>
   );
 });

@@ -115,14 +115,15 @@
       user-select: none;
     }
 
+    // The pieces of a stack - up to 255 since D28, so three digits in the corner.
     .stack {
       position: absolute;
       right: 1px;
       bottom: 0;
-      font-size: 10px;
-      line-height: 10px;
-      color: #ffd700;
-      text-shadow: 1px 1px 0 #000;
+      font: 700 9px/9px var(--v-font-label);
+      letter-spacing: -0.02em;
+      color: var(--v-gilt-bright);
+      text-shadow: 1px 1px 0 #000, -1px 0 1px #000, 0 -1px 1px #000;
     }
   }
 
