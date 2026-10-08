@@ -124,14 +124,11 @@ export const OptionsButton = ({
 
 const CHECK_SIZE = 16;
 
-/** `op2_ch`: frame 0 is the empty box, frame 1 the orange tick. */
+/** `op2_ch` in the Vael theme: the box a well, ticked in blood (`.vael-check`, ui/theme/vael-surfaces.less). */
 export const Checkbox = ({ checked }: { checked: boolean }) => (
-  <MuSpriteFrame
-    file="op2_ch.OZT"
-    y={checked ? CHECK_SIZE : 0}
-    width={CHECK_SIZE}
-    height={CHECK_SIZE}
-    style={{ flex: 'none' }}
+  <span
+    className={`vael-check${checked ? ' is-on' : ''}`}
+    style={{ width: CHECK_SIZE, height: CHECK_SIZE, flex: 'none' }}
   />
 );
 

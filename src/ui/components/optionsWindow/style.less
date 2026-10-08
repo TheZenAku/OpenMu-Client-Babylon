@@ -1,8 +1,10 @@
 @import (reference) '../muText/style.less';
+@import (reference) '../../theme/vael.less';
 
-@gold: #e8c877;
-@gold-dim: #b9a87e;
-@text: #e2e2e2;
+// The Vael theme's ink (ui/theme/vael.less).
+@gold: var(--v-gilt);
+@gold-dim: var(--v-gilt-dim);
+@text: var(--v-text);
 @shadow: 1px 1px 0 rgba(0, 0, 0, 0.85);
 
 .options-window-page {
@@ -30,11 +32,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ffffff;
-    font-size: 12px;
-    letter-spacing: 1px;
-    text-shadow: @shadow;
+    padding: 0 18px;
+    box-sizing: border-box;
     cursor: move;
+    .vael-ruled-title();
+  }
+
+  // The frame (OptionsFrame): one gilt-lined ink panel.
+  .vael-options-frame {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    pointer-events: none;
+    .vael-panel();
   }
 
   // The inset tables the rail, the page and the help strip sit in.
@@ -65,7 +76,7 @@
     border: 0;
     outline: none;
     background: transparent;
-    color: #ffffff;
+    color: var(--v-gilt-bright);
     font: inherit;
     font-size: 11px;
     text-shadow: @shadow;
@@ -85,7 +96,7 @@
     cursor: pointer;
 
     &:hover {
-      color: #ffffff;
+      color: var(--v-gilt-bright);
     }
   }
 
@@ -126,7 +137,7 @@
     pointer-events: auto;
 
     &:hover {
-      color: #ffffff;
+      color: var(--v-gilt-bright);
       background: linear-gradient(
         to right,
         rgba(232, 200, 119, 0.14),
@@ -135,7 +146,7 @@
     }
 
     &.is-active {
-      color: #ffffff;
+      color: var(--v-gilt-bright);
       font-weight: bold;
       background: linear-gradient(
         to right,
@@ -166,7 +177,7 @@
     position: absolute;
     display: flex;
     align-items: center;
-    color: #ffffff;
+    color: var(--v-gilt-bright);
     font-size: 13px;
     font-weight: bold;
     text-shadow: @shadow;
@@ -234,7 +245,7 @@
       pointer-events: auto;
 
       &:hover {
-        color: #ffffff;
+        color: var(--v-gilt-bright);
       }
     }
   }
@@ -337,7 +348,7 @@
     border: 1px solid rgba(232, 200, 119, 0.45);
     border-radius: 2px;
     background: rgba(12, 10, 8, 0.72);
-    color: #ffffff;
+    color: var(--v-gilt-bright);
     font-size: 11px;
     text-shadow: @shadow;
     white-space: nowrap;
@@ -364,7 +375,7 @@
     width: 96px;
 
     &.is-active {
-      border-color: #ffffff;
+      border-color: var(--v-gilt-bright);
       background: rgba(232, 200, 119, 0.25);
     }
   }
@@ -430,7 +441,7 @@
 
   .options-label {
     position: absolute;
-    color: #ffffff;
+    color: var(--v-gilt-bright);
     font-size: 11px;
     line-height: 1;
     text-shadow: @shadow;
@@ -478,7 +489,7 @@
     border: 1px solid rgba(232, 200, 119, 0.45);
     border-radius: 2px;
     background: rgba(12, 10, 8, 0.72);
-    color: #ffffff;
+    color: var(--v-gilt-bright);
     font-size: 11px;
     text-shadow: @shadow;
     white-space: nowrap;
@@ -530,7 +541,7 @@
     cursor: pointer;
 
     &:hover {
-      color: #ffffff;
+      color: var(--v-gilt-bright);
       background: rgba(232, 200, 119, 0.16);
     }
 
@@ -582,7 +593,7 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    color: #ffffff;
+    color: var(--v-gilt-bright);
     font-size: 11px;
     text-shadow: @shadow;
   }

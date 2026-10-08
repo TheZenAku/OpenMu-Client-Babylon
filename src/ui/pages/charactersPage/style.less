@@ -333,3 +333,29 @@
     bottom: calc(5.5% + 60px);
   }
 }
+
+// The creation window (CharMakeWin) in the Vael theme: its two panels as Vael panels (over the
+// inline fill of the original alpha), the stats and
+// the description in the body face, values in gilt; the class buttons and the name field are themed
+// by MuButton and MuSpriteFrame.
+.char-make-panel {
+  border: 1px solid var(--v-border);
+  background: var(--v-panel-gradient), oklch(11% 0.004 265 / 0.8) !important;
+}
+
+.char-make-stat,
+.char-make-desc {
+  color: var(--v-text);
+  font-family: var(--v-font-body);
+  text-shadow: 0 1px 2px #000;
+}
+
+.char-make-stat-value {
+  color: var(--v-gilt-bright);
+  font-family: var(--v-font-label);
+}
+
+.char-make-input {
+  color: var(--v-gilt-bright);
+  caret-color: var(--v-gilt);
+}

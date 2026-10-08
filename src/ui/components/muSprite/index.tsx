@@ -126,6 +126,8 @@ const SURFACES: Record<string, string> = {
   'newui_item_box.OZT': 'cell',
   'newui_item_money.OZT': 'money',
   'newui_item_money2.OZT': 'money',
+  'cha_id.OZT': 'well',
+  'login_me.OZT': 'well',
   'newui_cha_textbox02.OZT': 'bar',
   'newui_myquest_Line.OZT': 'rule',
   'newui_commamd_Line.OZJ': 'rule',

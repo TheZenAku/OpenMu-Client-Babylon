@@ -31,6 +31,11 @@
   }
 }
 
+// A text field (the character name, the login fields).
+.vael-surface-well {
+  .vael-well();
+}
+
 // A stat's name plate (character window).
 .vael-surface-bar {
   background: linear-gradient(180deg, oklch(22% 0.008 265), oklch(15% 0.005 265));
@@ -92,4 +97,25 @@
   position: absolute;
   inset: 0;
   .vael-panel();
+}
+
+// A checkbox: a well, ticked in blood (the login window's and the options window's `op2_ch`).
+.vael-check {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--v-border-strong);
+  background: var(--v-sunken);
+
+  &.is-on {
+    background: var(--v-blood-bright);
+
+    &::after {
+      content: '✓';
+      color: var(--v-gilt-bright);
+      font-size: 11px;
+      line-height: 1;
+    }
+  }
 }

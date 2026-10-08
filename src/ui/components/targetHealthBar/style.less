@@ -47,3 +47,15 @@
     position: absolute;
   }
 }
+
+// Vael theme (ui/theme/vael.less): the name plate in blood with a gilt hairline and the serif name,
+// on the original's line height so the bar under it stays where it was.
+.target-health-bar .target-name {
+  padding: 0 8px;
+  border: 1px solid var(--v-border);
+  background: linear-gradient(90deg, var(--v-blood-deep), var(--v-blood), var(--v-blood-deep));
+  color: var(--v-gilt-bright);
+  font-family: var(--v-font-display);
+  font-size: 13px;
+  font-weight: 700;
+}

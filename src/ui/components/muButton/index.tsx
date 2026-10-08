@@ -47,6 +47,7 @@ const THEMED: Record<string, { glyph?: string; primary?: boolean }> = {
   'newui_btn_empty_small.OZT': {},
   'newui_btn_empty_big.OZT': {},
   'newui_guild_tab04.OZT': {},
+  'op1_b_all.OZT': {},
   // The five buttons of the main bar (their tooltips name them).
   'partCharge1/newui_menu_Bt05.OZJ': { glyph: '⚖' },
   'partCharge1/newui_menu_Bt01.OZJ': { glyph: '♜' },
@@ -93,9 +94,11 @@ export const MuButton = ({
         style={{ position: 'relative', width, height, ...style }}
         onClick={disabled ? undefined : uiClick(onClick)}
       >
-        <span className="vael-btn-label" style={{ ...(color ? { color } : {}), ...labelStyle }}>
-          {label ?? themed?.glyph}
-        </span>
+        {(label ?? themed?.glyph) !== undefined && (
+          <span className="vael-btn-label" style={{ ...(color ? { color } : {}), ...labelStyle }}>
+            {label ?? themed?.glyph}
+          </span>
+        )}
         {children}
       </div>
     );

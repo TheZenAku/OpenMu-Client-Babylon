@@ -7,3 +7,9 @@
   pointer-events: none;
   user-select: none;
 }
+
+// Vael theme (ui/theme/vael.less): the localized picture keeps its lettering and is toned from the
+// original's silver to the reference's gilt, with a soft shadow to lift it off bright ground.
+.map-name-banner {
+  filter: grayscale(1) sepia(1) saturate(1.6) hue-rotate(-6deg) brightness(1.05) drop-shadow(0 3px 10px oklch(0% 0 0 / 0.8));
+}
