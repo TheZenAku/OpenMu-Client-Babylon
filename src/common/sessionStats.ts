@@ -17,6 +17,10 @@ const MS_PER_MINUTE = 60_000;
 
 /** The span the "now" rates look back over (the HUD's XP / min and kills / min). */
 const RECENT_MS = 120_000;
+/** No experience for this long and nothing is being killed: the rates "now" read nothing. */
+const IDLE_MS = 30_000;
+/** The shortest span a rate is read over, so the first kill of a run does not read as a flood. */
+const MIN_SPAN_MS = 15_000;
 
 export const SessionStats = new (class _SessionStats {
   /** Wall clock of the last reset. */
@@ -29,7 +33,11 @@ export const SessionStats = new (class _SessionStats {
   zen = 0;
 
   /** The gains of the last `RECENT_MS`, for the rates "now". */
-  recent: { at: number; experience: number; kill: boolean }[] = [];
+  recent: { at: number; experience: number; kill: boolean; zen: number }[] = [];
+  /** When the current run of kills began: the first experience after a pause. */
+  runStartedAt = 0;
+  /** The last experience gained; the rates "now" stop `IDLE_MS` after it. */
+  lastGainAt = Number.NEGATIVE_INFINITY;
 
   private money = 0;
   private watching = false;
@@ -60,10 +68,19 @@ export const SessionStats = new (class _SessionStats {
     return this.perHour(this.zen);
   }
 
-  /** Over the last two minutes (or the session, when it is younger): what is happening now. */
-  private perMinuteNow(pick: (gain: { experience: number; kill: boolean }) => number): number {
-    const span = Math.min(RECENT_MS, this.elapsedMs);
-    if (span < 15_000) return 0;
+  /** Experience came in lately: something is being killed. */
+  get active(): boolean {
+    return this.now - this.lastGainAt < IDLE_MS;
+  }
+
+  /**
+   * Over the last two minutes of the current run of kills (or the run, when it is younger): what is
+   * happening now. Nothing while nothing is killed - the old session-long window kept an XP / min up
+   * with HUNT off.
+   */
+  private perMinuteNow(pick: (gain: { experience: number; kill: boolean; zen: number }) => number): number {
+    if (!this.active) return 0;
+    const span = Math.max(MIN_SPAN_MS, Math.min(RECENT_MS, this.now - this.runStartedAt));
     const since = this.now - span;
     let total = 0;
     for (const gain of this.recent) if (gain.at >= since) total += pick(gain);
@@ -78,14 +95,15 @@ export const SessionStats = new (class _SessionStats {
     return this.perMinuteNow(gain => (gain.kill ? 1 : 0));
   }
 
+  /** The zen picked up while killing, at the rate now. */
   get zenPerMinute(): number {
-    return this.zenPerHour / 60;
+    return this.perMinuteNow(gain => gain.zen);
   }
 
-  /** The next level at the rate now, else the session's; null when there is nothing to go on. */
+  /** The next level at the rate now; null while nothing is being killed. */
   get msToLevelNow(): number | null {
     const now = this.experiencePerMinuteNow;
-    if (now <= 0) return this.msToLevel;
+    if (now <= 0) return null;
     const { exp, expToNextLvl } = Store.playerData;
     const remaining = expToNextLvl - exp;
     return remaining > 0 ? (remaining / now) * MS_PER_MINUTE : null;
@@ -114,7 +132,17 @@ export const SessionStats = new (class _SessionStats {
       this.kills = 0;
       this.zen = 0;
       this.recent = [];
+      this.runStartedAt = 0;
+      this.lastGainAt = Number.NEGATIVE_INFINITY;
       this.money = Store.playerData.money;
+    });
+  }
+
+  /** HUNT stopped: the rates "now" end with it rather than fade over the window. */
+  pause(): void {
+    runInAction(() => {
+      this.recent = [];
+      this.lastGainAt = Number.NEGATIVE_INFINITY;
     });
   }
 
@@ -144,7 +172,10 @@ export const SessionStats = new (class _SessionStats {
         // The killing blow is the client's own (`quests/killCounters.ts`
         // reads the same field); a share from a party mate carries none.
         if (killedNetId) this.kills++;
-        this.recent.push({ at: Date.now(), experience: added, kill: !!killedNetId });
+        const at = Date.now();
+        if (at - this.lastGainAt >= IDLE_MS) this.runStartedAt = at;
+        this.lastGainAt = at;
+        this.recent.push({ at, experience: added, kill: !!killedNetId, zen: 0 });
       });
     });
 
@@ -156,7 +187,11 @@ export const SessionStats = new (class _SessionStats {
       money => {
         const gained = money - this.money;
         this.money = money;
-        if (gained > 0) runInAction(() => (this.zen += gained));
+        if (gained <= 0) return;
+        runInAction(() => {
+          this.zen += gained;
+          this.recent.push({ at: Date.now(), experience: 0, kill: false, zen: gained });
+        });
       }
     );
 

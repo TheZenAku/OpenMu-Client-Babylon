@@ -838,13 +838,9 @@ export const Store = new (class _Store {
         'info'
       );
     }
-    // `[MU Helper] Started` / `Stopped` (MuHelper.cpp:116/122) go to the console log.
-    if (changed) {
-      this.addNotification(
-        t(active ? 'notify.helperStarted' : 'notify.helperStopped'),
-        'info'
-      );
-    }
+    // `[MU Helper] Started` / `Stopped` (MuHelper.cpp:116/122) are not shown: HUNT turns the helper on
+    // and off on its own (after a walk, a warp, a death), and the owner asked for no popups (D29) - the
+    // HUNT pill tells the state.
   }
 
   /**

@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
+import { reaction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { SessionStats } from '../../../../../common/sessionStats';
+import { MUIdle } from '../../../../../muidle/state';
 import { mt } from '../../../../../muidle/text';
 import { formatNumber } from '../playerFrame';
 
@@ -20,15 +22,22 @@ const Row = ({ label, value, accent }: { label: string; value: string; accent?: 
 );
 
 /**
- * The rates side of the bottom bar (the owner's reference): experience and kills per minute now (the
- * last two minutes), zen per minute over the sitting, and when the next level comes at the rate now.
+ * The rates side of the bottom bar (the owner's reference): experience, kills and zen per minute now (the
+ * last two minutes of the run of kills, nothing while idle), and when the next level comes at that rate.
  * Counted by SessionStats from the packets the client already handles; it ticks while on screen.
  */
 export const StatsPanel = observer(({ left, width, height }: { left: number; width: number; height: number }) => {
   useEffect(() => {
     SessionStats.watch();
     const timer = window.setInterval(() => SessionStats.tick(), 1000);
-    return () => window.clearInterval(timer);
+    const stopped = reaction(
+      () => MUIdle.hunting,
+      hunting => !hunting && SessionStats.pause()
+    );
+    return () => {
+      window.clearInterval(timer);
+      stopped();
+    };
   }, []);
 
   const eta = SessionStats.msToLevelNow;

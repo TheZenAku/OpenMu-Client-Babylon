@@ -84,6 +84,9 @@ export function useWindowChrome(
     if (target.closest('[data-no-drag]')) return;
 
     const root = event.currentTarget as HTMLElement;
+    // React bubbles a portal's events through its owner, so a dialog a window opens on the body (the
+    // stack split) would start a drag here and capture the pointer away from its own buttons.
+    if (!root.contains(target)) return;
     const rect = root.getBoundingClientRect();
 
     dragging.current = {

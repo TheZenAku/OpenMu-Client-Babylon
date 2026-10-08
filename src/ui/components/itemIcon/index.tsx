@@ -4,6 +4,7 @@ import type { Item } from '../../../ecs/world';
 import { itemIconKey, itemIconPackChain } from '../../../common/itemIconPack';
 import { ITEM_ICON_FIT } from '../../../common/itemIconFit';
 import { itemLevelLook } from '../../../common/itemLevelLook';
+import { smoothedIcon, smoothIcon } from '../../../common/itemIconSmooth';
 
 /**
  * `<img fetchpriority>` is not a React 18 prop (it arrives with React 19), so
@@ -63,8 +64,20 @@ export const ItemIcon = memo(
       setFallbackStep(0);
     }, [key]);
     const chain = itemIconPackChain(item);
+    const src = chain[fallbackStep] as string | undefined;
+    // The smoothed picture once it is made (itemIconSmooth.ts); the pack's own until then.
+    const smoothed = src ? smoothedIcon(src) : null;
+    const [, setSmoothedReady] = useState(0);
+    useEffect(() => {
+      if (!src || smoothed !== undefined) return;
+      let live = true;
+      void smoothIcon(src).then(() => live && setSmoothedReady(n => n + 1));
+      return () => {
+        live = false;
+      };
+    }, [src, smoothed]);
 
-    if (fallbackStep >= chain.length) {
+    if (!src) {
       return (
         <div
           className="item-icon item-icon-missing"
@@ -75,7 +88,7 @@ export const ItemIcon = memo(
 
     return (
       <img
-        src={chain[fallbackStep]}
+        src={smoothed || src}
         className="item-icon"
         style={{ transform: fitTransform(item) }}
         alt=""

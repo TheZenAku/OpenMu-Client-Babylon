@@ -45,8 +45,19 @@ const VARIANT_BIT: Readonly<Record<Variant, number>> = {
   _a: ITEM_ICON_TINTS.length * 2,
 };
 
+/**
+ * Pack pictures replaced after release, by file: a new address, since the old one is held for a day
+ * by the HTTP cache (`max-age`) and for good by the download screen's worker cache (`sw.js`).
+ */
+const REVISED: Readonly<Record<string, number>> = {
+  // MUIdle (D29): the Jewel of Life without the original's orange colour pass.
+  item_14_16_0: 2,
+};
+
 function packUrl(group: number, num: number, tint: number, variant: Variant): string {
-  return `/items/item_${group}_${num}_${tint}${variant}.png`;
+  const file = `item_${group}_${num}_${tint}${variant}`;
+  const revision = REVISED[file];
+  return `/items/${file}.png${revision ? `?r=${revision}` : ''}`;
 }
 
 /** Whether `public/items` holds this exact file (per the generated manifest). */
