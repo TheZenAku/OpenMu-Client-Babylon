@@ -332,12 +332,32 @@
     top: auto;
     bottom: calc(5.5% + 60px);
   }
+
+  // The four buttons (placed for a wide screen by index.tsx) share the width in a row; the status
+  // line gives way to the record above.
+  .char-sel-bar {
+    left: 12px;
+    right: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+
+    > .vael-btn {
+      position: relative !important;
+      left: auto !important;
+      right: auto !important;
+      width: auto !important;
+    }
+
+    .char-sel-status {
+      display: none;
+    }
+  }
 }
 
 // The creation window (CharMakeWin) in the Vael theme: its two panels as Vael panels (over the
-// inline fill of the original alpha), the stats and
-// the description in the body face, values in gilt; the class buttons and the name field are themed
-// by MuButton and MuSpriteFrame.
+// inline fill of the original alpha), the stats and the description in the body face, values in
+// gilt; the class buttons and the name field are themed by MuButton and MuSpriteFrame.
 .char-make-panel {
   border: 1px solid var(--v-border);
   background: var(--v-panel-gradient), oklch(11% 0.004 265 / 0.8) !important;
