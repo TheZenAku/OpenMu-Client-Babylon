@@ -120,13 +120,15 @@ type MuSpriteFrameProps = {
  * The Vael theme (the owner's reference, ui/theme/vael-surfaces.less) for the original's window
  * chrome: these sheets are drawn as CSS surfaces of the same size and place - a grid square as an
  * ink cell, a text box as a well, a separator as a gilt rule - and their picture is not loaded.
- * `tint` keeps the picture (an equipment slot's silhouette) and tones it to the gilt.
+ * `tint` keeps the picture (an equipment slot's silhouette) and tones it to the gilt, `gild` too but
+ * brighter (a selection arrow); `check` is a checkbox whose second frame (y > 0) is the ticked one.
  */
 const SURFACES: Record<string, string> = {
   'newui_item_box.OZT': 'cell',
   'newui_item_money.OZT': 'money',
   'newui_item_money2.OZT': 'money',
   'cha_id.OZT': 'well',
+  'newui_chat_back.OZJ': 'chatbar',
   'login_me.OZT': 'well',
   'newui_cha_textbox02.OZT': 'bar',
   'newui_myquest_Line.OZT': 'rule',
@@ -145,6 +147,12 @@ const SURFACES: Record<string, string> = {
   'newui_guild_tab03.OZT': 'head',
   'newui_Party_Lifebar01.OZJ': 'gauge',
   'newui_Party_Lifebar02.OZJ': 'gauge-fill',
+  'op2_volume1.OZT': 'gauge',
+  'op2_volume2.OZJ': 'gauge-fill',
+  'op2_volume3.OZT': 'knob',
+  'op2_ch.OZT': 'check',
+  'newui_arrow(L).OZT': 'gild',
+  'newui_arrow(R).OZT': 'gild',
   'newui_item_cap.OZT': 'tint',
   'newui_item_upper.OZT': 'tint',
   'newui_item_lower.OZT': 'tint',
@@ -178,12 +186,13 @@ export const MuSpriteFrame = memo(function MuSpriteFrame({
   children,
 }: MuSpriteFrameProps) {
   const surface = SURFACES[file];
-  const drawn = !surface || surface === 'tint';
+  const drawn = !surface || surface === 'tint' || surface === 'gild';
+  const state = surface === 'check' ? ` vael-check${y > 0 ? ' is-on' : ''}` : '';
   const sprite = useMuSprite(drawn ? file : undefined);
 
   return (
     <div
-      className={surface ? `vael-surface vael-surface-${surface}${className ? ` ${className}` : ''}` : className}
+      className={surface ? `vael-surface vael-surface-${surface}${state}${className ? ` ${className}` : ''}` : className}
       title={title}
       onClick={onClick}
       data-no-drag={noDrag ? 'true' : undefined}

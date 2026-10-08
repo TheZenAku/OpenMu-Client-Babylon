@@ -189,3 +189,22 @@
     text-align: center;
   }
 }
+
+// Vael theme (ui/theme/vael.less): the menu buttons as tiles with the bar's glyphs.
+@import (reference) '../../../../theme/vael.less';
+
+.mobile-controls .vael-mobile-tile {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .vael-tile();
+  background: oklch(13% 0.004 265 / 0.92);
+  color: var(--v-gilt);
+  font-size: 24px;
+  line-height: 1;
+
+  &.is-pressed {
+    .vael-tile-active();
+  }
+}

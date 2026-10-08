@@ -36,6 +36,12 @@
   .vael-well();
 }
 
+// The chat input box (its strip buttons are Vael tiles, chat/index.tsx): an ink panel; its two fields
+// are wells (chat/style.less).
+.vael-surface-chatbar {
+  .vael-panel();
+}
+
 // A stat's name plate (character window).
 .vael-surface-bar {
   background: linear-gradient(180deg, oklch(22% 0.008 265), oklch(15% 0.005 265));
@@ -113,10 +119,23 @@
   background: var(--v-blood-gradient);
 }
 
+// A slider's knob (the options window's volumes): a gilt bead.
+.vael-surface-knob {
+  border-radius: 50%;
+  border: 1px solid oklch(30% 0.04 78);
+  background: radial-gradient(circle at 35% 30%, var(--v-gilt-bright), var(--v-gilt) 55%, oklch(45% 0.07 75));
+  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.6);
+}
+
 // An equipment slot's silhouette, toned from the original's steel to the gilt.
 .vael-surface-tint {
   filter: grayscale(1) sepia(1) brightness(0.5) contrast(1.25);
   opacity: 0.85;
+}
+
+// A selection arrow, toned from the original's yellow to a bright gilt.
+.vael-surface-gild {
+  filter: grayscale(1) sepia(1) saturate(1.4) brightness(1.15);
 }
 
 // MsgBoxFrame's three slices, as one panel.

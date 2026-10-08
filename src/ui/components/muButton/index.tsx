@@ -48,6 +48,28 @@ const THEMED: Record<string, { glyph?: string; primary?: boolean }> = {
   'newui_btn_empty_big.OZT': {},
   'newui_guild_tab04.OZT': {},
   'op1_b_all.OZT': {},
+  'newui_btn_empty_very_small.OZT': {},
+  'mini_map_ui_cancel.OZT': { glyph: '✕' },
+  'new_Master_exit.OZJ': { glyph: '✕' },
+  'newui_Bt_closeshop.OZT': { glyph: '✕' },
+  'newui_Bt_money01.OZT': { glyph: '⇩' },
+  'newui_Bt_money02.OZT': { glyph: '⇧' },
+  'newui_Bt_openshop.OZT': { glyph: '⚖' },
+  'newui_expansion_btn.OZT': { glyph: '+' },
+  'newui_Bt_mix.OZT': { glyph: '⚗', primary: true },
+  'newui_Bt_accept.OZT': { glyph: '✓', primary: true },
+  'Quest_Bt_open.OZT': { glyph: '☰' },
+  'Quest_Bt_cast.OZT': { glyph: '⚑' },
+  'newui_chainfo_btn_quest.OZT': { glyph: '✦' },
+  'newui_chainfo_btn_pet.OZT': { glyph: '♞' },
+  'newui_chainfo_btn_master.OZT': { glyph: '✪' },
+  'newui_chat_btn_size.OZJ': { glyph: '⇕' },
+  'newui_chat_btn_alpha.OZJ': { glyph: '◐' },
+  // The chat log's filter tabs: marks like the input strip's (chat/index.tsx).
+  'newui_Bt_Chat_normal.OZJ': { glyph: 'ALL' },
+  'newui_Bt_Chat_party.OZJ': { glyph: 'PT' },
+  'newui_Bt_Chat_guild.OZJ': { glyph: 'GLD' },
+  'newui_Bt_Chat_system.OZJ': { glyph: 'SYS' },
   // The five buttons of the main bar (their tooltips name them).
   'partCharge1/newui_menu_Bt05.OZJ': { glyph: '⚖' },
   'partCharge1/newui_menu_Bt01.OZJ': { glyph: '♜' },
@@ -55,6 +77,11 @@ const THEMED: Record<string, { glyph?: string; primary?: boolean }> = {
   'partCharge1/newui_menu_Bt03.OZJ': { glyph: '✉' },
   'partCharge1/newui_menu_Bt04.OZJ': { glyph: '⚙' },
 };
+
+/** The Vael glyph a sprite button is drawn with, if any (the touch menu draws the same ones). */
+export function themedGlyph(file: string): string | undefined {
+  return THEMED[file]?.glyph;
+}
 
 export const MuButton = ({
   file,
@@ -79,7 +106,8 @@ export const MuButton = ({
   if (themed || label) {
     const classes = [
       'vael-btn',
-      themed?.glyph && !label ? 'vael-btn-glyph' : '',
+      // A one-character glyph is drawn large; a short mark ('ALL') reads as a label.
+      themed?.glyph && !label && [...themed.glyph].length === 1 ? 'vael-btn-glyph' : '',
       themed?.primary || primary ? 'vael-btn-primary' : '',
       checked ? 'vael-btn-checked' : '',
       disabled ? 'vael-btn-disabled' : '',

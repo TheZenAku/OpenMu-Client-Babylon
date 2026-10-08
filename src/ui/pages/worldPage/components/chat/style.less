@@ -507,3 +507,39 @@ html:not(.mu-mobile) .chat-line {
     background-position: 0 50%;
   }
 }
+
+// Vael theme (ui/theme/vael.less): the input box is a panel (MuSpriteFrame surface), its strip buttons
+// are tiles with a spaced mark - blood when on - and its two fields are wells.
+@import (reference) '../../../../theme/vael.less';
+
+.chat-input {
+  .vael-strip-button {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid oklch(77% 0.09 78 / 0.16);
+    background: oklch(13% 0.004 265 / 0.9);
+    color: var(--v-gilt-dim);
+    font: 600 8px/1 var(--v-font-label);
+    letter-spacing: 0.06em;
+
+    &:hover {
+      color: var(--v-gilt-bright);
+      border-color: var(--v-border-strong);
+    }
+
+    &.is-on {
+      .vael-tile-active();
+    }
+  }
+
+  .chat-field {
+    box-sizing: border-box;
+    padding: 0 3px;
+    background: var(--v-sunken);
+    border: 1px solid var(--v-border);
+    color: var(--v-text);
+    caret-color: var(--v-gilt);
+  }
+}

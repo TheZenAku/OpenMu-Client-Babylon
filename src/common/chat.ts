@@ -371,26 +371,24 @@ export const CHAT_LOG_LINES_STEP = 3;
 export const CHAT_LOG_DEFAULT_ALPHA = 0.6;
 
 /**
- * Text / background per type, `RenderMessages` (NewUIChatLogWindow.cpp:108).
- * Alpha is the original's byte over 255.
+ * Text / background per type, `RenderMessages` (NewUIChatLogWindow.cpp:108) - in the Vael theme's ink:
+ * every line on a dark ground, the type told by its colour (the original's bright party / guild /
+ * whisper grounds became a tint of the same hue under a light text).
  */
 export const CHAT_LINE_STYLE: Record<
   ChatLineType,
   { color: string; bg: string }
 > = {
-  [ChatLineType.All]: { color: 'rgb(205,220,239)', bg: 'rgba(0,0,0,0.59)' },
-  [ChatLineType.Chat]: { color: 'rgb(205,220,239)', bg: 'rgba(0,0,0,0.59)' },
-  [ChatLineType.Whisper]: { color: 'rgb(0,0,0)', bg: 'rgba(255,200,50,0.59)' },
-  [ChatLineType.System]: {
-    color: 'rgb(100,150,255)',
-    bg: 'rgba(0,0,0,0.59)',
-  },
-  [ChatLineType.Error]: { color: 'rgb(255,30,0)', bg: 'rgba(0,0,0,0.59)' },
-  [ChatLineType.Party]: { color: 'rgb(0,0,0)', bg: 'rgba(0,200,255,0.59)' },
-  [ChatLineType.Guild]: { color: 'rgb(0,0,0)', bg: 'rgba(0,255,150,0.78)' },
-  [ChatLineType.Union]: { color: 'rgb(0,0,0)', bg: 'rgba(200,200,0,0.78)' },
-  [ChatLineType.Gens]: { color: 'rgb(0,0,0)', bg: 'rgba(150,200,100,0.78)' },
-  [ChatLineType.GM]: { color: 'rgb(250,200,50)', bg: 'rgba(30,30,30,0.78)' },
+  [ChatLineType.All]: { color: 'oklch(88% 0.02 250)', bg: 'oklch(11% 0.004 265 / 0.62)' },
+  [ChatLineType.Chat]: { color: 'oklch(88% 0.02 250)', bg: 'oklch(11% 0.004 265 / 0.62)' },
+  [ChatLineType.Whisper]: { color: 'oklch(88% 0.11 85)', bg: 'oklch(24% 0.05 80 / 0.75)' },
+  [ChatLineType.System]: { color: 'oklch(74% 0.1 255)', bg: 'oklch(11% 0.004 265 / 0.62)' },
+  [ChatLineType.Error]: { color: 'oklch(66% 0.2 28)', bg: 'oklch(11% 0.004 265 / 0.62)' },
+  [ChatLineType.Party]: { color: 'oklch(84% 0.1 220)', bg: 'oklch(22% 0.05 225 / 0.75)' },
+  [ChatLineType.Guild]: { color: 'oklch(84% 0.13 160)', bg: 'oklch(22% 0.05 160 / 0.75)' },
+  [ChatLineType.Union]: { color: 'oklch(86% 0.12 105)', bg: 'oklch(22% 0.05 105 / 0.75)' },
+  [ChatLineType.Gens]: { color: 'oklch(84% 0.1 135)', bg: 'oklch(22% 0.05 135 / 0.75)' },
+  [ChatLineType.GM]: { color: 'oklch(88% 0.11 85)', bg: 'oklch(24% 0.09 22 / 0.85)' },
 };
 
 /** The log's filter tabs (`newui_Bt_Chat_*`): which types each one shows. */

@@ -43,7 +43,7 @@ export const NOTICE_STYLE: Record<number, { color: string; blink: boolean }> = {
   [NoticeColor.Guild]: { color: 'rgb(100,255,200)', blink: false },
 };
 
-export const NOTICE_BACKGROUND = 'rgba(0,0,0,0.5)';
+export const NOTICE_BACKGROUND = 'oklch(11% 0.004 265 / 0.72)';
 
 /** `GlobalText[483]`. */
 export const GUILD_NOTICE_FORMAT: TextKey = 'guild.notice.prefix';

@@ -8,6 +8,7 @@ import {
   MAIN_FRAME_BUTTON_WIDTH,
 } from '../bottomBar/mainFrameButtons';
 import { MobileButton, ScaledFrame } from './mobileButton';
+import { themedGlyph } from '../../../../components/muButton';
 import { MENU_SCALE } from './consts';
 
 /**
@@ -34,18 +35,31 @@ export const MenuCluster = observer(() => {
           title={t(button.titleKey)}
           onTap={button.toggle}
         >
-          {pressed => (
-            <ScaledFrame
-              file={button.file}
-              y={
-                (pressed ? MAIN_FRAME_BUTTON_FRAMES.down : MAIN_FRAME_BUTTON_FRAMES.up) *
-                MAIN_FRAME_BUTTON_HEIGHT
-              }
-              width={MAIN_FRAME_BUTTON_WIDTH}
-              height={MAIN_FRAME_BUTTON_HEIGHT}
-              scale={MENU_SCALE}
-            />
-          )}
+          {pressed =>
+            // The Vael theme's tile with the bar's glyph; the sprite only for a button without one.
+            themedGlyph(button.file) ? (
+              <div
+                className={`mobile-scaled vael-mobile-tile${pressed ? ' is-pressed' : ''}`}
+                style={{
+                  width: MAIN_FRAME_BUTTON_WIDTH * MENU_SCALE,
+                  height: MAIN_FRAME_BUTTON_HEIGHT * MENU_SCALE,
+                }}
+              >
+                {themedGlyph(button.file)}
+              </div>
+            ) : (
+              <ScaledFrame
+                file={button.file}
+                y={
+                  (pressed ? MAIN_FRAME_BUTTON_FRAMES.down : MAIN_FRAME_BUTTON_FRAMES.up) *
+                  MAIN_FRAME_BUTTON_HEIGHT
+                }
+                width={MAIN_FRAME_BUTTON_WIDTH}
+                height={MAIN_FRAME_BUTTON_HEIGHT}
+                scale={MENU_SCALE}
+              />
+            )
+          }
         </MobileButton>
       ))}
     </div>

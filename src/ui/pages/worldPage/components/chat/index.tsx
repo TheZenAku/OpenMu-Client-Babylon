@@ -117,17 +117,19 @@ const SCROLL_MIDDLE_PART_HEIGHT = 15;
 const SCROLL_BTN_WIDTH = 15;
 const SCROLL_BTN_HEIGHT = 30;
 
+// The Vael theme draws the input box as a surface (MuSpriteFrame) and the strip's buttons as tiles
+// with these marks, where the original's back art carried their pictures (`newui_chat_*_on` lit them).
 const BACK_SPRITE = 'newui_chat_back.OZJ';
-const MODE_ON_SPRITE: Record<ChatInputMode, string> = {
-  normal: 'newui_chat_normal_on.OZJ',
-  party: 'newui_chat_party_on.OZJ',
-  guild: 'newui_chat_guild_on.OZJ',
-  gens: 'newui_chat_gens_on.OZJ',
+const MODE_GLYPH: Record<ChatInputMode, string> = {
+  normal: 'ALL',
+  party: 'PT',
+  guild: 'GLD',
+  gens: 'GNS',
 };
-const WHISPER_ON_SPRITE = 'newui_chat_whisper_on.OZJ';
-const SYSTEM_ON_SPRITE = 'newui_chat_system_on.OZJ';
-const CHATLOG_ON_SPRITE = 'newui_chat_chat_on.OZJ';
-const FRAME_ON_SPRITE = 'newui_chat_frame_on.OZJ';
+const WHISPER_GLYPH = '⊘';
+const SYSTEM_GLYPH = 'SYS';
+const CHATLOG_GLYPH = '▤';
+const FRAME_GLYPH = '▢';
 const SIZE_SPRITE = 'newui_chat_btn_size.OZJ';
 const ALPHA_SPRITE = 'newui_chat_btn_alpha.OZJ';
 const DRAG_SPRITE = 'newui_Scrollbar_stretch.OZJ';
@@ -160,12 +162,12 @@ const FILTER_TAB_Y = -(RESIZING_BTN_HEIGHT + BUTTON_HEIGHT);
 
 /** `m_bPointedMessage`: the line under the cursor, ready for a right-click whisper. */
 const POINTED_LINE_STYLE: CSSProperties = {
-  color: 'rgb(255,128,255)',
-  backgroundColor: 'rgba(30,30,30,0.7)',
+  color: 'oklch(80% 0.14 330)',
+  backgroundColor: 'oklch(18% 0.03 330 / 0.8)',
 };
 /** `RenderMessages`: a chat line's bg alpha is 150 plain, 100 with the frame. */
-const CHAT_LINE_BG_PLAIN = `rgba(0,0,0,${150 / 255})`;
-const CHAT_LINE_BG_FRAMED = `rgba(0,0,0,${100 / 255})`;
+const CHAT_LINE_BG_PLAIN = 'oklch(11% 0.004 265 / 0.6)';
+const CHAT_LINE_BG_FRAMED = 'oklch(11% 0.004 265 / 0.4)';
 
 /** One style object per (type, framed), built once: the log re-renders per line. */
 const LINE_STYLES = new Map<string, CSSProperties>();
@@ -591,26 +593,26 @@ const ChatLog = observer(() => {
 const StripButton = ({
   x,
   on,
-  sprite,
+  glyph,
   tip,
   onClick,
   setTip,
 }: {
   x: number;
   on: boolean;
-  sprite: string;
+  glyph: string;
   tip: string;
   onClick: () => void;
   setTip: (tip: { text: string; x: number } | null) => void;
 }) => (
   <div
-    className="chat-strip-button"
+    className={`chat-strip-button vael-strip-button${on ? ' is-on' : ''}`}
     style={{ left: x, top: 0, width: BUTTON_WIDTH, height: BUTTON_HEIGHT }}
     onMouseEnter={() => setTip({ text: tip, x: x + 10 })}
     onMouseLeave={() => setTip(null)}
     onClick={uiClick(onClick)}
   >
-    {on && <MuSpriteFrame file={sprite} width={BUTTON_WIDTH} height={BUTTON_HEIGHT} />}
+    {glyph}
   </div>
 );
 
@@ -816,7 +818,7 @@ const ChatInput = observer(() => {
           key={m}
           x={INPUT_TYPE_START_X + i * BUTTON_WIDTH}
           on={mode === m}
-          sprite={MODE_ON_SPRITE[m]}
+          glyph={MODE_GLYPH[m]}
           tip={t(TOOLTIP_KEYS[m])}
           onClick={() => setMode(m)}
           setTip={setTip}
@@ -825,7 +827,7 @@ const ChatInput = observer(() => {
       <StripButton
         x={BLOCK_WHISPER_START_X}
         on={Social.blockWhisper}
-        sprite={WHISPER_ON_SPRITE}
+        glyph={WHISPER_GLYPH}
         tip={t(TOOLTIP_KEYS.whisper)}
         onClick={() => Social.toggle('blockWhisper')}
         setTip={setTip}
@@ -833,7 +835,7 @@ const ChatInput = observer(() => {
       <StripButton
         x={SYSTEM_ON_START_X}
         on={Social.showSystemMessages}
-        sprite={SYSTEM_ON_SPRITE}
+        glyph={SYSTEM_GLYPH}
         tip={t(TOOLTIP_KEYS.system)}
         onClick={() => Social.toggle('showSystemMessages')}
         setTip={setTip}
@@ -841,7 +843,7 @@ const ChatInput = observer(() => {
       <StripButton
         x={CHATLOG_ON_START_X}
         on={Social.chatLogVisible}
-        sprite={CHATLOG_ON_SPRITE}
+        glyph={CHATLOG_GLYPH}
         tip={t(TOOLTIP_KEYS.chatlog)}
         onClick={() => Social.toggle('chatLogVisible')}
         setTip={setTip}
@@ -849,7 +851,7 @@ const ChatInput = observer(() => {
       <StripButton
         x={FRAME_ON_START_X}
         on={framed}
-        sprite={FRAME_ON_SPRITE}
+        glyph={FRAME_GLYPH}
         tip={t(TOOLTIP_KEYS.frame)}
         onClick={() => Social.toggle('chatLogFramed')}
         setTip={setTip}
