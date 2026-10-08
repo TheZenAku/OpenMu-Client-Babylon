@@ -2,7 +2,7 @@
 // Vael theme (ui/theme/vael.less) after the owner's reference.
 @import (reference) '../../../../theme/vael.less';
 
-@portrait: 78px;
+@portrait: 84px;
 
 .player-frame {
   position: absolute;
@@ -13,7 +13,7 @@
   grid-template-columns: @portrait 1fr;
   column-gap: 10px;
   row-gap: 7px;
-  width: 372px;
+  width: 396px;
   padding: 10px 12px 10px 10px;
   box-sizing: border-box;
   .vael-panel();
@@ -77,7 +77,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-family: var(--v-font-display);
-    font-size: 19px;
+    font-size: 21px;
     font-weight: 700;
     line-height: 1;
     color: var(--v-gilt-bright);
@@ -85,8 +85,8 @@
 
   .pf-level,
   .pf-cp {
-    font: 500 11px/1 var(--v-font-label);
-    letter-spacing: 0.04em;
+    font: 600 12px/1 var(--v-font-label);
+    letter-spacing: 0.03em;
     color: var(--v-text);
 
     em {
@@ -98,7 +98,7 @@
 
 .pf-bar {
   position: relative;
-  height: 15px;
+  height: 17px;
   overflow: hidden;
   border: 1px solid oklch(0% 0 0 / 0.6);
   border-radius: 2px;
@@ -117,7 +117,7 @@
     position: relative;
     display: block;
     text-align: center;
-    font: 600 10px/13px var(--v-font-label);
+    font: 700 11px/15px var(--v-font-label);
     letter-spacing: 0.02em;
     color: oklch(97% 0.01 80);
     text-shadow: 0 1px 2px oklch(0% 0 0 / 0.95);
@@ -147,15 +147,15 @@
 
   // AG is the thin one: the reference shows three bars; AG still drives the skills.
   &.is-ag {
-    height: 9px;
+    height: 12px;
 
     .pf-bar-fill {
       background: linear-gradient(180deg, oklch(66% 0.11 145), oklch(42% 0.09 145));
     }
 
     .pf-bar-text {
-      font-size: 7px;
-      line-height: 7px;
+      font-size: 9px;
+      line-height: 10px;
     }
   }
 }
@@ -172,14 +172,14 @@
   align-items: center;
   gap: 7px;
   min-width: 0;
-  height: 34px;
-  padding: 0 9px;
+  height: 38px;
+  padding: 0 10px;
   box-sizing: border-box;
   .vael-tile();
   text-align: left;
 
   strong {
-    font: 600 12px/1 var(--v-font-label);
+    font: 700 13px/1 var(--v-font-label);
     color: var(--v-gilt-bright);
   }
 
@@ -187,7 +187,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font: 500 9px/1.1 var(--v-font-label);
+    font: 600 10px/1.15 var(--v-font-label);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--v-gilt-dim);

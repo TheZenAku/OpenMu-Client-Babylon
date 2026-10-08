@@ -6,10 +6,16 @@ import { useUiStageScale } from '../uiStage';
 import { skills, type ActiveBuff } from '../../../skills';
 import { BUFF_ICON_HEIGHT, BUFF_ICON_WIDTH, buffIconCell } from '../../../skills/recipes';
 import { t } from '../../../i18n';
+import { isMobileDevice } from '../../../common/mobile';
 
-/** `CNewUIBuffWindow::SetPos(640)`: the row starts at (220, 15). */
+/** `CNewUIBuffWindow::SetPos(640)`: the row starts at (220, 15) - where a touch screen keeps it. */
 const BAR_X = 220;
 const BAR_Y = 15;
+/**
+ * A desktop has the hero's frame in that corner (PlayerFrame, 12 px in, about 176 px tall): the
+ * row goes right under it, in screen pixels.
+ */
+const UNDER_FRAME = { left: 14, top: 196 };
 /** BUFF_IMG_SPACE / BUFF_MAX_LINE_COUNT. */
 const ICON_SPACE = 5;
 const ICONS_PER_LINE = 8;
@@ -61,7 +67,10 @@ export const BuffBar = observer(() => {
   return (
     <div
       className="buff-bar"
-      style={{ left: BAR_X * scale, top: BAR_Y * scale, transform: `scale(${scale})` }}
+      style={{
+        ...(isMobileDevice() ? { left: BAR_X * scale, top: BAR_Y * scale } : UNDER_FRAME),
+        transform: `scale(${scale})`,
+      }}
     >
       {buffs.map((buff, i) => {
         const x = (i % ICONS_PER_LINE) * (BUFF_ICON_WIDTH + ICON_SPACE);

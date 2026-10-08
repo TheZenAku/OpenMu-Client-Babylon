@@ -57,43 +57,44 @@ const SKILL_FAN_ID = 'skill-fan';
 
 const COMPACT = isMobileDevice();
 
+// One bar, its sections side by side (hairline dividers in style.less, no gaps).
 const BAR_HEIGHT = BOTTOM_BAR_HEIGHT;
-const PANEL_GAP = 6;
-const HUNT_WIDTH = 214;
-const CENTER_WIDTH = 684;
-const STATS_WIDTH = 194;
-const MENU_WIDTH = 22;
+const HUNT_WIDTH = 224;
+const CENTER_WIDTH = 742;
+const STATS_WIDTH = 224;
+const MENU_WIDTH = 34;
 
-const CENTER_X = COMPACT ? 0 : HUNT_WIDTH + PANEL_GAP;
-const STATS_X = CENTER_X + CENTER_WIDTH + PANEL_GAP;
-const MENU_X = COMPACT ? CENTER_X + CENTER_WIDTH + 4 : STATS_X + STATS_WIDTH + 4;
+const CENTER_X = COMPACT ? 0 : HUNT_WIDTH;
+const STATS_X = CENTER_X + CENTER_WIDTH;
+const MENU_X = COMPACT ? CENTER_X + CENTER_WIDTH : STATS_X + STATS_WIDTH;
 const BAR_WIDTH = MENU_X + MENU_WIDTH;
-// Fitted to the viewport like a window, so a portrait phone shows the whole bar.
+// Fitted to the viewport like a window, so a narrower screen scales the whole bar down evenly.
 MuWindows.setFixedSize(BAR_ID, { width: BAR_WIDTH, height: BAR_HEIGHT });
 
 /** The skill and potion boxes. */
-const SLOT_WIDTH = 40;
-const SLOT_HEIGHT = 48;
-const SLOT_STEP = 43;
-const SLOT_Y = 14;
-const CURRENT_SKILL_X = CENTER_X + 10;
+const SLOT_WIDTH = 44;
+const SLOT_HEIGHT = 50;
+const SLOT_STEP = 47;
+const SLOT_Y = 16;
+const CURRENT_SKILL_X = CENTER_X + 12;
 const HOTKEY_SLOTS_X = CURRENT_SKILL_X + SLOT_WIDTH + 10;
 const POTION_X = HOTKEY_SLOTS_X + 10 * SLOT_STEP - 3 + 12;
 const HOTKEY_KEYS = ['Q', 'W', 'E', 'R'];
 
-/** The 20x28 skill icon, drawn larger in the 40x48 box (`RenderSkillIcon` drew it 1:1 in 32x38). */
-const SKILL_ICON_SCALE = 1.4;
+/** The 20x28 skill icon, drawn larger in the 44x50 box (`RenderSkillIcon` drew it 1:1 in 32x38). */
+const SKILL_ICON_SCALE = 1.5;
 const SKILL_ICON_X = Math.round((SLOT_WIDTH - SKILL_ICON_WIDTH * SKILL_ICON_SCALE) / 2);
-const SKILL_ICON_Y = 3;
+const SKILL_ICON_Y = 2;
 
-const EXP_X = CENTER_X + 10;
-const EXP_WIDTH = CENTER_WIDTH - 20;
-const EXP_TEXT_Y = SLOT_Y + SLOT_HEIGHT + 5;
-const EXP_Y = EXP_TEXT_Y + 16;
+const EXP_X = CENTER_X + 12;
+const EXP_WIDTH = CENTER_WIDTH - 24;
+const EXP_TEXT_Y = SLOT_Y + SLOT_HEIGHT + 6;
+const EXP_Y = EXP_TEXT_Y + 18;
 const EXP_HEIGHT = 8;
 
+const MENU_BUTTON_WIDTH = 26;
 const MENU_BUTTON_HEIGHT = 18;
-const MENU_BUTTON_STEP = 20;
+const MENU_BUTTON_STEP = 21;
 
 /**
  * One Q/W/E/R slot (`CNewUIItemHotKey`): shows the best matching potion the
@@ -185,11 +186,11 @@ const BarButton = ({
   <div
     className="bar-button"
     title={title}
-    style={{ left: MENU_X, top: 4 + index * MENU_BUTTON_STEP }}
+    style={{ left: MENU_X + (MENU_WIDTH - MENU_BUTTON_WIDTH) / 2, top: 5 + index * MENU_BUTTON_STEP }}
   >
     <MuButton
       file={file}
-      width={MENU_WIDTH}
+      width={MENU_BUTTON_WIDTH}
       height={MENU_BUTTON_HEIGHT}
       frames={MAIN_FRAME_BUTTON_FRAMES}
       onClick={onClick}
@@ -663,6 +664,8 @@ export const BottomBar = observer(() => {
       />
 
       {!COMPACT && <StatsPanel left={STATS_X} width={STATS_WIDTH} height={BAR_HEIGHT} />}
+
+      <div className="hud-panel menu-panel" style={{ left: MENU_X, top: 0, width: MENU_WIDTH, height: BAR_HEIGHT }} />
 
       {MAIN_FRAME_BUTTONS.map((button, index) => (
         <BarButton

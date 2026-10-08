@@ -11,7 +11,7 @@ export const WINDOW_HEIGHT = 429;
 // bar, with HUNT and the rates beside the skills, is taller); the bar is scaled
 // by the player, so every window that rides on it (the original's
 // `480 - 51 - h`) follows the bar's on-screen height, not the constant.
-export const BOTTOM_BAR_HEIGHT = 108;
+export const BOTTOM_BAR_HEIGHT = 112;
 /** The bar stands this far off the screen's bottom edge (bottomBar/style.less), plus a breath. */
 const BOTTOM_BAR_GAP = 10;
 export const BOTTOM_BAR_ID = 'bottom-bar';
