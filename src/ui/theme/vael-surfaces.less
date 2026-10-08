@@ -1,0 +1,95 @@
+// The Vael surfaces for the original's window chrome (MuSpriteFrame's SURFACES map, MsgBoxFrame):
+// each keeps the sprite's size and place and draws the reference's ink, wells and gilt instead.
+@import (reference) './vael.less';
+
+// No specificity: whatever positions the element (its inline style, its caller's class) wins; an
+// element nobody positions still anchors its own ::before / ::after.
+:where(.vael-surface) {
+  position: relative;
+  box-sizing: border-box;
+}
+
+// A grid square: 21px on a 20px pitch, so neighbours share one hairline.
+.vael-surface-cell {
+  background: oklch(12% 0.004 265 / 0.85);
+  border: 1px solid oklch(77% 0.09 78 / 0.16);
+}
+
+// The zen box: a well, the coin art replaced by its label.
+.vael-surface-money {
+  .vael-well();
+
+  &::before {
+    content: 'ZEN';
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    .vael-label();
+    font-size: 9px;
+    color: var(--v-gilt);
+  }
+}
+
+// A stat's name plate (character window).
+.vael-surface-bar {
+  background: linear-gradient(180deg, oklch(22% 0.008 265), oklch(15% 0.005 265));
+  border: 1px solid var(--v-border);
+}
+
+// A separator: a gilt hairline fading out at both ends, a lozenge in the middle.
+.vael-surface-rule {
+  &::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 50%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--v-gilt-dim) 20%, var(--v-gilt) 50%, var(--v-gilt-dim) 80%, transparent);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    background: var(--v-gilt);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+}
+
+.vael-surface-slot {
+  .vael-tile();
+}
+
+// A scrollbar: the track a hairline, the thumb a gilt bar.
+.vael-surface-track::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--v-border);
+}
+
+.vael-surface-thumb {
+  background: linear-gradient(90deg, var(--v-gilt-dim), var(--v-gilt), var(--v-gilt-dim));
+  border: 1px solid oklch(20% 0.01 78);
+}
+
+// An equipment slot's silhouette, toned from the original's steel to the gilt.
+.vael-surface-tint {
+  filter: grayscale(1) sepia(1) brightness(0.5) contrast(1.25);
+  opacity: 0.85;
+}
+
+// MsgBoxFrame's three slices, as one panel.
+.vael-msgbox {
+  position: absolute;
+  inset: 0;
+  .vael-panel();
+}

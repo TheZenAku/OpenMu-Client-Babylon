@@ -117,6 +117,38 @@ type MuSpriteFrameProps = {
 };
 
 /**
+ * The Vael theme (the owner's reference, ui/theme/vael-surfaces.less) for the original's window
+ * chrome: these sheets are drawn as CSS surfaces of the same size and place - a grid square as an
+ * ink cell, a text box as a well, a separator as a gilt rule - and their picture is not loaded.
+ * `tint` keeps the picture (an equipment slot's silhouette) and tones it to the gilt.
+ */
+const SURFACES: Record<string, string> = {
+  'newui_item_box.OZT': 'cell',
+  'newui_item_money.OZT': 'money',
+  'newui_item_money2.OZT': 'money',
+  'newui_cha_textbox02.OZT': 'bar',
+  'newui_myquest_Line.OZT': 'rule',
+  'newui_commamd_Line.OZJ': 'rule',
+  'newui_skillbox.OZJ': 'slot',
+  'newui_skillbox2.OZJ': 'slot',
+  'newui_scrollbar_up.OZT': 'track',
+  'newui_scrollbar_m.OZT': 'track',
+  'newui_scrollbar_down.OZT': 'track',
+  'newui_scroll_on.OZT': 'thumb',
+  'newui_item_cap.OZT': 'tint',
+  'newui_item_upper.OZT': 'tint',
+  'newui_item_lower.OZT': 'tint',
+  'newui_item_gloves.OZT': 'tint',
+  'newui_item_boots.OZT': 'tint',
+  'newui_item_weapon(L).OZT': 'tint',
+  'newui_item_weapon(R).OZT': 'tint',
+  'newui_item_wing.OZT': 'tint',
+  'newui_item_fairy.OZT': 'tint',
+  'newui_item_necklace.OZT': 'tint',
+  'newui_item_ring.OZT': 'tint',
+};
+
+/**
  * A crop of a sprite sheet as a `div` background. Memoised: a grid draws
  * 60–120 of these and only the hovered one changes between renders, so
  * callers should hoist their `style` objects where they can (a fresh object
@@ -135,11 +167,13 @@ export const MuSpriteFrame = memo(function MuSpriteFrame({
   noDrag,
   children,
 }: MuSpriteFrameProps) {
-  const sprite = useMuSprite(file);
+  const surface = SURFACES[file];
+  const drawn = !surface || surface === 'tint';
+  const sprite = useMuSprite(drawn ? file : undefined);
 
   return (
     <div
-      className={className}
+      className={surface ? `vael-surface vael-surface-${surface}${className ? ` ${className}` : ''}` : className}
       title={title}
       onClick={onClick}
       data-no-drag={noDrag ? 'true' : undefined}

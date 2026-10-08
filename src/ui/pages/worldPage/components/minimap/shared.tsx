@@ -21,11 +21,6 @@ export const PORTAL_SIZE = 30;
 export const HERO_SIZE = 12;
 export const PARTY_SIZE = 15;
 
-export const EDGE_WIDTH = 35;
-export const EDGE_HEIGHT = 6;
-
-export const CORNER_SPRITE = 'mini_map_ui_corner.OZT';
-export const LINE_SPRITE = 'mini_map_ui_line.OZJ';
 export const HERO_SPRITE = 'mini_map_ui_cha.OZT';
 export const PORTAL_SPRITE = 'mini_map_ui_portal.OZT';
 export const NPC_SPRITE = 'mini_map_ui_npc.OZT';
@@ -190,45 +185,17 @@ export const Sprite = ({
 };
 
 /**
- * The frame around a `width` x `height` map: the line strip along each edge
- * (the sides are the top strip turned 90 degrees, `RenderBitmapRotate`) and
- * the corner piece mirrored into each corner.
+ * The frame around a `width` x `height` map, in the Vael theme (the owner's reference): a gilt
+ * hairline with gilt brackets on the corners, where the original drew its line strips and corner
+ * pieces (`mini_map_ui_line` / `mini_map_ui_corner`).
  */
-export const Frame = ({ width, height }: { width: number; height: number }) => {
-  const line = useMuSprite(LINE_SPRITE);
-  const corner = useMuSprite(CORNER_SPRITE);
-  const lineStyle: CSSProperties = {
-    backgroundImage: line ? `url(${line.url})` : undefined,
-    backgroundSize: `${EDGE_WIDTH}px ${EDGE_HEIGHT}px`,
-  };
-  const cornerStyle: CSSProperties = {
-    backgroundImage: corner ? `url(${corner.url})` : undefined,
-  };
-
-  return (
-    <>
-      <div className="minimap-edge minimap-edge-top" style={lineStyle} />
-      <div className="minimap-edge minimap-edge-bottom" style={lineStyle} />
-      <div
-        className="minimap-edge minimap-edge-side"
-        style={{
-          ...lineStyle,
-          width: height,
-          left: 0,
-          transform: `rotate(90deg) translateY(-${EDGE_HEIGHT}px)`,
-        }}
-      />
-      <div
-        className="minimap-edge minimap-edge-side"
-        style={{ ...lineStyle, width: height, left: width, transform: 'rotate(90deg)' }}
-      />
-      <div className="minimap-corner minimap-corner-tl" style={cornerStyle} />
-      <div className="minimap-corner minimap-corner-tr" style={cornerStyle} />
-      <div className="minimap-corner minimap-corner-bl" style={cornerStyle} />
-      <div className="minimap-corner minimap-corner-br" style={cornerStyle} />
-    </>
-  );
-};
+export const Frame = ({ width, height }: { width: number; height: number }) => (
+  <div className="minimap-frame" style={{ width, height }} aria-hidden>
+    {(['tl', 'tr', 'bl', 'br'] as const).map(corner => (
+      <span key={corner} className={`minimap-frame-corner is-${corner}`} />
+    ))}
+  </div>
+);
 
 /**
  * How far the view has been dragged off the hero (ours: the original pins

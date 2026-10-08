@@ -152,3 +152,56 @@
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// MUIdle Vael theme (ui/theme/vael.less): the name in the serif, the stat plates' names as spaced
+// gilt labels, the amount box as a well; the plates themselves are MuSpriteFrame surfaces.
+@import (reference) '../../../../theme/vael.less';
+
+.character-info {
+  .character-name {
+    font-family: var(--v-font-display);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--v-gilt-bright);
+  }
+
+  .character-class {
+    font-family: var(--v-font-display);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--v-gilt);
+  }
+
+  .table-fill {
+    .vael-well();
+  }
+
+  .stat-label {
+    .vael-label();
+    font-size: 10px;
+    color: var(--v-gilt);
+    text-shadow: none;
+  }
+
+  .stat-detail {
+    color: var(--v-text);
+  }
+
+  .stat-amount {
+    border-color: var(--v-border);
+    background: var(--v-sunken);
+    color: var(--v-gilt-bright);
+
+    &:focus {
+      border-color: var(--v-border-strong);
+    }
+  }
+
+  .stat-button .button-tooltip,
+  .window-button .button-tooltip {
+    background: oklch(11% 0.004 265 / 0.95);
+    border-color: var(--v-border);
+    color: var(--v-text);
+  }
+}

@@ -40,6 +40,7 @@ const THEMED: Record<string, { glyph?: string; primary?: boolean }> = {
   'newui_button_cancel.OZT': { glyph: '✕' },
   'loding_cancel_b_all.OZT': { glyph: '✕' },
   'newui_repair_00.OZT': { glyph: '⚒' },
+  'newui_chainfo_btn_level.OZT': { glyph: '+' },
   'Quest_bt_L.OZT': { glyph: '‹' },
   'Quest_bt_R.OZT': { glyph: '›' },
   'newui_btn_empty.OZT': {},

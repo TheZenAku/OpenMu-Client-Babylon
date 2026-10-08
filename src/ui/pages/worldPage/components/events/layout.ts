@@ -221,12 +221,12 @@ export const EVENT_ROW_CLOCK_WIDTH = 38;
  */
 export const EVENT_TIMERS_HEIGHT = EVENT_ROW_GAP + 3 * EVENT_ROW_HEIGHT;
 
-/** Counting down: the colour the in-event timer figure draws its lines in. */
-export const EVENT_ROW_COLOR = TIMER_COLOR;
-/** Open: the colour the match notice line uses. */
-export const EVENT_ROW_COLOR_OPEN = COUNTDOWN_COLOR;
+/** Counting down (Vael gilt; the original used the in-event timer figure's orange). */
+export const EVENT_ROW_COLOR = 'var(--v-gilt)';
+/** Open (Vael blood; the original used the match notice line's blue). */
+export const EVENT_ROW_COLOR_OPEN = 'oklch(66% 0.17 27)';
 /** Nothing known yet, or the server never answered. */
-export const EVENT_ROW_COLOR_UNKNOWN = 'rgb(150,150,150)';
+export const EVENT_ROW_COLOR_UNKNOWN = 'var(--v-gilt-dim)';
 
 export const EVENT_SPRITES = [
   BUTTON_SPRITE,

@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { MuSpriteFrame } from '../muSprite';
 
 /**
  * The original's three-slice message box (`CNewUIMessageBoxMng::LoadImages`,
@@ -9,33 +8,16 @@ import { MuSpriteFrame } from '../muSprite';
  * economy prompt takes 8, the Kanturu gateway dialog takes 10
  * (`RenderFrame`, NewUIKanturuEvent.cpp).
  *
+ * In the Vael theme (the owner's reference) the slices are one gilt-lined panel of the same size
+ * (`.vael-msgbox`, ui/theme/vael-surfaces.less); the slice heights still size the box.
+ *
  * Driven by: whoever renders it. Read by: nobody - it holds no state.
  */
 
-export const MSGBOX_BACK_SPRITE = 'newui_msgbox_back.OZJ';
-export const MSGBOX_TOP_SPRITE = 'newui_msgbox_top.OZT';
-export const MSGBOX_MIDDLE_SPRITE = 'newui_msgbox_middle.OZT';
-export const MSGBOX_BOTTOM_SPRITE = 'newui_msgbox_bottom.OZT';
-
-export const MSGBOX_SPRITES = [
-  MSGBOX_BACK_SPRITE,
-  MSGBOX_TOP_SPRITE,
-  MSGBOX_MIDDLE_SPRITE,
-  MSGBOX_BOTTOM_SPRITE,
-];
-
-// `MSGBOX_WIDTH`, `MSGBOX_TOP_HEIGHT`, `MSGBOX_MIDDLE_HEIGHT`,
-// `MSGBOX_BOTTOM_HEIGHT` (NewUICommonMessageBox.h:30).
 export const MSGBOX_WIDTH = 230;
 export const MSGBOX_TOP_HEIGHT = 67;
 export const MSGBOX_MIDDLE_HEIGHT = 15;
 export const MSGBOX_BOTTOM_HEIGHT = 50;
-
-// `MSGBOX_BACK_BLANK_WIDTH` / `_HEIGHT`: the fill is stretched a little
-// smaller than the frame so the frame's own edge stays on top of it.
-export const MSGBOX_BACK_TOP = 2;
-export const MSGBOX_BACK_BLANK_WIDTH = 8;
-export const MSGBOX_BACK_BLANK_HEIGHT = 10;
 
 /** The box's height for `lines` middle slices. */
 export function msgBoxHeight(lines: number): number {
@@ -55,40 +37,7 @@ export const MsgBoxFrame = ({ lines, className, style, children }: MsgBoxFramePr
 
   return (
     <div className={className} style={{ width: MSGBOX_WIDTH, height, ...style }}>
-      <MuSpriteFrame
-        file={MSGBOX_BACK_SPRITE}
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: MSGBOX_BACK_TOP,
-          width: MSGBOX_WIDTH - MSGBOX_BACK_BLANK_WIDTH,
-          height: height - MSGBOX_BACK_BLANK_HEIGHT,
-          backgroundSize: '100% 100%',
-        }}
-      />
-      <MuSpriteFrame
-        file={MSGBOX_TOP_SPRITE}
-        width={MSGBOX_WIDTH}
-        height={MSGBOX_TOP_HEIGHT}
-        style={{ position: 'absolute', left: 0, top: 0 }}
-      />
-      <MuSpriteFrame
-        file={MSGBOX_MIDDLE_SPRITE}
-        width={MSGBOX_WIDTH}
-        height={MSGBOX_MIDDLE_HEIGHT * lines}
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: MSGBOX_TOP_HEIGHT,
-          backgroundRepeat: 'repeat-y',
-        }}
-      />
-      <MuSpriteFrame
-        file={MSGBOX_BOTTOM_SPRITE}
-        width={MSGBOX_WIDTH}
-        height={MSGBOX_BOTTOM_HEIGHT}
-        style={{ position: 'absolute', left: 0, top: height - MSGBOX_BOTTOM_HEIGHT }}
-      />
+      <div className="vael-msgbox" aria-hidden />
       {children}
     </div>
   );

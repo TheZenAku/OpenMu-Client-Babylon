@@ -128,23 +128,23 @@ export const OPEN_BUTTON = { x: 50, y: 392, width: 36, height: 29 };
 export const GIVEUP_BUTTON = { x: 87, y: 392, width: 36, height: 29 };
 export const SMALL_BUTTON_FRAMES = { up: 0, down: 1 } as const;
 
-/** `SetTextColor` values of the originals. */
+/** `SetTextColor` values of the originals, by role - in the Vael theme's ink (ui/theme/vael.less). */
 export const COLOR = {
-  title: 'rgb(230,230,230)',
-  npcName: 'rgb(150,255,240)',
-  questTitle: 'rgb(200,220,255)',
-  text: 'rgb(255,230,210)',
-  answer: 'rgb(223,191,103)',
-  answerHot: 'rgb(255,0,0)',
-  subject: 'rgb(36,242,252)',
-  s6NpcName: 'rgb(255,255,10)',
-  heroName: 'rgb(255,185,10)',
-  yellow: 'rgb(255,255,0)',
-  done: 'rgb(223,191,103)',
-  missing: 'rgb(255,30,30)',
-  tabOn: 'rgb(255,255,255)',
-  tabOff: 'rgb(181,181,181)',
-  zenLabel: 'rgb(255,220,150)',
+  title: 'var(--v-gilt-bright)',
+  npcName: 'var(--v-gilt)',
+  questTitle: 'var(--v-gilt-bright)',
+  text: 'var(--v-text)',
+  answer: 'var(--v-gilt)',
+  answerHot: 'oklch(62% 0.19 27)',
+  subject: 'var(--v-gilt-bright)',
+  s6NpcName: 'var(--v-gilt)',
+  heroName: 'oklch(78% 0.12 70)',
+  yellow: 'var(--v-gilt-bright)',
+  done: 'var(--v-gilt-dim)',
+  missing: 'oklch(62% 0.19 27)',
+  tabOn: 'var(--v-gilt-bright)',
+  tabOff: 'var(--v-gilt-dim)',
+  zenLabel: 'var(--v-gilt)',
   /** `RenderSelTextBlock`'s (0.5, 0.7, 0.3): the green the log picks a row out with. */
   complete: 'rgb(128,179,77)',
 } as const;

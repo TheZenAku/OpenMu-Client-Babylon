@@ -4,9 +4,53 @@
 // the `.minimap-stage`; the overlay itself darkens the whole viewport. The
 // corner panel (`.minimap-corner-panel`) reuses the frame and sprite rules at
 // the same art sizes and scales itself as a whole.
-@edge-width: 35px;
-@edge-height: 6px;
-@corner-size: 35px;
+@import (reference) '../../../../theme/vael.less';
+
+// The Vael frame (`Frame` in shared.tsx): a gilt hairline, gilt brackets on the corners.
+.minimap-frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--v-border-strong);
+  box-shadow: 0 6px 18px oklch(0% 0 0 / 0.5);
+  pointer-events: none;
+}
+
+.minimap-frame-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 0 solid var(--v-gilt);
+
+  &.is-tl {
+    left: -1px;
+    top: -1px;
+    border-left-width: 2px;
+    border-top-width: 2px;
+  }
+
+  &.is-tr {
+    right: -1px;
+    top: -1px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+  }
+
+  &.is-bl {
+    left: -1px;
+    bottom: -1px;
+    border-left-width: 2px;
+    border-bottom-width: 2px;
+  }
+
+  &.is-br {
+    right: -1px;
+    bottom: -1px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+  }
+}
 
 .minimap-overlay {
   position: absolute;
@@ -59,69 +103,6 @@
   position: absolute;
   inset: 0;
   cursor: pointer;
-}
-
-.minimap-edge {
-  position: absolute;
-  background-repeat: repeat;
-  pointer-events: none;
-}
-
-.minimap-edge-top {
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: @edge-height;
-  // `RenderImage(..., 0.f, 1.f, uvxy, -uvxy_Line)`: the top strip is drawn
-  // upside down.
-  transform: scaleY(-1);
-}
-
-.minimap-edge-bottom {
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: @edge-height;
-}
-
-// The side strips are the top strip turned 90° about its top-left corner
-// (`RenderBitmapRotate(..., ±90.f, ...)`); their length is set inline.
-.minimap-edge-side {
-  top: 0;
-  height: @edge-height;
-  transform-origin: 0 0;
-}
-
-.minimap-corner {
-  position: absolute;
-  width: @corner-size;
-  height: @corner-size;
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  pointer-events: none;
-}
-
-.minimap-corner-tl {
-  left: 0;
-  top: 0;
-}
-
-.minimap-corner-tr {
-  right: 0;
-  top: 0;
-  transform: scaleX(-1);
-}
-
-.minimap-corner-bl {
-  left: 0;
-  bottom: 0;
-  transform: scaleY(-1);
-}
-
-.minimap-corner-br {
-  right: 0;
-  bottom: 0;
-  transform: scale(-1, -1);
 }
 
 .minimap-close {

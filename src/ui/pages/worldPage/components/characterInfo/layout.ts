@@ -101,12 +101,16 @@ export const HEAD_CLOSE_Y = 7;
 export const HEAD_CLOSE_WIDTH = 13;
 export const HEAD_CLOSE_HEIGHT = 12;
 
+/**
+ * The original's yellow / orange / blue / cyan / white, in the Vael theme's ink (ui/theme/vael.less):
+ * the keys keep naming the original's roles.
+ */
 export const TEXT_COLOR = {
-  stat: '#e6e600',
-  points: '#ff8a00',
-  buffed: '#6496ff',
-  cyan: '#4cc5fe',
-  white: '#ffffff',
+  stat: 'var(--v-gilt-bright)',
+  points: 'oklch(70% 0.14 50)',
+  buffed: 'oklch(74% 0.09 250)',
+  cyan: 'var(--v-gilt)',
+  white: 'var(--v-text)',
 } as const;
 
 export const CHARACTER_INFO_SPRITES = [
