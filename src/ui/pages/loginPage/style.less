@@ -144,3 +144,99 @@
     text-align: center;
   }
 }
+
+// ---------------------------------------------------------------------------
+// MUIdle Vael theme (ui/theme/vael.less, the owner's reference): the window as a gilt-lined panel
+// with a ruled title, the fields as wells, the checkbox as a blood box - on the original's
+// coordinates, so the window keeps its place and its rows.
+@import (reference) '../../theme/vael.less';
+
+.login-page {
+  .vael-login-win {
+    .vael-panel();
+    box-sizing: border-box;
+    background: var(--v-panel-gradient), oklch(11% 0.004 265 / 0.94);
+  }
+
+  .vael-login-title {
+    .vael-ruled-title();
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 30px;
+  }
+
+  .vael-field {
+    .vael-well();
+    box-sizing: border-box;
+
+    &:focus-within {
+      border-color: var(--v-border-strong);
+      box-shadow: 0 0 10px var(--v-gilt-glow);
+    }
+  }
+
+  .vael-check {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--v-border-strong);
+    background: var(--v-sunken);
+    cursor: pointer;
+    pointer-events: auto;
+
+    &.is-on {
+      background: var(--v-blood-bright);
+
+      &::after {
+        content: '✓';
+        color: var(--v-gilt-bright);
+        font-size: 11px;
+        line-height: 1;
+      }
+    }
+  }
+
+  .login-label {
+    .vael-label();
+    font-size: 9.5px;
+    line-height: 1;
+    color: var(--v-text);
+    text-shadow: none;
+  }
+
+  .login-remember {
+    letter-spacing: 0.08em;
+  }
+
+  .login-register {
+    font-family: var(--v-font-display);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--v-gilt-dim);
+    text-shadow: none;
+
+    &:hover {
+      color: var(--v-gilt-bright);
+    }
+  }
+
+  .login-input {
+    color: var(--v-gilt-bright);
+    font-family: var(--v-font-body);
+    font-size: 13px;
+    caret-color: var(--v-gilt);
+  }
+
+  .login-error,
+  .login-signup-message {
+    color: oklch(68% 0.16 25);
+  }
+
+  .login-notice,
+  .login-signup-message {
+    background: oklch(11% 0.004 265 / 0.92);
+    border: 1px solid var(--v-border);
+  }
+}

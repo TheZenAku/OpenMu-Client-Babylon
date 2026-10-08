@@ -9,7 +9,6 @@ import {
   type PublishedGameServer,
 } from '../../../common/serverConfig';
 import { MuButton } from '../../components/muButton';
-import { MuSpriteFrame } from '../../components/muSprite';
 import { ServerItem } from './ServerItem';
 import { DescriptionBar } from './DescriptionBar';
 import {
@@ -178,46 +177,20 @@ const leftGroups = groups.slice(0, LEFT_GROUP_MAX);
           <div className="servers-loading">{t('servers.loading')}</div>
         ) : (
           <>
-            {}
-            {leftGroups.length > 0 && (
-              <MuSpriteFrame
-                file={SPRITE.deco}
-                {...DECO.left}
-                style={{
-                  position: 'absolute',
-                  left: LEFT_GROUP_X,
-                  top: GROUP_BASE_Y,
-                  pointerEvents: 'none',
-                }}
-              />
-            )}
-            {rightGroups.length > 0 && (
-              <MuSpriteFrame
-                file={SPRITE.deco}
-                {...DECO.right}
-                style={{
-                  position: 'absolute',
-                  left: RIGHT_GROUP_X + GROUP_BTN_WIDTH - DECO.right.width,
-                  top: GROUP_BASE_Y,
-                  pointerEvents: 'none',
-                }}
-              />
-            )}
-
             {leftGroups.map((group, i) => renderGroup(group, LEFT_GROUP_X, i))}
             {rightGroups.map((group, i) =>
               renderGroup(group, RIGHT_GROUP_X, i)
             )}
 
             {arrow && (
-              <MuSpriteFrame
-                file={SPRITE.deco}
-                {...arrow.rect}
+              <div
+                className="vael-server-arrow"
                 style={{
                   position: 'absolute',
                   left: arrow.left,
                   top: arrow.top,
-                  pointerEvents: 'none',
+                  width: arrow.rect.width,
+                  height: GROUP_BTN_HEIGHT,
                 }}
               />
             )}

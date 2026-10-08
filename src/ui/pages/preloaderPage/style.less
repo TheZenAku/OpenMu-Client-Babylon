@@ -315,106 +315,12 @@
   }
 }
 
-// `#root img` fills its box, which is what these want anyway; the selector
-// only has to outrank it for the positioning.
-:is(#root, .app) .ws-page .ws-logo img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.ws-logo-art {
-  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.55));
-}
-
-// The light: the red parts screened back over themselves, breathing and
-// flickering, with a blurred copy as the bloom.
-.ws-logo-glow,
-.ws-logo-bloom,
-.ws-logo-surge {
-  mix-blend-mode: screen;
-}
-
-.ws-logo-glow {
-  animation: ws-glow 3.4s ease-in-out infinite;
-}
-
-.ws-logo-bloom {
-  filter: blur(8px);
-  animation: ws-glow 3.4s ease-in-out infinite;
-}
-
-// A band of light that runs down the crack and across everything red on the
-// way, then waits.
-.ws-logo-surge {
-  filter: brightness(1.7);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 44%, #000 50%, transparent 56%);
-  mask-image: linear-gradient(to bottom, transparent 44%, #000 50%, transparent 56%);
-  -webkit-mask-size: 100% 300%;
-  mask-size: 100% 300%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  animation: ws-surge 4.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-}
-
-.ws-page .ws-logo-sparks {
-  position: absolute;
-  left: -15%;
-  top: -10%;
-  width: 130%;
-  height: 120%;
-}
-
 @keyframes ws-logo-draw {
   from {
     clip-path: inset(-30% -30% 130% -30%);
   }
   to {
     clip-path: inset(-30% -30% -30% -30%);
-  }
-}
-
-@keyframes ws-glow {
-  0%,
-  100% {
-    opacity: 0.2;
-  }
-  35% {
-    opacity: 0.75;
-  }
-  38% {
-    opacity: 0.45;
-  }
-  41% {
-    opacity: 0.8;
-  }
-  60% {
-    opacity: 0.5;
-  }
-  80% {
-    opacity: 0.3;
-  }
-}
-
-// The mask is three boxes tall with the band in its middle: at 100% the band
-// sits above the logo, at 0% below it.
-@keyframes ws-surge {
-  0% {
-    -webkit-mask-position: 0 100%;
-    mask-position: 0 100%;
-    opacity: 1;
-  }
-  55% {
-    -webkit-mask-position: 0 0%;
-    mask-position: 0 0%;
-    opacity: 1;
-  }
-  56%,
-  100% {
-    -webkit-mask-position: 0 0%;
-    mask-position: 0 0%;
-    opacity: 0;
   }
 }
 
@@ -2581,12 +2487,129 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ws-logo-glow,
-  .ws-logo-bloom,
-  .ws-logo-surge,
   .ws-runner-rig,
   :is(#root, .app) .ws-page .ws-runner-part,
   .ws-runner-dust i {
     animation: none;
   }
+}
+
+// ---------------------------------------------------------------------------
+// MUIdle Vael theme (ui/theme/vael.less, the owner's reference). The tokens (`web/tokens.less`)
+// carry the colours and faces; these give the mark, the Start button and the card the reference's
+// own shapes - serif name in blood and gilt, square blood buttons, spaced mono labels.
+@import (reference) '../../theme/vael.less';
+
+.ws-logo.vael-mark {
+  width: auto;
+  aspect-ratio: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--logo-h) * 0.05);
+  margin-bottom: 0;
+
+  .vael-mark-kicker {
+    .vael-label();
+    font-size: clamp(9px, calc(var(--logo-h) * 0.065), 13px);
+    letter-spacing: 0.36em;
+    color: var(--v-gilt);
+  }
+
+  .vael-mark-word {
+    font-family: var(--v-font-display);
+    font-size: calc(var(--logo-h) * 0.48);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    background: var(--v-hero-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 6px 24px oklch(0% 0 0 / 0.75));
+  }
+
+  .vael-mark-rule {
+    width: calc(var(--logo-h) * 1.1);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--v-gilt), transparent);
+  }
+}
+
+.ws-page .ws-start {
+  padding: 16px 40px 16px 34px;
+  border-radius: 0;
+  background: linear-gradient(160deg, var(--v-blood-bright), var(--v-blood-deep));
+  color: var(--v-gilt-bright);
+  font-family: var(--v-font-label);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+
+  .ws-icon {
+    color: var(--v-gilt);
+  }
+
+  &:hover {
+    background: linear-gradient(160deg, oklch(54% 0.18 26), var(--v-blood));
+  }
+}
+
+.ws-card {
+  border-radius: 0;
+  background: var(--v-panel-gradient), oklch(11% 0.004 265 / 0.96);
+}
+
+.ws-marker {
+  .vael-label();
+  font-size: 10px;
+  color: var(--v-gilt);
+}
+
+.ws-headline {
+  font-size: clamp(32px, 3.2vw, 46px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--v-gilt-bright);
+}
+
+.ws-lead {
+  font-family: var(--v-font-display);
+  font-size: 18px;
+  font-style: italic;
+  color: var(--v-gilt);
+}
+
+.ws-tab.is-on {
+  .vael-tile-active();
+
+  &::before {
+    background: var(--v-gilt);
+  }
+}
+
+.ws-btn-primary:hover {
+  background: oklch(54% 0.18 26);
+}
+
+.ws-page .ws-enter,
+.ws-side-actions .ws-btn {
+  font-family: var(--v-font-label);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.ws-side-actions .ws-btn:not(.ws-btn-primary) {
+  border: 1px solid var(--v-border);
+}
+
+.ws-mock {
+  border: 1px solid var(--v-border);
+}
+
+.ws-mock-bar {
+  border-bottom-color: var(--v-border);
 }

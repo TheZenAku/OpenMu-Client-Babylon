@@ -12,7 +12,6 @@ import {
   validateSignup,
   type SignupProblem,
 } from '../../../common/registerRules';
-import { MuSpriteFrame } from '../../components/muSprite';
 import { MuButton } from '../../components/muButton';
 import { TEXT_COLOR } from '../serversPage/layout';
 
@@ -195,12 +194,7 @@ export const RegisterWindow = observer(({ onCreated, onCancel }: RegisterWindowP
   }, []);
 
   return (
-    <MuSpriteFrame
-      file="login_back.OZT"
-      width={WIN_WIDTH}
-      height={WIN_HEIGHT}
-      className="login-win"
-    >
+    <div className="login-win vael-login-win" style={{ width: WIN_WIDTH, height: WIN_HEIGHT }}>
       <span className="login-label login-signup-title" style={{ top: TITLE_Y }}>
         {t('login.createAccount')}
       </span>
@@ -224,11 +218,9 @@ export const RegisterWindow = observer(({ onCreated, onCancel }: RegisterWindowP
                 {t(row.label)}
               </span>
 
-              <MuSpriteFrame
-                file="login_me.OZT"
-                width={INPUT_WIDTH}
-                height={INPUT_HEIGHT}
-                style={{ position: 'absolute', left: INPUT_X, top }}
+              <div
+                className="vael-field"
+                style={{ position: 'absolute', left: INPUT_X, top, width: INPUT_WIDTH, height: INPUT_HEIGHT }}
               >
                 <input
                   className="login-input"
@@ -243,7 +235,7 @@ export const RegisterWindow = observer(({ onCreated, onCancel }: RegisterWindowP
                     paddingTop: TEXT_INSET_Y,
                   }}
                 />
-              </MuSpriteFrame>
+              </div>
             </div>
           );
         })}
@@ -275,6 +267,6 @@ export const RegisterWindow = observer(({ onCreated, onCancel }: RegisterWindowP
       </form>
 
       {!!error && <p className="login-signup-message">{error}</p>}
-    </MuSpriteFrame>
+    </div>
   );
 });

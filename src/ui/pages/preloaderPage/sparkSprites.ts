@@ -45,8 +45,7 @@ export function rampAt(
 
 /**
  * The light's breathing, shared by everything that glows on the page: a slow
- * swell with a flicker near its peak. The CSS `ws-glow` keyframes follow the
- * same curve for the parts drawn by the stylesheet.
+ * swell with a flicker near its peak.
  */
 export function glowPulse(seconds: number): number {
   const t = (seconds % 3.4) / 3.4;

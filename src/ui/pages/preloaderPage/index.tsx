@@ -24,7 +24,7 @@ import { WorldsView } from './worldsView';
 import { SetupView } from './setupView';
 import { DownloadView } from './downloadView';
 import { LoadingRunner } from './loadingRunner';
-import { LogoLight } from './logoLight';
+import { MuidleMark } from './muidleMark';
 import { LightningLine } from './lightningLine';
 import { Hellfire } from './hellfire';
 import { FooterStrike } from './footerStrike';
@@ -372,7 +372,7 @@ export const PreloaderPage = observer(() => {
       </header>
 
       <main className="ws-main">
-        <LogoLight />
+        <MuidleMark />
 
         <div className="ws-stage">
           <LightningLine phase={phase} />

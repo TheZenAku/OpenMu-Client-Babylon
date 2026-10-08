@@ -1,5 +1,4 @@
 import { MuButton } from '../../components/muButton';
-import { MuSpriteFrame } from '../../components/muSprite';
 import {
   GAUGE_HEIGHT,
   GAUGE_OFFSET_X,
@@ -42,25 +41,18 @@ export const ServerItem = ({ name, load, top, onClick }: ServerItemProps) => {
       }}
       label={name}
     >
+      {/* The load gauge ('server_b2_loding' in the original), as a Vael bar. */}
       <div
+        className="vael-server-gauge"
         style={{
           position: 'absolute',
           left: GAUGE_OFFSET_X,
           top: GAUGE_OFFSET_Y,
           width: GAUGE_WIDTH,
           height: GAUGE_HEIGHT,
-          background: 'rgba(0, 0, 0, 0.55)',
-          overflow: 'hidden',
         }}
       >
-        <MuSpriteFrame
-          file={SPRITE.gauge}
-          width={GAUGE_WIDTH}
-          height={GAUGE_HEIGHT}
-          style={{
-            clipPath: `inset(0 ${100 - filled}% 0 0)`,
-          }}
-        />
+        <div className="vael-server-gauge-fill" style={{ width: `${filled}%` }} />
       </div>
     </MuButton>
   );

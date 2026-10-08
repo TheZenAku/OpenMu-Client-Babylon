@@ -6,10 +6,10 @@ import { observer } from 'mobx-react-lite';
 import { Store, UIState } from '../../../store';
 import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH } from '../../../consts';
 import { registerApiUrl, registerUrl } from '../../../common/serverServices';
-import { MuSpriteFrame } from '../../components/muSprite';
 import { MuText } from '../../components/muText';
 import { MuLogo } from '../../components/muLogo';
 import { MuButton } from '../../components/muButton';
+import { mt } from '../../../muidle/text';
 import { RegisterWindow } from './registerWindow';
 import { TEXT_COLOR } from '../serversPage/layout';
 
@@ -150,12 +150,8 @@ export const LoginPage = observer(() => {
     <div className="login-page">
       <MuLogo />
 
-      <MuSpriteFrame
-        file="login_back.OZT"
-        width={WIN_WIDTH}
-        height={WIN_HEIGHT}
-        className="login-win"
-      >
+      <div className="login-win vael-login-win" style={{ width: WIN_WIDTH, height: WIN_HEIGHT }}>
+        <div className="vael-login-title">{mt('login.title')}</div>
         {/* GlobalText 460: "%s Server %d" - the server picked on the list. */}
         {Store.selectedServer && (
           <MuText
@@ -183,11 +179,9 @@ export const LoginPage = observer(() => {
             {t('login.password')}
           </span>
 
-          <MuSpriteFrame
-            file="login_me.OZT"
-            width={INPUT_WIDTH}
-            height={INPUT_HEIGHT}
-            style={{ position: 'absolute', left: INPUT_X, top: ACCOUNT_Y }}
+          <div
+            className="vael-field"
+            style={{ position: 'absolute', left: INPUT_X, top: ACCOUNT_Y, width: INPUT_WIDTH, height: INPUT_HEIGHT }}
           >
             {/* An ID is already there after a signup, or after "remember me":
                 the field still to fill is the password. */}
@@ -202,13 +196,11 @@ export const LoginPage = observer(() => {
               maxLength={MAX_USERNAME_LENGTH}
               style={{ paddingLeft: TEXT_INSET_X, paddingTop: TEXT_INSET_Y }}
             />
-          </MuSpriteFrame>
+          </div>
 
-          <MuSpriteFrame
-            file="login_me.OZT"
-            width={INPUT_WIDTH}
-            height={INPUT_HEIGHT}
-            style={{ position: 'absolute', left: INPUT_X, top: PASSWORD_Y }}
+          <div
+            className="vael-field"
+            style={{ position: 'absolute', left: INPUT_X, top: PASSWORD_Y, width: INPUT_WIDTH, height: INPUT_HEIGHT }}
           >
             <input
               className="login-input"
@@ -221,20 +213,19 @@ export const LoginPage = observer(() => {
               maxLength={MAX_PASSWORD_LENGTH}
               style={{ paddingLeft: TEXT_INSET_X, paddingTop: TEXT_INSET_Y }}
             />
-          </MuSpriteFrame>
+          </div>
 
           {}
-          <MuSpriteFrame
-            file="op2_ch.OZT"
-            y={Store.rememberLogin ? CHECK_SIZE : 0}
-            width={CHECK_SIZE}
-            height={CHECK_SIZE}
+          <span
+            className={`vael-check${Store.rememberLogin ? ' is-on' : ''}`}
+            role="checkbox"
+            aria-checked={Store.rememberLogin}
             style={{
               position: 'absolute',
               left: CHECK_X,
               top: CHECK_Y,
-              cursor: 'pointer',
-              pointerEvents: 'auto',
+              width: CHECK_SIZE,
+              height: CHECK_SIZE,
             }}
             onClick={uiClick(() => (Store.rememberLogin = !Store.rememberLogin))}
           />
@@ -304,7 +295,7 @@ export const LoginPage = observer(() => {
         )}
 
         {!Store.loginError && !!notice && <p className="login-notice">{notice}</p>}
-      </MuSpriteFrame>
+      </div>
     </div>
   );
 });

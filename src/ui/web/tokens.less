@@ -34,35 +34,37 @@
   }
 }
 
+// The site tokens, in the Vael theme (the owner's reference, ui/theme/vael.less): ink-dark surfaces,
+// gilt text and lines, blood for the main action, the reference's three faces, square corners.
 .web-tokens() {
-  --bg-0: #101113;
-  --bg-1: #151719;
-  --bg-2: #1b1d20;
-  --bg-3: #222528;
-  --bg-4: #2a2d31;
-  --divider: #24272a;
-  --text-0: #f2f3f4;
-  --text-1: #9ba1a6;
-  --text-2: #80868b;
-  --text-mark: #5f6469;
-  --accent: #e8e9ea;
-  --accent-contrast: #131416;
-  --mu-red: #c4302b;
-  --mu-red-soft: #e2564a;
+  --bg-0: var(--v-bg);
+  --bg-1: oklch(16% 0.005 265);
+  --bg-2: oklch(19% 0.006 265);
+  --bg-3: var(--v-muted);
+  --bg-4: var(--v-card);
+  --divider: oklch(77% 0.09 78 / 0.14);
+  --text-0: var(--v-gilt-bright);
+  --text-1: var(--v-text);
+  --text-2: var(--v-gilt-dim);
+  --text-mark: oklch(45% 0.04 78);
+  --accent: var(--v-blood-bright);
+  --accent-contrast: var(--v-gilt-bright);
+  --mu-red: var(--v-blood-bright);
+  --mu-red-soft: oklch(58% 0.17 27);
   --ok: #4a9d6e;
   --ok-text: #9ed4b6;
   --warn: #c2963f;
   --warn-text: #dfc290;
   --danger: #c25252;
   --danger-text: #e8b9b9;
-  --radius-s: 6px;
-  --radius-m: 10px;
-  --radius-l: 16px;
+  --radius-s: 2px;
+  --radius-m: 2px;
+  --radius-l: 3px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-fast: 120ms;
   --dur: 220ms;
-  --font-ui: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  --font-display: 'Geist', 'Inter', 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
+  --font-ui: var(--v-font-body);
+  --font-display: var(--v-font-display);
+  --font-mono: var(--v-font-label);
   --shadow-overlay: 0 12px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
 }

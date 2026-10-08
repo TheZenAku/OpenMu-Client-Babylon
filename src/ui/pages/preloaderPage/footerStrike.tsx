@@ -81,12 +81,12 @@ export const FooterStrike = ({ lit }: { lit: boolean }) => {
             ? 1
             : glowPulse(time) * (0.9 + Math.random() * 0.1);
 
-          // Inside: plain white, for the black lettering.
+          // Inside: the Vael gilt (oklch(77% 0.09 78)), for the dark lettering.
           ctx.save();
           ctx.globalCompositeOperation = 'source-over';
           ctx.shadowColor = `rgba(226, 70, 48, ${0.75 * glow})`;
           ctx.shadowBlur = 22;
-          ctx.fillStyle = '#fff';
+          ctx.fillStyle = '#d4ad71';
           ctx.beginPath();
           ctx.roundRect(cx - half, cy - tall, half * 2, tall * 2, 2);
           ctx.fill();

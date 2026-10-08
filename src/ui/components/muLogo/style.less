@@ -1,36 +1,43 @@
-// The MU logo of `LoginScene::Render`: glow under mark, centred on x,
-// `g_fMULogoAlpha` += 0.02 a frame ≈ 0.8 s to full at 60 fps.
+// The mark over the login window (Vael theme): label, serif name in blood and gilt, a gilt rule.
+// It fades in as `g_fMULogoAlpha` did, += 0.02 a frame ≈ 0.8 s at 60 fps.
+@import (reference) '../../theme/vael.less';
+
 .mu-logo {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   pointer-events: none;
+  white-space: nowrap;
   animation: mu-logo-in 0.8s linear both;
 
-  .mu-logo-glow,
-  .mu-logo-mark {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+  .mu-logo-kicker {
+    .vael-label();
+    font-size: 11px;
+    letter-spacing: 0.36em;
+    color: var(--v-gilt);
+    text-shadow: 0 1px 3px #000;
   }
 
-  // `glColor4f(alpha - 0.3)` on the glow: it trails the mark. A version whose
-  // tree has only the JPEG draws it alone, at full strength.
-  .mu-logo-glow.is-only {
-    opacity: 1;
+  .mu-logo-word {
+    font-family: var(--v-font-display);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    background: var(--v-hero-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 6px 22px oklch(0% 0 0 / 0.85));
   }
 
-  .mu-logo-glow {
-    opacity: 0.7;
-    background-size: 100% 100%;
-    // Luminance self-mask: the JPEG's black is fully transparent, its bright
-    // glow fully opaque - the additive look without needing to blend against
-    // the canvas.
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
-    -webkit-mask-mode: luminance;
-    mask-mode: luminance;
+  .mu-logo-rule {
+    width: 70%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--v-gilt), transparent);
   }
 }
 

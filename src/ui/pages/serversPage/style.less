@@ -38,3 +38,62 @@
   font-size: 12px;
   text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.85);
 }
+
+// ---------------------------------------------------------------------------
+// MUIdle Vael theme (ui/theme/vael.less): the arrow at the chosen group, the load gauge and the
+// description bar in the reference's gilt and blood; the buttons are themed by MuButton.
+@import (reference) '../../theme/vael.less';
+
+.servers-page {
+  .vael-server-arrow {
+    pointer-events: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 8px;
+      height: 8px;
+      background: var(--v-gilt);
+      box-shadow: 0 0 8px var(--v-gilt-glow);
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+  }
+
+  .vael-server-gauge {
+    background: var(--v-sunken);
+    border: 1px solid oklch(77% 0.09 78 / 0.18);
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .vael-server-gauge-fill {
+    height: 100%;
+    background: var(--v-blood-gradient);
+  }
+
+  .vael-server-desc {
+    .vael-panel();
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+  }
+
+  .vael-server-desc-text {
+    font-family: var(--v-font-display);
+    font-size: 15px;
+    font-style: italic;
+    line-height: 1.2;
+    text-align: center;
+    white-space: pre-line;
+    color: var(--v-gilt);
+  }
+
+  .servers-loading {
+    .vael-label();
+    color: var(--v-gilt);
+  }
+}
