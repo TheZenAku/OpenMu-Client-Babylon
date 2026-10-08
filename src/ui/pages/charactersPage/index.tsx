@@ -14,23 +14,20 @@ import {
 } from '../../../common/packets/ServerToClientPackets';
 import { MsgWinCode } from '../../../common/msgWin';
 import { MuButton } from '../../components/muButton';
-import { MuSpriteFrame } from '../../components/muSprite';
 import { MsgWindow } from '../../components/msgWindow';
+import { mt } from '../../../muidle/text';
+import { CharacterDossier } from './CharacterDossier';
 import { TEXT_COLOR } from '../serversPage/layout';
 import { CharMakeWin } from './CharMakeWin';
 import { CharacterSelectionPlate } from './CharacterSelectionPlate';
 
-const BTN_WIDTH = 54;
-const BTN_HEIGHT = 30;
-const BTN_GAP = 1;
-const STATUS_GAP = 2;
-const STATUS_OFFSET_Y = 5;
-const STATUS_HEIGHT = 21;
-
-const DECO_WIDTH = 189;
-const DECO_HEIGHT = 103;
-const DECO_OFFSET_X = 22;
-const DECO_OFFSET_Y = 59;
+// Vael theme: labelled CSS buttons, wider than the original's 54x30 sprites.
+const BTN_WIDTH = 120;
+const BTN_HEIGHT = 36;
+const BTN_GAP = 8;
+const STATUS_GAP = 12;
+const STATUS_OFFSET_Y = 7;
+const STATUS_HEIGHT = 22;
 
 const WIN_MARGIN_X = 22;
 
@@ -142,23 +139,12 @@ export const CharactersPage = observer(() => {
   return (
     <div className="characters-page">
       <CharacterSelectionPlate />
+      <CharacterDossier />
 
       <div className="char-sel-bar" style={{ height: BTN_HEIGHT }}>
-        {}
-        <MuSpriteFrame
-          file="deco.OZT"
-          width={DECO_WIDTH}
-          height={DECO_HEIGHT}
-          style={{
-            position: 'absolute',
-            right: -DECO_OFFSET_X,
-            top: -DECO_OFFSET_Y,
-            pointerEvents: 'none',
-          }}
-        />
-
         <MuButton
           file="b_create.OZT"
+          label={mt('charsel.create')}
           width={BTN_WIDTH}
           height={BTN_HEIGHT}
           frames={{ ...CREATE_FRAMES, check: 3 }}
@@ -168,6 +154,7 @@ export const CharactersPage = observer(() => {
         />
         <MuButton
           file="server_menu_b_all.OZT"
+          label={mt('charsel.options')}
           width={BTN_WIDTH}
           height={BTN_HEIGHT}
           frames={CREATE_FRAMES}
@@ -199,6 +186,8 @@ export const CharactersPage = observer(() => {
 
         <MuButton
           file="b_connect.OZT"
+          label={mt('charsel.enter')}
+          primary
           width={BTN_WIDTH}
           height={BTN_HEIGHT}
           frames={{ ...CREATE_FRAMES, check: 3 }}
@@ -212,6 +201,7 @@ export const CharactersPage = observer(() => {
         />
         <MuButton
           file="b_delete.OZT"
+          label={mt('charsel.delete')}
           width={BTN_WIDTH}
           height={BTN_HEIGHT}
           frames={{ ...CREATE_FRAMES, check: 3 }}

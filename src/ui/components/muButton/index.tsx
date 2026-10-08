@@ -16,6 +16,8 @@ type MuButtonProps = {
   height: number;
   frames: MuButtonFrames;
   label?: string;
+  /** The main action of its place, in blood (Vael theme). */
+  primary?: boolean;
   color?: string;
   activeColor?: string;
   checked?: boolean;
@@ -58,6 +60,7 @@ export const MuButton = ({
   height,
   frames,
   label,
+  primary = false,
   color,
   activeColor,
   checked = false,
@@ -75,7 +78,7 @@ export const MuButton = ({
     const classes = [
       'vael-btn',
       themed?.glyph && !label ? 'vael-btn-glyph' : '',
-      themed?.primary ? 'vael-btn-primary' : '',
+      themed?.primary || primary ? 'vael-btn-primary' : '',
       checked ? 'vael-btn-checked' : '',
       disabled ? 'vael-btn-disabled' : '',
     ].filter(Boolean).join(' ');

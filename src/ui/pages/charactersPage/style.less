@@ -147,3 +147,189 @@
     gap: 3px;
   }
 }
+
+// ---------------------------------------------------------------------------
+// MUIdle Vael theme: the character select as the owner's reference "dossiê" -
+// a roster column, the chosen character's record, gilt-lined plates.
+@import (reference) '../../theme/vael.less';
+
+.char-sel-plate {
+  padding: 6px 14px;
+  background: var(--v-panel-gradient), oklch(11% 0.004 265 / 0.85);
+  border: 1px solid var(--v-border);
+  box-shadow: 0 8px 20px oklch(0% 0 0 / 0.5);
+  color: var(--v-text);
+  text-shadow: none;
+}
+
+.char-sel-plate-name {
+  font-family: var(--v-font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--v-gilt-bright) !important;
+}
+
+.char-sel-plate-info {
+  .vael-label();
+  font-size: 9px;
+}
+
+.char-sel-plate-hint {
+  color: var(--v-gilt);
+}
+
+.char-sel-status {
+  .vael-label();
+  color: var(--v-gilt);
+  text-shadow: 0 1px 2px #000;
+}
+
+.vael-roster {
+  .vael-panel();
+  position: absolute;
+  left: 22px;
+  top: 22px;
+  bottom: calc(5.5% + 60px);
+  width: 188px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  box-sizing: border-box;
+  pointer-events: auto;
+  z-index: 5;
+}
+
+.vael-roster-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0 8px;
+  margin-bottom: 6px;
+  border: 1px solid var(--v-border);
+  background: linear-gradient(160deg, oklch(30% 0.1 22 / 0.6), oklch(14% 0.02 22 / 0.8));
+
+  .vael-roster-letter {
+    font-family: var(--v-font-display);
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--v-gilt);
+  }
+
+  .vael-roster-word {
+    .vael-label();
+    font-size: 9px;
+    color: var(--v-gilt);
+  }
+}
+
+.vael-roster-title {
+  .vael-ruled-title();
+  margin: 2px 0 4px;
+}
+
+.vael-roster-tile {
+  .vael-tile();
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 9px 10px;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+
+  &:hover:not(.is-free) {
+    border-color: var(--v-border-strong);
+  }
+
+  &.is-active {
+    .vael-tile-active();
+  }
+
+  &.is-free {
+    cursor: default;
+    opacity: 0.5;
+    border-style: dashed;
+  }
+
+  .vael-roster-name {
+    font-family: var(--v-font-display);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--v-gilt-bright);
+  }
+
+  .vael-roster-meta {
+    .vael-label();
+    font-size: 8.5px;
+    letter-spacing: 0.12em;
+  }
+}
+
+.vael-dossier {
+  position: absolute;
+  left: 234px;
+  top: 22px;
+  max-width: calc(100vw - 280px);
+  pointer-events: none;
+
+  .vael-dossier-house {
+    .vael-label();
+    font-size: 10px;
+  }
+
+  .vael-dossier-name {
+    margin: 0;
+    font-family: var(--v-font-display);
+    font-size: clamp(48px, 8vw, 112px);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    background: var(--v-hero-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 4px 18px oklch(0% 0 0 / 0.6));
+  }
+
+  .vael-dossier-line {
+    margin: 6px 0 0;
+    font-family: var(--v-font-display);
+    font-style: italic;
+    font-size: 19px;
+    color: var(--v-gilt);
+    text-shadow: 0 1px 3px #000;
+  }
+}
+
+// A phone held upright: the roster becomes a strip at the top, the record under it.
+@media (max-width: 700px) {
+  .vael-roster {
+    right: 12px;
+    left: 12px;
+    top: 12px;
+    bottom: auto;
+    width: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    .vael-roster-mark,
+    .vael-roster-title,
+    .vael-roster-tile.is-free {
+      display: none;
+    }
+
+    .vael-roster-tile {
+      flex: 1 1 40%;
+    }
+  }
+
+  .vael-dossier {
+    left: 16px;
+    top: auto;
+    bottom: calc(5.5% + 60px);
+  }
+}
