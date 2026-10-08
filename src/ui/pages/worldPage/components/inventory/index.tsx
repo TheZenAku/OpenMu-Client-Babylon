@@ -157,6 +157,47 @@ function targetSquareAt(
   return { column: Math.floor(x / SQUARE), row: Math.floor(y / SQUARE) };
 }
 
+/** The first place (row by row, from the top left) a w x h item fits at; null in a full bag. */
+function firstFit(
+  squares: (Placed | null)[],
+  w: number,
+  h: number
+): { column: number; row: number } | null {
+  for (let row = 0; row + h <= ROWS; row++) {
+    for (let column = 0; column + w <= COLUMNS; column++) {
+      if (canPlace(squares, column, row, w, h)) return { column, row };
+    }
+  }
+  return null;
+}
+
+/**
+ * MUIdle: where the press that lifted the carried item was. Letting go farther than DRAG_DISTANCE
+ * from it is a drag, and drops the item under the pointer - the original lifts and drops on two
+ * clicks only, and a drag left the item on the cursor until a right click put it back in the hand
+ * (the owner took that for a weapon that would not come off).
+ */
+let liftedAt: { x: number; y: number } | null = null;
+const DRAG_DISTANCE = 8;
+
+/** The carried item let go over an equipment slot: the slot's click, or the end of a drag. */
+function dropOnEquipment(slot: number, item: Item | null): void {
+  const picked = Store.pickedItem;
+  if (!picked) return;
+
+  // A jewel dropped on worn gear: ApplyJewels explains why not
+  // (OpenMU only upgrades items lying in the grid).
+  if (item && isUpgradeJewel(picked.item)) {
+    Store.applyPickedJewel(slot);
+    return;
+  }
+
+  if (item) return;
+  if (!isEquipable(slot, picked.item)) return;
+
+  Store.placePickedItem(slot);
+}
+
 const POTION_GROUP = 14;
 
 function isConsumable(item: Item): boolean {
@@ -176,6 +217,7 @@ const EquipmentSlot = observer(
     sprite,
     item,
     onHover,
+    onPutAway,
   }: {
     slot: number;
     x: number;
@@ -185,6 +227,8 @@ const EquipmentSlot = observer(
     sprite: string;
     item: Item | null;
     onHover: (info: HoverInfo | null) => void;
+    /** MUIdle: the worn item (or the one carried off a slot) into the first free place of the bag. */
+    onPutAway: () => void;
   }) => {
     const picked = Store.pickedItem;
 
@@ -197,6 +241,7 @@ const EquipmentSlot = observer(
           blocked ? ' blocked' : ''
         }`}
         data-no-drag="true"
+        data-equipment-slot={slot}
         style={{ left: x, top: y, width, height }}
         onPointerEnter={event =>
           onHover(item ? { item, slot, x: event.clientX, y: event.clientY } : null)
@@ -212,21 +257,21 @@ const EquipmentSlot = observer(
               if (item) Store.repairItemRequest(slot);
               return;
             }
-            if (item) Store.pickInventoryItem(slot);
+            if (item) {
+              Store.pickInventoryItem(slot);
+              liftedAt = { x: event.clientX, y: event.clientY };
+            }
             return;
           }
 
-          // A jewel dropped on worn gear: ApplyJewels explains why not
-          // (OpenMU only upgrades items lying in the grid).
-          if (item && isUpgradeJewel(picked.item)) {
-            Store.applyPickedJewel(slot);
-            return;
-          }
-
-          if (item) return;
-          if (!isEquipable(slot, picked.item)) return;
-
-          Store.placePickedItem(slot);
+          dropOnEquipment(slot, item);
+        }}
+        onContextMenu={event => {
+          // MUIdle: a right click takes the worn item off into the bag, as one in the bag puts it on.
+          event.preventDefault();
+          event.stopPropagation();
+          if (Store.repairMode || (!item && !picked)) return;
+          onPutAway();
         }}
       >
         <MuSpriteFrame
@@ -274,6 +319,21 @@ export const Inventory = observer(() => {
   // The handlers read the latest occupancy without being recreated.
   const latest = useRef({ squares, pickedSize });
   latest.current = { squares, pickedSize };
+
+  // MUIdle: a drag ends where it is let go (see liftedAt); a click keeps the item on the cursor.
+  const dropRef = useRef<(clientX: number, clientY: number) => void>(() => {});
+  useEffect(() => {
+    const onUp = (event: PointerEvent) => {
+      const from = liftedAt;
+      liftedAt = null;
+      if (!from || event.button !== 0 || !Store.inventoryEnabled) return;
+      if (!Store.pickedItem || Store.pendingItemMove) return;
+      if (Math.hypot(event.clientX - from.x, event.clientY - from.y) < DRAG_DISTANCE) return;
+      dropRef.current(event.clientX, event.clientY);
+    };
+    window.addEventListener('pointerup', onUp);
+    return () => window.removeEventListener('pointerup', onUp);
+  }, []);
 
   useEventBus('keyPressed', key => {
     if (
@@ -402,47 +462,95 @@ export const Inventory = observer(() => {
     return row * COLUMNS + column;
   };
 
+  /** The carried item let go over the grid: a click on it, or the end of a drag. */
+  const dropOnGrid = (clientX: number, clientY: number) => {
+    if (!picked || !pickedSize) return;
+
+    // A stack dropped on the same item merges into it (the server's full / partial stack), before
+    // the jewel rule below would try to use one jewel on the other.
+    if (picked.fromStorage === StorageKind.Inventory) {
+      const square = squareAt(clientX, clientY);
+      const entry = square >= 0 ? squares[square] : null;
+      if (entry && entry.slot !== picked.fromSlot && mergesWith(picked.item, entry.item)) {
+        Store.pendingStackMerge = true;
+        Store.placePickedItem(entry.slot);
+        return;
+      }
+    }
+
+    // ApplyJewels (NewUIMyInventory.cpp:2055): a carried jewel clicked on
+    // an occupied square is used on that item instead of moved.
+    if (isUpgradeJewel(picked.item)) {
+      const square = squareAt(clientX, clientY);
+      const entry = square >= 0 ? squares[square] : null;
+      if (entry && entry.slot !== picked.fromSlot) {
+        if (Store.applyPickedJewel(entry.slot)) return;
+      }
+    }
+
+    const at = targetFor(clientX, clientY);
+    if (!at) return;
+
+    if (at.column < 0 || at.row < 0) return;
+
+    const toSlot = slotOf(at.column, at.row);
+
+    if (toSlot === picked.fromSlot) {
+      Store.cancelPickedItem();
+      return;
+    }
+
+    if (canPlace(squares, at.column, at.row, pickedSize.w, pickedSize.h)) {
+      Store.placePickedItem(toSlot);
+    }
+  };
+
+  /**
+   * MUIdle: worn gear into the first free place of the bag - a right click on it, or on the bag
+   * while carrying an item lifted off an equipment slot (which put it back in the hand before).
+   * Anything else carried goes back where it came from, as the right click always did.
+   */
+  const putAway = (slot: number | null) => {
+    const carried = Store.pickedItem;
+    const item = carried ? carried.item : slot !== null ? playerData.items[slot] : null;
+    if (!item) return;
+    if (carried && (carried.fromStorage !== StorageKind.Inventory || carried.fromSlot >= FIRST_SLOT)) {
+      Store.cancelPickedItem();
+      return;
+    }
+
+    const { w, h } = itemSize(item);
+    const fit = firstFit(squares, w, h);
+    if (!fit) {
+      Store.addNotification(t('notify.noRoomForItem'), 'error');
+      if (carried) Store.cancelPickedItem();
+      return;
+    }
+
+    if (!carried) {
+      if (slot === null) return;
+      Store.pickInventoryItem(slot);
+    }
+    Store.placePickedItem(slotOf(fit.column, fit.row));
+  };
+
+  // The release of a drag reads this render's grid.
+  dropRef.current = (clientX: number, clientY: number) => {
+    const under = document.elementFromPoint(clientX, clientY);
+    const equipment = under?.closest<HTMLElement>('[data-equipment-slot]');
+    if (equipment) {
+      const slot = Number(equipment.dataset.equipmentSlot);
+      dropOnEquipment(slot, playerData.items[slot] ?? null);
+      return;
+    }
+    if (under && gridRef.current?.contains(under)) dropOnGrid(clientX, clientY);
+  };
+
   const onGridPointerDown = (event: React.PointerEvent) => {
     if (event.button !== 0) return;
 
     if (picked && pickedSize) {
-      // A stack dropped on the same item merges into it (the server's full / partial stack), before
-      // the jewel rule below would try to use one jewel on the other.
-      if (picked.fromStorage === StorageKind.Inventory) {
-        const square = squareAt(event.clientX, event.clientY);
-        const entry = square >= 0 ? squares[square] : null;
-        if (entry && entry.slot !== picked.fromSlot && mergesWith(picked.item, entry.item)) {
-          Store.pendingStackMerge = true;
-          Store.placePickedItem(entry.slot);
-          return;
-        }
-      }
-
-      // ApplyJewels (NewUIMyInventory.cpp:2055): a carried jewel clicked on
-      // an occupied square is used on that item instead of moved.
-      if (isUpgradeJewel(picked.item)) {
-        const square = squareAt(event.clientX, event.clientY);
-        const entry = square >= 0 ? squares[square] : null;
-        if (entry && entry.slot !== picked.fromSlot) {
-          if (Store.applyPickedJewel(entry.slot)) return;
-        }
-      }
-
-      const at = targetFor(event.clientX, event.clientY);
-      if (!at) return;
-
-      if (at.column < 0 || at.row < 0) return;
-
-      const toSlot = slotOf(at.column, at.row);
-
-      if (toSlot === picked.fromSlot) {
-        Store.cancelPickedItem();
-        return;
-      }
-
-      if (canPlace(squares, at.column, at.row, pickedSize.w, pickedSize.h)) {
-        Store.placePickedItem(toSlot);
-      }
+      dropOnGrid(event.clientX, event.clientY);
       return;
     }
 
@@ -470,6 +578,7 @@ export const Inventory = observer(() => {
     }
 
     Store.pickInventoryItem(entry.slot);
+    liftedAt = { x: event.clientX, y: event.clientY };
   };
 
   const onGridContextMenu = (event: React.MouseEvent) => {
@@ -482,7 +591,7 @@ export const Inventory = observer(() => {
     }
 
     if (picked) {
-      Store.cancelPickedItem();
+      putAway(null);
       return;
     }
 
@@ -557,6 +666,7 @@ export const Inventory = observer(() => {
           {...info}
           item={playerData.items[info.slot] ?? null}
           onHover={setHover}
+          onPutAway={() => putAway(info.slot)}
         />
       ))}
 
