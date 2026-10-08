@@ -7,7 +7,9 @@
   // Cyrillic, Greek) - hence the `Tahoma` fallback inside `var()`, which keeps
   // the declaration valid when the property is not set at all. The named CJK /
   // Thai faces behind it catch a browser with no preference of its own.
-  var(--mu-script-font, Tahoma), Tahoma, Verdana, 'Malgun Gothic',
+  // MUIdle (Vael theme): Karla for Latin text; the browser falls back per glyph to Tahoma and the
+  // script faces for what Karla does not cover (Cyrillic, Greek, CJK, Thai).
+  var(--mu-script-font, 'Karla'), 'Karla', Tahoma, Verdana, 'Malgun Gothic',
   'Microsoft YaHei', 'Yu Gothic UI', 'Leelawadee UI', sans-serif;
 
 // The one place a window says which face it is set in. Windows call this
@@ -22,7 +24,7 @@
   font-size: 11px;
   font-weight: 400;
   line-height: 13px;
-  color: #fff;
+  color: var(--v-text, #fff);
   white-space: pre;
   // ClearType text on a texture: no subpixel tricks, crisp at every scale.
   -webkit-font-smoothing: antialiased;

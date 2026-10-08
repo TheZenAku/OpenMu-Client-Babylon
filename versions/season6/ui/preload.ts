@@ -7,7 +7,6 @@
  * this is version property (versions/v097d/ui/preload.ts).
  */
 import { CURSOR_SPRITES } from '../../../src/ui/components/gameCursor/cursors';
-import { MU_WINDOW_SPRITES } from '../../../src/ui/components/muWindow';
 import { INVENTORY_SPRITES } from '../../../src/ui/pages/worldPage/components/inventory/layout';
 import { NPC_SHOP_SPRITES } from '../../../src/ui/pages/worldPage/components/npcShop/layout';
 import { CHARACTER_INFO_SPRITES } from '../../../src/ui/pages/worldPage/components/characterInfo/layout';
@@ -201,7 +200,7 @@ const HUD_SPRITES = [
 
 const WORLD_SPRITES = [
   ...new Set([
-    ...MU_WINDOW_SPRITES,
+    // The window frame is drawn in CSS by the Vael theme: no frame sprites to preload.
     ...INVENTORY_SPRITES,
     ...CHARACTER_INFO_SPRITES,
     ...NPC_SHOP_SPRITES,

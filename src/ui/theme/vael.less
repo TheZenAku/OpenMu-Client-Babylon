@@ -1,0 +1,168 @@
+// MUIdle's visual identity ("Vael", after the owner's reference): a gothic, near-black interface with
+// gilt text and hairlines, blood-red accents, a serif display face, small spaced monospace labels and
+// square tiles. One set of tokens on :root, the fonts, and mixins the pages and windows use - so the
+// whole UI changes from here, not window by window.
+
+@font-face {
+  font-family: 'Karla';
+  src: url('/fonts/karla_var.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/fonts/cormorant_garamond_var.woff2') format('woff2');
+  font-weight: 300 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/fonts/cormorant_garamond_italic.woff2') format('woff2');
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono Vael';
+  src: url('/fonts/jetbrains_mono_var.woff2') format('woff2');
+  font-weight: 100 800;
+  font-display: swap;
+}
+
+:root {
+  // Surfaces
+  --v-bg: oklch(13.7% 0.004 265);
+  --v-card: oklch(26% 0.008 265);
+  --v-muted: oklch(21% 0.006 265);
+  --v-sunken: oklch(11% 0.004 265);
+  // Ink
+  --v-gilt: oklch(77% 0.09 78);
+  --v-gilt-bright: oklch(90% 0.06 83);
+  --v-gilt-dim: oklch(59% 0.05 78);
+  --v-text: oklch(84% 0.03 80);
+  // Blood
+  --v-blood: oklch(36% 0.145 24);
+  --v-blood-bright: oklch(48% 0.17 25);
+  --v-blood-deep: oklch(24% 0.09 22);
+  // Lines and glows
+  --v-border: oklch(77% 0.09 78 / 0.25);
+  --v-border-strong: oklch(77% 0.09 78 / 0.5);
+  --v-blood-glow: oklch(36% 0.145 24 / 0.65);
+  --v-gilt-glow: oklch(77% 0.09 78 / 0.3);
+  // Gradients
+  --v-hero-gradient: linear-gradient(98deg, var(--v-blood) 0%, var(--v-gilt) 46%, oklch(91% 0.07 85) 52%, var(--v-gilt) 58%, var(--v-blood) 100%);
+  --v-panel-gradient: linear-gradient(145deg, oklch(25% 0.008 265 / 0.8), oklch(16% 0.005 265 / 0.92));
+  --v-blood-gradient: linear-gradient(90deg, var(--v-blood-deep), var(--v-blood-bright));
+  --v-gilt-gradient: linear-gradient(90deg, oklch(55% 0.07 78), var(--v-gilt));
+  // Type
+  --v-font-body: 'Karla', 'Segoe UI', sans-serif;
+  --v-font-display: 'Cormorant Garamond', 'Georgia', serif;
+  --v-font-label: 'JetBrains Mono Vael', 'JetBrains Mono', 'Consolas', monospace;
+}
+
+// A raised panel: the reference's cards (dark gradient, gilt hairline, a faint inner light).
+.vael-panel() {
+  background: var(--v-panel-gradient), var(--v-bg);
+  border: 1px solid var(--v-border);
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.04), 0 8px 24px oklch(0% 0 0 / 0.45);
+  color: var(--v-text);
+}
+
+// A sunken well: lists, grids, inputs.
+.vael-well() {
+  background: oklch(11% 0.004 265 / 0.85);
+  border: 1px solid var(--v-border);
+}
+
+// The small spaced capitals of the reference ("EQUIPAMENTO", "ATRIBUTOS").
+.vael-label() {
+  font-family: var(--v-font-label);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--v-gilt-dim);
+}
+
+// A section title with hairlines on both sides: "——— EQUIPAMENTO ———".
+.vael-ruled-title() {
+  .vael-label();
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--v-gilt);
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--v-border);
+  }
+}
+
+// Serif display: names and headings.
+.vael-display() {
+  font-family: var(--v-font-display);
+  font-weight: 600;
+  color: var(--v-gilt);
+  letter-spacing: 0.01em;
+}
+
+// A square tile: equipment, inventory, shortcuts.
+.vael-tile() {
+  background: oklch(14% 0.004 265 / 0.9);
+  border: 1px solid oklch(77% 0.09 78 / 0.18);
+  color: var(--v-gilt-dim);
+  transition: border-color 120ms, background 120ms, box-shadow 120ms;
+}
+.vael-tile-active() {
+  background: linear-gradient(160deg, oklch(30% 0.1 22 / 0.95), oklch(20% 0.06 22 / 0.95));
+  border-color: var(--v-border-strong);
+  color: var(--v-gilt-bright);
+  box-shadow: inset 0 0 12px var(--v-blood-glow);
+}
+
+// Buttons: the quiet one (outlined) and the strong one (blood).
+.vael-button() {
+  .vael-label();
+  color: var(--v-gilt);
+  background: oklch(14% 0.004 265 / 0.9);
+  border: 1px solid var(--v-border);
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: border-color 120ms, background 120ms, color 120ms;
+  &:hover:not(:disabled) {
+    border-color: var(--v-border-strong);
+    color: var(--v-gilt-bright);
+    background: oklch(18% 0.006 265 / 0.95);
+  }
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+.vael-button-primary() {
+  .vael-button();
+  color: var(--v-gilt-bright);
+  background: linear-gradient(160deg, var(--v-blood), var(--v-blood-deep));
+  border-color: oklch(48% 0.17 25 / 0.7);
+  &:hover:not(:disabled) {
+    background: linear-gradient(160deg, var(--v-blood-bright), var(--v-blood));
+    box-shadow: 0 0 14px var(--v-blood-glow);
+  }
+}
+
+// A resource bar (VIDA, MANA): a sunken track with a gradient fill.
+.vael-bar() {
+  position: relative;
+  height: 8px;
+  background: oklch(10% 0.004 265);
+  border: 1px solid oklch(77% 0.09 78 / 0.18);
+  overflow: hidden;
+}
+
+// The thin scrollbars of the reference.
+.vael-scrollbars() {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(77% 0.09 78 / 0.35) transparent;
+}

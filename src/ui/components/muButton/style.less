@@ -1,0 +1,63 @@
+@import (reference) '../../theme/vael.less';
+
+// The Vael buttons (see index.tsx): CSS faces for the original's button sprites.
+.vael-btn {
+  .vael-button();
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  pointer-events: auto;
+  user-select: none;
+  white-space: nowrap;
+  font-size: 9px;
+
+  .vael-btn-label {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &.vael-btn-glyph {
+    padding: 0;
+    font-family: var(--v-font-body);
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+
+  &.vael-btn-primary {
+    .vael-button-primary();
+    padding: 0;
+  }
+
+  &.vael-btn-checked {
+    .vael-tile-active();
+  }
+
+  &.vael-btn-disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  &:active:not(.vael-btn-disabled) .vael-btn-label {
+    transform: translateY(1px);
+  }
+}
+
+// A sprite button the theme has no face for keeps its picture, framed like a tile.
+.vael-sprite-btn {
+  outline: 1px solid var(--v-border);
+  outline-offset: -1px;
+  transition: outline-color 120ms, box-shadow 120ms;
+
+  &:hover {
+    outline-color: var(--v-border-strong);
+    box-shadow: 0 0 10px var(--v-gilt-glow);
+  }
+
+  &.vael-btn-checked {
+    outline-color: var(--v-blood-bright);
+    box-shadow: inset 0 0 10px var(--v-blood-glow);
+  }
+}

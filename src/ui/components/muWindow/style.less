@@ -1,21 +1,68 @@
 @import (reference) '../muText/style.less';
-// Window furniture. Both components are pure positioning: every coordinate
-// comes from the C++ and is passed in, so this file only says that the pieces
-// stack absolutely and that the art must not be smoothed.
+@import (reference) '../../theme/vael.less';
+// Window furniture. Every coordinate comes from the C++ and is passed in; the
+// Vael theme draws the frame itself (a gilt-lined dark panel) instead of the
+// original's sprite pieces.
 .mu-item-window {
   position: absolute;
   pointer-events: auto;
   user-select: none;
-  image-rendering: pixelated;
-  color: #fff;
+  color: var(--v-text);
   .mu-font();
   // The root takes focus on open (Escape scopes to the focused window); the
-  // art is the frame, not a focus ring.
+  // frame is the border, not a focus ring.
   outline: none;
+}
+
+.vael-window {
+  .vael-panel();
+  // The reference's double line: an outer hairline and a faint inner one.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid oklch(77% 0.09 78 / 0.08);
+    pointer-events: none;
+  }
+
+  // Every window's title, whatever its own stylesheet says about placement:
+  // the reference's spaced gilt capitals between two hairlines.
+  .window-title {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 14px;
+    font-family: var(--v-font-label) !important;
+    font-size: 9px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--v-gilt) !important;
+    text-shadow: none !important;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--v-border);
+    }
+  }
 }
 
 .mu-table-frame {
   position: absolute;
+  pointer-events: none;
+}
+
+.vael-table {
+  .vael-well();
+}
+
+.vael-rule {
+  height: 1px;
+  background: var(--v-border);
   pointer-events: none;
 }
 
@@ -33,9 +80,9 @@
   background: linear-gradient(
     135deg,
     transparent 0 45%,
-    #d8c89a 45% 55%,
+    var(--v-gilt) 45% 55%,
     transparent 55% 70%,
-    #d8c89a 70% 80%,
+    var(--v-gilt) 70% 80%,
     transparent 80%
   );
 }

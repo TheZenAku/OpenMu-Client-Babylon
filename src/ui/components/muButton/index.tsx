@@ -1,3 +1,4 @@
+import './style.less';
 import { useState, type CSSProperties } from 'react';
 import { MuSpriteFrame } from '../muSprite';
 import { uiClick } from '../../../libs/sfx';
@@ -25,14 +26,34 @@ type MuButtonProps = {
   children?: React.ReactNode;
 };
 
+/**
+ * The Vael theme's face for the original's button sprites. A button with a label, or one of the
+ * common sprites below, is drawn in CSS (the reference's gilt-lined tiles, the blood one for the
+ * main action); any other sprite keeps its picture inside a themed tile.
+ */
+const THEMED: Record<string, { glyph?: string; primary?: boolean }> = {
+  'newui_exit_00.OZT': { glyph: '✕' },
+  'newui_button_ok.OZT': { glyph: '✓', primary: true },
+  'message_ok_b_all.OZT': { glyph: '✓', primary: true },
+  'newui_button_cancel.OZT': { glyph: '✕' },
+  'loding_cancel_b_all.OZT': { glyph: '✕' },
+  'newui_repair_00.OZT': { glyph: '⚒' },
+  'Quest_bt_L.OZT': { glyph: '‹' },
+  'Quest_bt_R.OZT': { glyph: '›' },
+  'newui_btn_empty.OZT': {},
+  'newui_btn_empty_small.OZT': {},
+  'newui_btn_empty_big.OZT': {},
+  'newui_guild_tab04.OZT': {},
+};
+
 export const MuButton = ({
   file,
   width,
   height,
   frames,
   label,
-  color = '#e2e2e2',
-  activeColor = '#ffffff',
+  color,
+  activeColor,
   checked = false,
   disabled = false,
   onClick,
@@ -42,6 +63,33 @@ export const MuButton = ({
 }: MuButtonProps) => {
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
+  const themed = THEMED[file];
+
+  if (themed || label) {
+    const classes = [
+      'vael-btn',
+      themed?.glyph && !label ? 'vael-btn-glyph' : '',
+      themed?.primary ? 'vael-btn-primary' : '',
+      checked ? 'vael-btn-checked' : '',
+      disabled ? 'vael-btn-disabled' : '',
+    ].filter(Boolean).join(' ');
+    return (
+      <div
+        role="button"
+        aria-disabled={disabled}
+        // A button is never a drag handle (see the sprite branch below).
+        data-no-drag="true"
+        className={classes}
+        style={{ position: 'relative', width, height, ...style }}
+        onClick={disabled ? undefined : uiClick(onClick)}
+      >
+        <span className="vael-btn-label" style={{ ...(color ? { color } : {}), ...labelStyle }}>
+          {label ?? themed?.glyph}
+        </span>
+        {children}
+      </div>
+    );
+  }
 
   let frame = frames.up;
 
@@ -61,6 +109,7 @@ export const MuButton = ({
       // does nothing. Every caller used to wrap itself in a `data-no-drag`
       // div to avoid that; the ones that forgot were simply broken.
       noDrag
+      className={`vael-sprite-btn${checked ? ' vael-btn-checked' : ''}`}
       style={{
         position: 'relative',
         pointerEvents: 'auto',
@@ -85,11 +134,10 @@ export const MuButton = ({
           alignItems: 'center',
           justifyContent: 'center',
           paddingTop: pressed && !disabled ? 2 : 0,
-          color: hovered && !disabled ? activeColor : color,
+          color: hovered && !disabled ? (activeColor ?? 'var(--v-gilt-bright)') : (color ?? 'var(--v-gilt)'),
           ...labelStyle,
         }}
       >
-        {label}
         {children}
       </div>
     </MuSpriteFrame>
