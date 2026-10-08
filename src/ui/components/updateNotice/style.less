@@ -1,0 +1,28 @@
+// The "new version" notice (UpdateNotice): a Vael panel at the top centre, over everything but modals.
+@import (reference) '../../theme/vael.less';
+
+.update-notice {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  z-index: 650;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 10px 8px 16px;
+  transform: translateX(-50%);
+  .vael-panel();
+  border-color: var(--v-border-strong);
+  box-shadow: 0 8px 24px oklch(0% 0 0 / 0.6), 0 0 14px var(--v-gilt-glow);
+  color: var(--v-gilt-bright);
+  font: 500 14px/1.3 var(--v-font-body);
+  pointer-events: auto;
+  white-space: nowrap;
+
+  button {
+    .vael-button-primary();
+    min-height: 32px;
+    padding: 0 16px;
+    cursor: pointer;
+  }
+}
