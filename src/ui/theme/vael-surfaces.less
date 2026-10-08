@@ -86,6 +86,33 @@
   border: 1px solid oklch(20% 0.01 78);
 }
 
+// A tab strip (quest, guild, friends windows): a baseline; the chosen tab is a blood tile open at the
+// bottom, a head plate an ink tile.
+.vael-surface-tabs {
+  border-bottom: 1px solid var(--v-border);
+  background: linear-gradient(180deg, transparent, oklch(77% 0.09 78 / 0.05));
+}
+
+.vael-surface-tab-on {
+  background: linear-gradient(160deg, oklch(30% 0.1 22 / 0.95), oklch(20% 0.06 22 / 0.95));
+  border: 1px solid var(--v-border-strong);
+  border-bottom-color: transparent;
+}
+
+.vael-surface-head {
+  .vael-tile();
+}
+
+// A life gauge (party window): an ink trough, a blood fill.
+.vael-surface-gauge {
+  background: var(--v-sunken);
+  border: 1px solid oklch(77% 0.09 78 / 0.18);
+}
+
+.vael-surface-gauge-fill {
+  background: var(--v-blood-gradient);
+}
+
 // An equipment slot's silhouette, toned from the original's steel to the gilt.
 .vael-surface-tint {
   filter: grayscale(1) sepia(1) brightness(0.5) contrast(1.25);

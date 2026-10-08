@@ -59,3 +59,19 @@
     }
   }
 }
+
+// Vael theme (ui/theme/vael.less): the text-only buff cell as a blood tile with a gilt hairline, the
+// tip as the ink box the item tooltip uses.
+.buff-bar {
+  .buff .buff-text {
+    background: linear-gradient(160deg, var(--v-blood), var(--v-blood-deep));
+    border-color: var(--v-border-strong);
+    color: var(--v-gilt-bright);
+  }
+
+  .buff-tip {
+    background: linear-gradient(160deg, oklch(17% 0.006 265 / 0.95), oklch(11% 0.004 265 / 0.95));
+    border-color: var(--v-border-strong);
+    box-shadow: 0 6px 18px oklch(0% 0 0 / 0.5);
+  }
+}

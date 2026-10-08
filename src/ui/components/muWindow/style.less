@@ -26,8 +26,13 @@
   }
 
   // Every window's title, whatever its own stylesheet says about placement:
-  // the reference's spaced gilt capitals between two hairlines.
-  .window-title {
+  // the reference's spaced gilt capitals between two hairlines. (Some windows name
+  // their title element after themselves.)
+  .window-title,
+  .guild-title,
+  .messenger-title,
+  .party-title,
+  .pet-title {
     display: flex !important;
     align-items: center;
     justify-content: center;
