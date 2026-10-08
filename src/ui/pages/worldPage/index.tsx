@@ -10,6 +10,7 @@ import { DamageNumbers } from '../../components/damageNumbers';
 import { TargetHealthBar } from '../../components/targetHealthBar';
 import { MoveCommandWindow } from './components/moveCommandWindow';
 import { BottomBar } from './components/bottomBar';
+import { PlayerFrame } from './components/playerFrame';
 import { CharacterInfo } from './components/characterInfo';
 import { PetInfoWindow } from './components/petInfo';
 import { MuHelperWindow } from './components/muHelper';
@@ -77,6 +78,7 @@ const HUD = observer(() => {
       <Notices />
       <SlideHelpBar />
       <BuffBar />
+      <PlayerFrame />
       <BottomBar />
       {}
       <Inventory />

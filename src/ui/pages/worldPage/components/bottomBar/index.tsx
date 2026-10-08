@@ -6,7 +6,6 @@ import { observer } from 'mobx-react-lite';
 import { Store } from '../../../../../store';
 import { ItemIcon } from '../../../../components/itemIcon';
 import { MuButton } from '../../../../components/muButton';
-import { MuNumber } from '../../../../components/muNumber';
 import { Item } from '../../../../../ecs/world';
 import {
   MuResizeGrip,
@@ -14,22 +13,12 @@ import {
 } from '../../../../components/muWindow/useWindowChrome';
 import { MuWindows } from '../../../../components/muWindow/windowState';
 import { SkillIcon } from '../../../../components/skillIcon';
-import { MasterExpBar } from '../masterSkills/masterExpBar';
-import { PetCommandBar } from './petCommands';
-import {
-  MAIN_FRAME_BUTTONS,
-  MAIN_FRAME_BUTTON_FRAMES,
-  MAIN_FRAME_BUTTON_HEIGHT,
-  MAIN_FRAME_BUTTON_WIDTH,
-} from './mainFrameButtons';
+import { PetCommandBar, PET_COMMAND_BAR_HEIGHT, PET_COMMAND_BAR_WIDTH } from './petCommands';
+import { MAIN_FRAME_BUTTONS, MAIN_FRAME_BUTTON_FRAMES } from './mainFrameButtons';
 import { isKey } from '../../../../../common/keyBindings';
-import { BOTTOM_BAR_ID } from '../../../../components/muWindow';
+import { BOTTOM_BAR_HEIGHT, BOTTOM_BAR_ID } from '../../../../components/muWindow';
 import { skillDefinition } from '../../../../../common/skillsDatabase';
-import {
-  isHotbarSkill,
-  SKILL_ICON_HEIGHT,
-  SKILL_ICON_WIDTH,
-} from '../../../../../common/skillCasting';
+import { isHotbarSkill, SKILL_ICON_HEIGHT, SKILL_ICON_WIDTH } from '../../../../../common/skillCasting';
 import { useEventBus } from '../../../../../hooks/useEventBus';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -40,86 +29,71 @@ import { ExpTooltip } from './expTooltip';
 import { SessionStats } from '../../../../../common/sessionStats';
 import { devQuery } from '../../../../../common/devSeams';
 import { itemBaseName } from '../../../../../common/itemsDatabase';
+import { isMobileDevice } from '../../../../../common/mobile';
 import {
   ITEM_HOTKEY_CODES,
   canRegisterItemHotkey,
   countHotkeyItems,
   findHotkeyItem,
 } from '../../../../../common/itemHotkeys';
+import { HuntPanel } from '../muidle/huntPanel';
+import { StatsPanel } from './statsPanel';
+import { formatNumber } from '../playerFrame';
+
+/**
+ * The bottom bar in the Vael layout (the owner's reference): HUNT on the left, the skills with the
+ * potions and the experience in the middle, the rates on the right, the window buttons in a column at
+ * the end. Life, mana, SD and AG moved to the hero's frame (PlayerFrame). The behaviour is the
+ * original's main frame - the hot keys 1..9 / 0 (all ten on show, no page flipping), Q W E R, the
+ * current-skill box and its fan, Ctrl+digit and drag binding - only the arrangement is new.
+ *
+ * A touch screen keeps only the middle and the window buttons: its HUNT button floats (MUIdleHud),
+ * and the skill pad fires the skills.
+ */
 
 const BAR_ID = BOTTOM_BAR_ID;
 /** The skill fan is a window for Escape's purposes, nothing more. */
 const SKILL_FAN_ID = 'skill-fan';
 
-const BAR_WIDTH = 640;
-const BAR_HEIGHT = 51;
+const COMPACT = isMobileDevice();
+
+const BAR_HEIGHT = BOTTOM_BAR_HEIGHT;
+const PANEL_GAP = 6;
+const HUNT_WIDTH = 214;
+const CENTER_WIDTH = 684;
+const STATS_WIDTH = 194;
+const MENU_WIDTH = 22;
+
+const CENTER_X = COMPACT ? 0 : HUNT_WIDTH + PANEL_GAP;
+const STATS_X = CENTER_X + CENTER_WIDTH + PANEL_GAP;
+const MENU_X = COMPACT ? CENTER_X + CENTER_WIDTH + 4 : STATS_X + STATS_WIDTH + 4;
+const BAR_WIDTH = MENU_X + MENU_WIDTH;
 // Fitted to the viewport like a window, so a portrait phone shows the whole bar.
 MuWindows.setFixedSize(BAR_ID, { width: BAR_WIDTH, height: BAR_HEIGHT });
-const BAR_TOP = 480 - BAR_HEIGHT;
 
-const local = (screenY: number) => screenY - BAR_TOP;
-
-
-const HOTKEY_X = 10;
-const HOTKEY_STEP = 38;
-const HOTKEY_Y = local(443);
-const HOTKEY_SIZE = 20;
-const HOTKEY_COUNT_X = 30;
-const HOTKEY_COUNT_Y = local(457);
+/** The skill and potion boxes. */
+const SLOT_WIDTH = 40;
+const SLOT_HEIGHT = 48;
+const SLOT_STEP = 43;
+const SLOT_Y = 14;
+const CURRENT_SKILL_X = CENTER_X + 10;
+const HOTKEY_SLOTS_X = CURRENT_SKILL_X + SLOT_WIDTH + 10;
+const POTION_X = HOTKEY_SLOTS_X + 10 * SLOT_STEP - 3 + 12;
 const HOTKEY_KEYS = ['Q', 'W', 'E', 'R'];
 
-const SKILL_SLOT_X = 190 + 32;
-const SKILL_SLOT_Y = local(431);
-const SKILL_SLOT_WIDTH = 32;
-const SKILL_SLOT_HEIGHT = 38;
-const CURRENT_SKILL_X = 385;
+/** The 20x28 skill icon, drawn larger in the 40x48 box (`RenderSkillIcon` drew it 1:1 in 32x38). */
+const SKILL_ICON_SCALE = 1.4;
+const SKILL_ICON_X = Math.round((SLOT_WIDTH - SKILL_ICON_WIDTH * SKILL_ICON_SCALE) / 2);
+const SKILL_ICON_Y = 3;
 
-const BUTTON_X = 489;
-const BUTTON_STEP = 30;
-const BUTTON_WIDTH = MAIN_FRAME_BUTTON_WIDTH;
-const BUTTON_HEIGHT = MAIN_FRAME_BUTTON_HEIGHT;
-const BUTTON_Y = local(BAR_TOP);
+const EXP_X = CENTER_X + 10;
+const EXP_WIDTH = CENTER_WIDTH - 20;
+const EXP_TEXT_Y = SLOT_Y + SLOT_HEIGHT + 5;
+const EXP_Y = EXP_TEXT_Y + 16;
+const EXP_HEIGHT = 8;
 
-const BUTTON_FRAMES = MAIN_FRAME_BUTTON_FRAMES;
-
-const EXP_X = 2;
-const EXP_Y = local(473);
-const EXP_WIDTH = 629;
-const EXP_HEIGHT = 4;
-const EXP_NUMBER_X = 635;
-const EXP_NUMBER_Y = local(469);
-const EXP_SUB_BARS = 10;
-
-/**
- * A vital gauge in the Vael theme: a sunken tile filled from the bottom - blood for life, gilt for
- * mana, pale for SD and AG - with its label (the reference's "VIDA" / "MANA").
- */
-const Gauge = ({
-  kind,
-  x,
-  y,
-  width,
-  height,
-  fill,
-  label,
-}: {
-  kind: 'hp' | 'sd' | 'ag' | 'mp';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  fill: number;
-  label?: string;
-}) => {
-  const filled = Math.max(0, Math.min(1, fill));
-
-  return (
-    <div className={`gauge vael-gauge ${kind}`} style={{ left: x, top: y, width, height }}>
-      <div className="gauge-fill" style={{ height: `${filled * 100}%` }} />
-      {label && <span className="gauge-label">{label}</span>}
-    </div>
-  );
-};
+const MENU_BUTTON_HEIGHT = 18;
+const MENU_BUTTON_STEP = 20;
 
 /**
  * One Q/W/E/R slot (`CNewUIItemHotKey`): shows the best matching potion the
@@ -138,43 +112,40 @@ const ConsumableItem = observer(({ index, hotKey }: { index: number; hotKey: str
   const name = icon ? itemBaseName(icon.group, icon.num) : undefined;
 
   return (
-    <>
-      <div
-        className={`consumable-item${canBind ? ' can-bind' : ''}`}
-        title={
-          name
-            ? t('bottomBar.itemSlot', { name, key: hotKey })
-            : t('bottomBar.emptySlot', { key: hotKey })
-        }
-        style={{
-          left: HOTKEY_X + index * HOTKEY_STEP,
-          top: HOTKEY_Y,
-          width: HOTKEY_SIZE,
-          height: HOTKEY_SIZE,
-        }}
-        onPointerDown={event => {
-          if (event.button !== 0 || !picked) return;
-          event.stopPropagation();
-          if (!canBind) return;
-          Store.setItemHotkey(index, picked.item);
-          Store.cancelPickedItem();
-        }}
-        onContextMenu={event => {
-          event.preventDefault();
-          event.stopPropagation();
-          Store.useItemHotkey(index);
-        }}
-      >
-        {!!icon && <ItemIcon item={icon} />}
-      </div>
-      {count > 0 && (
-        <MuNumber
-          value={count}
-          x={HOTKEY_COUNT_X + index * HOTKEY_STEP}
-          y={HOTKEY_COUNT_Y}
-        />
+    <div
+      className={`consumable-item${canBind ? ' can-bind' : ''}${icon ? '' : ' empty'}`}
+      title={
+        name
+          ? t('bottomBar.itemSlot', { name, key: hotKey })
+          : t('bottomBar.emptySlot', { key: hotKey })
+      }
+      style={{
+        left: POTION_X + index * SLOT_STEP,
+        top: SLOT_Y,
+        width: SLOT_WIDTH,
+        height: SLOT_HEIGHT,
+      }}
+      onPointerDown={event => {
+        if (event.button !== 0 || !picked) return;
+        event.stopPropagation();
+        if (!canBind) return;
+        Store.setItemHotkey(index, picked.item);
+        Store.cancelPickedItem();
+      }}
+      onContextMenu={event => {
+        event.preventDefault();
+        event.stopPropagation();
+        Store.useItemHotkey(index);
+      }}
+    >
+      {!!icon && (
+        <div className="consumable-icon">
+          <ItemIcon item={icon} />
+        </div>
       )}
-    </>
+      <span className="slot-key">{hotKey}</span>
+      {count > 0 && <span className="slot-count">{count}</span>}
+    </div>
   );
 });
 
@@ -199,6 +170,7 @@ const ConsumableItems = () => {
   );
 };
 
+/** One of the five window buttons (shop, character, inventory, friends, options), in a column. */
 const BarButton = ({
   index,
   file,
@@ -213,25 +185,31 @@ const BarButton = ({
   <div
     className="bar-button"
     title={title}
-    style={{ left: BUTTON_X + index * BUTTON_STEP, top: BUTTON_Y }}
+    style={{ left: MENU_X, top: 4 + index * MENU_BUTTON_STEP }}
   >
     <MuButton
       file={file}
-      width={BUTTON_WIDTH}
-      height={BUTTON_HEIGHT}
-      frames={BUTTON_FRAMES}
+      width={MENU_WIDTH}
+      height={MENU_BUTTON_HEIGHT}
+      frames={MAIN_FRAME_BUTTON_FRAMES}
       onClick={onClick}
     />
   </div>
 );
 
-/** The 4 px strip is too thin to aim at; the hover area reaches past it. */
-const EXP_HOVER_PAD = 4;
-/** Stopping short of the corner leaves the resize grip its own 12 px. */
-const EXP_HOVER_WIDTH = EXP_WIDTH - 14;
+/** The thin strip is hard to aim at; the hover area reaches past it. */
+const EXP_HOVER_PAD = 6;
 
+/**
+ * The experience of the level (or the master level, once the hero levels as a master: the
+ * original's `Exbar_Master` branch), as numbers over a gilt strip - "375.822 / 3.437.200 · 10.93%".
+ */
 export const ExpBar = observer(() => {
-  const progress = Store.playerData.expPercent;
+  const master = skills.inMasterProgression;
+  const p = Store.playerData;
+  const progress = master ? skills.masterExpPercent : p.expPercent;
+  const current = master ? skills.masterExperience.current : p.exp - p.currentLvlExp;
+  const needed = master ? skills.masterExperience.next : p.expToNextLvl - p.currentLvlExp;
   const hover = useRef<HTMLDivElement>(null);
   const [tip, setTip] = useState<{ x: number; y: number } | null>(null);
 
@@ -245,29 +223,24 @@ export const ExpBar = observer(() => {
 
   return (
     <>
-      <div className="exp-track" style={{ left: EXP_X, top: EXP_Y, width: EXP_WIDTH, height: EXP_HEIGHT }} />
-      <div
-        className="exp-fill"
-        style={{
-          left: EXP_X,
-          top: EXP_Y,
-          width: Math.round(progress * EXP_WIDTH),
-          height: EXP_HEIGHT,
-        }}
-      />
-      <MuNumber
-        value={Math.trunc(progress * EXP_SUB_BARS)}
-        x={EXP_NUMBER_X}
-        y={EXP_NUMBER_Y}
-      />
+      <div className="exp-text" style={{ left: EXP_X, top: EXP_TEXT_Y, width: EXP_WIDTH }}>
+        {master && <span className="exp-master">{mt('hud.master')}</span>}
+        <span className="exp-numbers">
+          {formatNumber(Math.max(0, current))} / {formatNumber(Math.max(0, needed))}
+        </span>
+        <span className="exp-percent">{(progress * 100).toFixed(2)}%</span>
+      </div>
+      <div className={`exp-track${master ? ' is-master' : ''}`} style={{ left: EXP_X, top: EXP_Y, width: EXP_WIDTH, height: EXP_HEIGHT }}>
+        <div className="exp-fill" style={{ width: `${progress * 100}%` }} />
+      </div>
       <div
         ref={hover}
         className="exp-hover"
         style={{
           left: EXP_X,
-          top: EXP_Y - EXP_HOVER_PAD,
-          width: EXP_HOVER_WIDTH,
-          height: EXP_HEIGHT + EXP_HOVER_PAD * 2,
+          top: EXP_TEXT_Y - 2,
+          width: EXP_WIDTH - 14,
+          height: EXP_Y + EXP_HEIGHT - EXP_TEXT_Y + EXP_HOVER_PAD,
         }}
         onPointerEnter={() => SessionStats.watch()}
         onPointerMove={e => setTip({ x: e.clientX, y: e.clientY })}
@@ -278,28 +251,8 @@ export const ExpBar = observer(() => {
   );
 });
 
-/** `RenderSkillIcon(…, x + 6, y + 6, 20, 28)`: the icon inside a 32x38 box. */
-const SKILL_ICON_INSET_X = 6;
-const SKILL_ICON_INSET_Y = 6;
-
-
-/**
- * Which hot-key slot each of the five boxes shows, per page
- * (`iStartSkillIndex`, with 10 folded back to 0). The slot index *is* the
- * digit that fires it - which is why the bar art has 1..5 printed on it -
- * so the second page is 6..9 and 0, and nothing here is off by one.
- */
-const BAR_PAGES: readonly (readonly number[])[] = [
-  [1, 2, 3, 4, 5],
-  [6, 7, 8, 9, 0],
-];
-/** Every slot in bar order, for the drag-to-bind strip. */
+/** Every hot key in bar order: the slot index *is* the digit that fires it. */
 const ALL_SLOTS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
-/** The drop strip that appears over the slots while a skill is dragged. */
-const HOTKEY_STRIP_X = SKILL_SLOT_X - 14;
-const HOTKEY_STRIP_Y = SKILL_SLOT_Y - 16;
-const HOTKEY_STRIP_STEP = 19;
-const HOTKEY_STRIP_SIZE = 16;
 /** Pixels the pointer must travel before a press becomes a drag, not a click. */
 const DRAG_THRESHOLD = 4;
 /** RenderSkillDelay: red at half alpha rising from the slot's floor. */
@@ -309,27 +262,17 @@ const DROP_CURRENT = -2;
 const DROP_NONE = -1;
 
 /**
- * The learned-skill fan (`m_bSkillList`, NewUIMainFrameWindow.cpp:1546):
- * 32×38 boxes at y 390 spreading out from the current-skill box, right,
- * left, right…; boxes 15..18 continue leftward and everything past 18
- * climbs one row.
+ * The learned-skill fan (`m_bSkillList`, NewUIMainFrameWindow.cpp:1546): boxes over the bar from the
+ * current-skill box rightwards, a row of `FAN_ROW`, further rows above.
  */
-const FAN_Y = local(390);
-const FAN_WRAP = 18;
+const FAN_ROW = 14;
+const FAN_Y = -(SLOT_HEIGHT + 10);
 
 function fanPosition(count: number): { left: number; top: number } {
-  const w = SKILL_SLOT_WIDTH;
-  const top = count >= FAN_WRAP ? FAN_Y - SKILL_SLOT_HEIGHT : FAN_Y;
-  let left: number;
-  if (count < 14) {
-    const half = Math.floor(count / 2);
-    left = count % 2 === 0 ? CURRENT_SKILL_X + half * w : CURRENT_SKILL_X - (half + 1) * w;
-  } else if (count < FAN_WRAP) {
-    left = CURRENT_SKILL_X - 8 * w - (count - 14) * w;
-  } else {
-    left = CURRENT_SKILL_X - 12 * w + (count - 17) * w;
-  }
-  return { left, top };
+  return {
+    left: CURRENT_SKILL_X + (count % FAN_ROW) * SLOT_STEP,
+    top: FAN_Y - Math.floor(count / FAN_ROW) * (SLOT_HEIGHT + 3),
+  };
 }
 
 type SkillDrag = { number: number; x: number; y: number; moved: boolean; fromFan: boolean };
@@ -352,10 +295,17 @@ const SkillDragGhost = ({ drag }: { drag: SkillDrag }) =>
     document.body
   );
 
+/** The skill's cost as the box prints it under the icon: mana, else AG. */
+function costText(number: number): string {
+  const definition = skillDefinition(number);
+  if (!definition) return '';
+  if (definition.mana > 0) return `${definition.mana} MP`;
+  if (definition.ag > 0) return `${definition.ag} AG`;
+  return '';
+}
+
 /**
- * CNewUISkillList: the five bar slots are hot keys 1..5 or 6..9,0 - the page
- * holding the current skill (`IsArrayUp`), the mouse wheel flips it, and the
- * slot index is the digit that fires it, so box one really is key 1.
+ * CNewUISkillList: the ten hot keys 1..9, 0 in a row, the slot index being the digit that fires it.
  *
  * A click on a bound slot makes it the current skill; a click on an *empty*
  * slot (and a right click on a bound one) opens the fan of every learned
@@ -363,17 +313,16 @@ const SkillDragGhost = ({ drag }: { drag: SkillDrag }) =>
  * skill clears it. A click on the current-skill box opens the same fan to
  * select rather than bind, and a right click there goes back to the plain
  * attack. Ctrl+digit over an icon binds that key (`SetHotKey`), as does
- * dropping a dragged skill on the digit strip; dropping one on the
- * current-skill box selects it. Icons the hero cannot use are greyed
- * (bCantSkill), a running delay sweeps the slot red from the bottom
- * (RenderSkillDelay), and hovering shows RenderSkillInfo.
+ * dropping a dragged skill on a slot; dropping one on the current-skill box
+ * selects it. Icons the hero cannot use are greyed (bCantSkill), a running
+ * delay sweeps the slot red from the bottom with the seconds left
+ * (RenderSkillDelay), the box prints the skill's cost, and hovering shows
+ * RenderSkillInfo.
  */
 const SkillSlots = observer(() => {
   const [listOpen, setListOpen] = useState(false);
   /** The slot the open fan is picking for; -1 = it is only browsing. */
   const [assignSlot, setAssignSlot] = useState(-1);
-  // The wheel's choice of page; the current skill's page wins while it has one.
-  const [pageOverride, setPageOverride] = useState<boolean | null>(null);
   const [hovered, setHovered] = useState(-1);
   const [tip, setTip] = useState<{ number: number; x: number; y: number } | null>(null);
   const [drag, setDrag] = useState<SkillDrag | null>(null);
@@ -407,16 +356,16 @@ const SkillSlots = observer(() => {
         const el = delayRefs.current[i];
         if (!el) continue;
         const delay = numbers[i] >= 0 ? skills.cooldown(numbers[i]) : null;
-        const css = delay ? Math.round(delay.fraction * SKILL_SLOT_HEIGHT) + 'px' : '0px';
+        const css = delay ? Math.round(delay.fraction * SLOT_HEIGHT) + 'px' : '0px';
         if (el.style.height !== css) el.style.height = css;
         const seconds = secondsRefs.current[i];
         if (!seconds) continue;
-        // Whole seconds under 10, one decimal above nothing: the same
-        // reading a player counts under their breath.
+        // Whole seconds from one up, one decimal under it: the reading a
+        // player counts under their breath.
         const text = delay
           ? delay.remaining >= 1
-            ? String(Math.ceil(delay.remaining))
-            : delay.remaining.toFixed(1)
+            ? `${Math.ceil(delay.remaining)}s`
+            : `${delay.remaining.toFixed(1)}s`
           : '';
         if (seconds.textContent !== text) seconds.textContent = text;
       }
@@ -424,13 +373,6 @@ const SkillSlots = observer(() => {
     sweep();
     return onCooldownTick(sweep);
   });
-  // Which slot holds the current skill, or -1 - guarded, because with no
-  // current skill `indexOf(-1)` would answer with the first *empty* slot.
-  const currentIdx =
-    Store.currentSkill >= 0 ? Store.skillHotkeys.indexOf(Store.currentSkill) : -1;
-  useEffect(() => setPageOverride(null), [currentIdx]);
-  const pageUp = pageOverride ?? BAR_PAGES[1].includes(currentIdx);
-  const page = BAR_PAGES[pageUp ? 1 : 0];
   const fanSkills = skillList.map(s => s.number).filter(isHotbarSkill);
 
   useEventBus('keyPressed', code => {
@@ -511,17 +453,15 @@ const SkillSlots = observer(() => {
     },
   });
 
-  /** IMAGE_SKILLBOX / IMAGE_SKILLBOX_USE: the box under a fan or lit slot - a Vael tile, lit in blood. */
-  const boxArt = (lit: boolean) => (
-    <div
-      className={`skill-box-art vael-slot${lit ? ' lit' : ''}`}
-      style={{ width: SKILL_SLOT_WIDTH, height: SKILL_SLOT_HEIGHT }}
-    />
+  const icon = (number: number, disabled: boolean) => (
+    <div className="skill-icon" style={{ left: SKILL_ICON_X, top: SKILL_ICON_Y, transform: `scale(${SKILL_ICON_SCALE})` }}>
+      <SkillIcon number={number} disabled={disabled} />
+    </div>
   );
 
   return (
     <>
-      {page.map((slot, i) => {
+      {ALL_SLOTS.map((slot, i) => {
         const number = Store.skillHotkeys[slot] ?? -1;
         const state = number >= 0 ? skills.usability(number) : null;
         const usable = !!state?.requirementsMet;
@@ -541,6 +481,8 @@ const SkillSlots = observer(() => {
         if (shortOn) classes.push(shortOn === 'mana' ? 'no-mana' : 'no-ag');
         if (number < 0) classes.push('empty');
         if (picking) classes.push('picking');
+        if (cooling) classes.push('cooling');
+        if (dragging && dropSlot === slot) classes.push('drop-target');
         const events = boxEvents(number, false);
         return (
           <div
@@ -552,12 +494,20 @@ const SkillSlots = observer(() => {
                 : t('bottomBar.pickSkill', { key: slot })
             }
             style={{
-              left: SKILL_SLOT_X + i * SKILL_SLOT_WIDTH,
-              top: SKILL_SLOT_Y,
-              width: SKILL_SLOT_WIDTH,
-              height: SKILL_SLOT_HEIGHT,
+              left: HOTKEY_SLOTS_X + i * SLOT_STEP,
+              top: SLOT_Y,
+              width: SLOT_WIDTH,
+              height: SLOT_HEIGHT,
             }}
             {...events}
+            onPointerEnter={() => {
+              events.onPointerEnter();
+              if (dragging) setDropSlot(slot);
+            }}
+            onPointerLeave={() => {
+              events.onPointerLeave();
+              leaveDrop(slot);
+            }}
             onPointerDown={e => {
               // An empty box is the "choose a skill" button; a bound one drags.
               if (e.button === 0 && number < 0) {
@@ -572,14 +522,8 @@ const SkillSlots = observer(() => {
               e.stopPropagation();
               uiClick(() => openPicker(slot))();
             }}
-            onWheel={() => setPageOverride(!pageUp)}
           >
-            {selected && boxArt(true)}
-            {number >= 0 && (
-              <div className="skill-icon" style={{ left: SKILL_ICON_INSET_X, top: SKILL_ICON_INSET_Y }}>
-                <SkillIcon number={number} disabled={!usable} />
-              </div>
-            )}
+            {number >= 0 && icon(number, !usable)}
             {cooling && (
               <>
                 <div
@@ -590,7 +534,8 @@ const SkillSlots = observer(() => {
                 <div ref={el => (secondsRefs.current[i] = el)} className="skill-delay-left" />
               </>
             )}
-            {number >= 0 && <div className="skill-hotkey">{slot}</div>}
+            {number >= 0 && <div className="skill-cost">{costText(number)}</div>}
+            <div className="skill-hotkey">{slot}</div>
           </div>
         );
       })}
@@ -610,9 +555,9 @@ const SkillSlots = observer(() => {
         }
         style={{
           left: CURRENT_SKILL_X,
-          top: SKILL_SLOT_Y,
-          width: SKILL_SLOT_WIDTH,
-          height: SKILL_SLOT_HEIGHT,
+          top: SLOT_Y,
+          width: SLOT_WIDTH,
+          height: SLOT_HEIGHT,
         }}
         onClick={uiClick(() => {
           if (listOpen) closeList();
@@ -628,14 +573,10 @@ const SkillSlots = observer(() => {
         onPointerEnter={() => dragging && setDropSlot(DROP_CURRENT)}
         onPointerLeave={() => leaveDrop(DROP_CURRENT)}
       >
-        {Store.currentSkill >= 0 && (
-          <div className="skill-icon" style={{ left: SKILL_ICON_INSET_X, top: SKILL_ICON_INSET_Y }}>
-            <SkillIcon
-              number={Store.currentSkill}
-              disabled={!skills.requirementsMet(Store.currentSkill)}
-            />
-          </div>
-        )}
+        {Store.currentSkill >= 0 && icon(Store.currentSkill, !skills.requirementsMet(Store.currentSkill))}
+        <div className="skill-current-mark" aria-hidden>
+          ▲
+        </div>
       </div>
       {listOpen &&
         fanSkills.map((number, count) => {
@@ -650,13 +591,10 @@ const SkillSlots = observer(() => {
             <div
               key={number}
               className={classes.join(' ')}
-              style={{ left, top, width: SKILL_SLOT_WIDTH, height: SKILL_SLOT_HEIGHT }}
+              style={{ left, top, width: SLOT_WIDTH, height: SLOT_HEIGHT }}
               {...boxEvents(number, true)}
             >
-              {boxArt(selected)}
-              <div className="skill-icon" style={{ left: SKILL_ICON_INSET_X, top: SKILL_ICON_INSET_Y }}>
-                <SkillIcon number={number} disabled={!usable} />
-              </div>
+              {icon(number, !usable)}
               {key && <div className="skill-hotkey">{key}</div>}
             </div>
           );
@@ -667,35 +605,17 @@ const SkillSlots = observer(() => {
           title={t('bottomBar.clearSlot', { key: assignSlot })}
           style={{
             ...fanPosition(fanSkills.length),
-            width: SKILL_SLOT_WIDTH,
-            height: SKILL_SLOT_HEIGHT,
+            width: SLOT_WIDTH,
+            height: SLOT_HEIGHT,
           }}
           onClick={uiClick(() => {
             Store.assignSkillHotkey(assignSlot, -1);
             closeList();
           })}
         >
-          {boxArt(false)}
           <span>&times;</span>
         </div>
       )}
-      {dragging &&
-        ALL_SLOTS.map((slot, i) => (
-          <div
-            key={slot}
-            className={dropSlot === slot ? 'skill-hotkey-target drop-target' : 'skill-hotkey-target'}
-            style={{
-              left: HOTKEY_STRIP_X + i * HOTKEY_STRIP_STEP,
-              top: HOTKEY_STRIP_Y,
-              width: HOTKEY_STRIP_SIZE,
-              height: HOTKEY_STRIP_SIZE,
-            }}
-            onPointerEnter={() => setDropSlot(slot)}
-            onPointerLeave={() => leaveDrop(slot)}
-          >
-            {slot}
-          </div>
-        ))}
       {dragging && drag && <SkillDragGhost drag={drag} />}
       {tip && !dragging && (
         <SkillTooltip
@@ -705,68 +625,6 @@ const SkillSlots = observer(() => {
           y={tip.y}
         />
       )}
-    </>
-  );
-});
-
-/**
- * The four orbs (HP / SD / AG / MP gauges and their numbers): the only part
- * of the bar that follows the hero's vitals, so it is the only part that
- * re-renders on a tick of them.
- */
-const Orbs = observer(() => {
-  const playerData = Store.playerData;
-  return (
-    <>
-      <Gauge
-        kind="hp"
-        label={mt('hud.life')}
-        x={158}
-        y={local(480 - 48)}
-        width={45}
-        height={39}
-        fill={playerData.hpPercent}
-      />
-      <MuNumber value={playerData.currentHP} x={158 + 25} y={local(480 - 18)} />
-
-      <Gauge
-        kind="sd"
-        x={204}
-        y={local(480 - 49)}
-        width={16}
-        height={39}
-        fill={playerData.sdPercent}
-      />
-      <MuNumber value={playerData.currentSD} x={204 + 15} y={local(480 - 18)} />
-
-      <Gauge
-        kind="ag"
-        x={256 + 128 + 36}
-        y={local(480 - 49)}
-        width={16}
-        height={39}
-        fill={playerData.agPercent}
-      />
-      <MuNumber
-        value={playerData.currentAG}
-        x={256 + 128 + 36 + 10}
-        y={local(480 - 18)}
-      />
-
-      <Gauge
-        kind="mp"
-        label={mt('hud.mana')}
-        x={256 + 128 + 53}
-        y={local(480 - 48)}
-        width={45}
-        height={39}
-        fill={playerData.mpPercent}
-      />
-      <MuNumber
-        value={playerData.currentMP}
-        x={256 + 128 + 53 + 30}
-        y={local(480 - 18)}
-      />
     </>
   );
 });
@@ -789,12 +647,22 @@ export const BottomBar = observer(() => {
         transformOrigin: '50% 100%',
       }}
     >
-      {/* The Vael theme draws the bar's frame in CSS (style.less) instead of FRAME_PIECES. */}
-      <Orbs />
+      {!COMPACT && <HuntPanel left={0} width={HUNT_WIDTH} height={BAR_HEIGHT} />}
 
-      <ConsumableItems />
-
+      <div className="hud-panel skills-panel" style={{ left: CENTER_X, top: 0, width: CENTER_WIDTH, height: BAR_HEIGHT }}>
+        <div className="skills-panel-title">
+          <span aria-hidden>⚔</span> {mt('hud.skills')}
+        </div>
+      </div>
       <SkillSlots />
+      <ConsumableItems />
+      <ExpBar />
+      <PetCommandBar
+        left={CENTER_X + CENTER_WIDTH - PET_COMMAND_BAR_WIDTH - 10}
+        top={-PET_COMMAND_BAR_HEIGHT - 8}
+      />
+
+      {!COMPACT && <StatsPanel left={STATS_X} width={STATS_WIDTH} height={BAR_HEIGHT} />}
 
       {MAIN_FRAME_BUTTONS.map((button, index) => (
         <BarButton
@@ -805,10 +673,6 @@ export const BottomBar = observer(() => {
           onClick={button.toggle}
         />
       ))}
-
-      <ExpBar />
-      <MasterExpBar />
-      <PetCommandBar />
 
       <MuResizeGrip id={BAR_ID} width={BAR_WIDTH} />
     </div>

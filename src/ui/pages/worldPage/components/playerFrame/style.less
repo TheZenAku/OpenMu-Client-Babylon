@@ -1,0 +1,242 @@
+// The hero's frame, top left (PlayerFrame): portrait, name line, the four bars, three boxes - in the
+// Vael theme (ui/theme/vael.less) after the owner's reference.
+@import (reference) '../../../../theme/vael.less';
+
+@portrait: 78px;
+
+.player-frame {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: @portrait 1fr;
+  column-gap: 10px;
+  row-gap: 7px;
+  width: 372px;
+  padding: 10px 12px 10px 10px;
+  box-sizing: border-box;
+  .vael-panel();
+  background: var(--v-panel-gradient), oklch(11% 0.004 265 / 0.86);
+  pointer-events: auto;
+  user-select: none;
+  font-family: var(--v-font-body);
+
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+}
+
+.pf-portrait {
+  width: @portrait;
+  height: @portrait;
+  padding: 0;
+  border: 2px solid var(--v-gilt);
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--v-sunken);
+  box-shadow: 0 0 0 3px oklch(11% 0.004 265 / 0.9), 0 0 0 4px var(--v-border), 0 6px 16px oklch(0% 0 0 / 0.6);
+  align-self: center;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &:hover {
+    border-color: var(--v-gilt-bright);
+  }
+}
+
+.pf-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pf-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  margin-bottom: 2px;
+  white-space: nowrap;
+
+  > span + span {
+    margin-left: 10px;
+    padding-left: 10px;
+    border-left: 1px solid var(--v-border);
+  }
+
+  .pf-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: var(--v-font-display);
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--v-gilt-bright);
+  }
+
+  .pf-level,
+  .pf-cp {
+    font: 500 11px/1 var(--v-font-label);
+    letter-spacing: 0.04em;
+    color: var(--v-text);
+
+    em {
+      font-style: normal;
+      color: var(--v-gilt);
+    }
+  }
+}
+
+.pf-bar {
+  position: relative;
+  height: 15px;
+  overflow: hidden;
+  border: 1px solid oklch(0% 0 0 / 0.6);
+  border-radius: 2px;
+  background: oklch(9% 0.004 265);
+  box-shadow: inset 0 1px 2px oklch(0% 0 0 / 0.7);
+
+  .pf-bar-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transition: width 220ms ease-out;
+  }
+
+  .pf-bar-text {
+    position: relative;
+    display: block;
+    text-align: center;
+    font: 600 10px/13px var(--v-font-label);
+    letter-spacing: 0.02em;
+    color: oklch(97% 0.01 80);
+    text-shadow: 0 1px 2px oklch(0% 0 0 / 0.95);
+
+    b {
+      margin-right: 4px;
+      font-weight: 600;
+    }
+  }
+
+  &.is-hp .pf-bar-fill {
+    background: linear-gradient(180deg, oklch(56% 0.19 26), oklch(36% 0.15 24));
+  }
+
+  &.is-sd .pf-bar-fill {
+    background: linear-gradient(180deg, oklch(82% 0.12 85), oklch(60% 0.11 75));
+  }
+
+  &.is-sd .pf-bar-text {
+    color: oklch(20% 0.03 70);
+    text-shadow: 0 1px 0 oklch(90% 0.06 85 / 0.6);
+  }
+
+  &.is-mp .pf-bar-fill {
+    background: linear-gradient(180deg, oklch(56% 0.16 258), oklch(36% 0.14 262));
+  }
+
+  // AG is the thin one: the reference shows three bars; AG still drives the skills.
+  &.is-ag {
+    height: 9px;
+
+    .pf-bar-fill {
+      background: linear-gradient(180deg, oklch(66% 0.11 145), oklch(42% 0.09 145));
+    }
+
+    .pf-bar-text {
+      font-size: 7px;
+      line-height: 7px;
+    }
+  }
+}
+
+.pf-boxes {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.35fr;
+  gap: 6px;
+}
+
+.pf-box {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  height: 34px;
+  padding: 0 9px;
+  box-sizing: border-box;
+  .vael-tile();
+  text-align: left;
+
+  strong {
+    font: 600 12px/1 var(--v-font-label);
+    color: var(--v-gilt-bright);
+  }
+
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: 500 9px/1.1 var(--v-font-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--v-gilt-dim);
+  }
+
+  &.is-lit {
+    border-color: var(--v-border-strong);
+    box-shadow: inset 0 0 10px var(--v-gilt-glow);
+  }
+
+  &:is(button):hover {
+    border-color: var(--v-border-strong);
+  }
+}
+
+.pf-coin {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, oklch(92% 0.09 88), oklch(72% 0.13 78) 55%, oklch(48% 0.09 70));
+  box-shadow: 0 0 0 1px oklch(40% 0.07 70), 0 1px 3px oklch(0% 0 0 / 0.6);
+}
+
+.pf-glyph {
+  flex: none;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--v-gilt);
+}
+
+.pf-map-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// A touch screen: the warp button owns the corner and the minimap the top right, so the frame
+// sits under the button, smaller (where the MUIdle strip was).
+.mu-mobile .player-frame {
+  left: 6px;
+  top: 70px;
+  transform: scale(0.62);
+  transform-origin: 0 0;
+}

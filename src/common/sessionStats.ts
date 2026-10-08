@@ -13,6 +13,10 @@ import { Store } from '../store';
  */
 
 const MS_PER_HOUR = 3_600_000;
+const MS_PER_MINUTE = 60_000;
+
+/** The span the "now" rates look back over (the HUD's XP / min and kills / min). */
+const RECENT_MS = 120_000;
 
 export const SessionStats = new (class _SessionStats {
   /** Wall clock of the last reset. */
@@ -23,6 +27,9 @@ export const SessionStats = new (class _SessionStats {
   experience = 0;
   kills = 0;
   zen = 0;
+
+  /** The gains of the last `RECENT_MS`, for the rates "now". */
+  recent: { at: number; experience: number; kill: boolean }[] = [];
 
   private money = 0;
   private watching = false;
@@ -53,6 +60,37 @@ export const SessionStats = new (class _SessionStats {
     return this.perHour(this.zen);
   }
 
+  /** Over the last two minutes (or the session, when it is younger): what is happening now. */
+  private perMinuteNow(pick: (gain: { experience: number; kill: boolean }) => number): number {
+    const span = Math.min(RECENT_MS, this.elapsedMs);
+    if (span < 15_000) return 0;
+    const since = this.now - span;
+    let total = 0;
+    for (const gain of this.recent) if (gain.at >= since) total += pick(gain);
+    return (total * MS_PER_MINUTE) / span;
+  }
+
+  get experiencePerMinuteNow(): number {
+    return this.perMinuteNow(gain => gain.experience);
+  }
+
+  get killsPerMinuteNow(): number {
+    return this.perMinuteNow(gain => (gain.kill ? 1 : 0));
+  }
+
+  get zenPerMinute(): number {
+    return this.zenPerHour / 60;
+  }
+
+  /** The next level at the rate now, else the session's; null when there is nothing to go on. */
+  get msToLevelNow(): number | null {
+    const now = this.experiencePerMinuteNow;
+    if (now <= 0) return this.msToLevel;
+    const { exp, expToNextLvl } = Store.playerData;
+    const remaining = expToNextLvl - exp;
+    return remaining > 0 ? (remaining / now) * MS_PER_MINUTE : null;
+  }
+
   /**
    * Milliseconds to the next level at the running rate, or null when there
    * is nothing to go on yet (no rate, or the bar is already full).
@@ -75,14 +113,19 @@ export const SessionStats = new (class _SessionStats {
       this.experience = 0;
       this.kills = 0;
       this.zen = 0;
+      this.recent = [];
       this.money = Store.playerData.money;
     });
   }
 
-  /** Called once a second while the panel is open. */
+  /** Called once a second while the panel (or the HUD's rates) is on screen. */
   tick(): void {
     runInAction(() => {
       this.now = Date.now();
+      const since = this.now - RECENT_MS;
+      if (this.recent.length && this.recent[0].at < since) {
+        this.recent = this.recent.filter(gain => gain.at >= since);
+      }
     });
   }
 
@@ -101,6 +144,7 @@ export const SessionStats = new (class _SessionStats {
         // The killing blow is the client's own (`quests/killCounters.ts`
         // reads the same field); a share from a party mate carries none.
         if (killedNetId) this.kills++;
+        this.recent.push({ at: Date.now(), experience: added, kill: !!killedNetId });
       });
     });
 

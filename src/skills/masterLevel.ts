@@ -10,7 +10,7 @@
  * and, through `masterTree.ts`, the point count `MasterSkillLevelUpdate`
  * echoes back after a point is spent.
  *
- * Read by the master exp bar (`ui/…/masterSkills/masterExpBar`) and the
+ * Read by the bottom bar's exp line (`ui/…/bottomBar` ExpBar, master branch) and the
  * master tree window through `skills.masterLevel` / `skills.masterExp…`, and
  * by `masterTree.ts` (the point gate).
  */

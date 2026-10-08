@@ -369,7 +369,7 @@
   }
 
   .muidle-activity {
-    top: 132px;
+    top: 172px;
     left: 8px;
     align-items: flex-start;
     max-width: calc(100vw - 214px);
@@ -431,4 +431,14 @@
 
 .muidle-me {
   color: @gold;
+}
+
+// A desktop shows only the warnings, just over the bottom bar (its bottom is set inline).
+.muidle-activity.is-notes {
+  top: auto;
+}
+
+// Every checkbox of the MUIdle panels in blood, like the toggles.
+.muidle-panel input[type='checkbox'] {
+  accent-color: var(--v-blood-bright);
 }

@@ -14,15 +14,18 @@ import {
 } from '../../../../../muidle/state';
 import { mt, type MUIdleTextKey } from '../../../../../muidle/text';
 import { toggleMuHelperWindow } from '../../../../../muHelper/state';
-import { combatPower } from '../../../../../muidle/combatPower';
 import { itemDisplayName } from '../../../../../common/itemTooltip';
 import { EventsWindow } from './events';
 import { ProgressionWindow } from './progression';
 import { Performance, type PerformanceMode } from '../../../../../muidle/performance';
+import { isMobileDevice } from '../../../../../common/mobile';
+import { bottomBarScreenHeight } from '../../../../components/muWindow';
 
 /**
- * MUIdle's HUD: the HUNT/MANUAL switch (always on screen, sized for a thumb),
- * a compact status strip, the idle settings and the offline summary. Plain
+ * MUIdle's HUD: the idle settings, the offline summary and what the hunt is doing. On a desktop the
+ * HUNT switch and the status sit in the bottom bar (HuntPanel) and the hero's frame (PlayerFrame), and
+ * this line keeps only its warnings, over the bar; a touch screen keeps the floating HUNT button
+ * (sized for a thumb) and the whole line. Plain
  * HTML over the canvas on purpose - big, legible and touchable on a phone,
  * which the original's pixel windows are not.
  */
@@ -65,14 +68,23 @@ function activityText(activity: HuntActivity): string {
 }
 
 /** What the hunt is doing now, and why it is not on the chosen map when it is not. */
+const COMPACT = isMobileDevice();
+
 const ActivityLine = observer(() => {
   const activity = MUIdle.activity;
   if (!activity) return null;
   const pinned = MUIdle.settings?.preferredMap ?? null;
   const option = pinned === null ? undefined : MUIdle.maps.find(m => m.number === pinned);
+  const warned = !!(activity.pinnedReason && option) || !!activity.notes?.length;
+  // The desktop's bottom bar says what the hunt does (its status pill); the warnings stay here.
+  if (!COMPACT && !warned) return null;
   return (
-    <div className="muidle-activity" aria-live="polite">
-      <span>{activityText(activity)}</span>
+    <div
+      className={`muidle-activity${COMPACT ? '' : ' is-notes'}`}
+      style={COMPACT ? undefined : { bottom: bottomBarScreenHeight() + 22 }}
+      aria-live="polite"
+    >
+      {COMPACT && <span>{activityText(activity)}</span>}
       {activity.pinnedReason && option && (
         <span className="muidle-activity-warn">
           {mt('pinnedUnavailable', { reason: mapReasonText({ ...option, reason: activity.pinnedReason }) })}
@@ -92,23 +104,9 @@ const PerformanceSampler = () => {
   return null;
 };
 
-const StatusStrip = observer(() => {
-  // The HUD only exists on the world page; `playerData` is observable (the
-  // world/entity handles are not, so they cannot gate a render).
-  const p = Store.playerData;
-  if (!p.name) return null;
-  return (
-    <div className="muidle-strip" aria-label="character status">
-      <span className="muidle-strip-name">{p.name}</span>
-      <span>Lv {p.level}</span>
-      <span>Zen {compact(p.money)}</span>
-      <span>{mt('cp')} {compact(combatPower())}</span>
-    </div>
-  );
-});
-
+/** The touch screen's HUNT switch; a desktop has HuntPanel in the bottom bar. */
 const HuntButton = observer(() => {
-  if (!Store.playerData.name || Store.isOffline) return null;
+  if (!COMPACT || !Store.playerData.name || Store.isOffline) return null;
   const hunting = MUIdle.hunting;
   return (
     <div className="muidle-hunt">
@@ -391,7 +389,6 @@ function usePerformanceSampler(): void {
 export const MUIdleHud = observer(() => (
   <>
     <PerformanceSampler />
-    <StatusStrip />
     <ActivityLine />
     <HuntButton />
     <SettingsPanel />

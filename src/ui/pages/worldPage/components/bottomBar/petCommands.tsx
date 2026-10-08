@@ -16,9 +16,7 @@ import { MuSpriteFrame } from '../../../../components/muSprite';
  * server confirmed with `PetMode` (`IMAGE_SKILLBOX_USE`).
  */
 
-/** `x = 353, y = 352, width = 32, height = 38` (NewUIMainFrameWindow.cpp:2071). */
-const PET_BAR_X = 353;
-const PET_BAR_Y = 352;
+/** `width = 32, height = 38` (NewUIMainFrameWindow.cpp:2071); the bar places the row (Vael layout). */
 const BOX_WIDTH = 32;
 const BOX_HEIGHT = 38;
 /** `newui_skillbox.jpg`: the plain box; `newui_skillbox2` the lit one. */
@@ -41,9 +39,6 @@ const COMMANDS: readonly {
   { mode: PetCommandModeEnum.AttackTarget, labelKey: 'bottomBar.pet.target', tipKey: 'bottomBar.pet.targetTip' },
 ];
 
-/** The bottom bar's local Y of a 640×480 screen Y. */
-const BAR_TOP = 480 - 51;
-
 export function ravenEquipped(): boolean {
   const item = Store.playerData.items[InventoryConstants.LeftHandSlot];
   return !!item && item.group === PET_GROUP && item.num === DARK_RAVEN_INDEX;
@@ -62,7 +57,11 @@ export function sendRavenCommand(mode: PetCommandModeEnum): void {
   Store.sendPetCommand(mode, target);
 }
 
-export const PetCommandBar = observer(() => {
+/** The four command boxes, from `left` / `top` in the bottom bar's coordinates. */
+export const PET_COMMAND_BAR_WIDTH = 4 * BOX_WIDTH;
+export const PET_COMMAND_BAR_HEIGHT = BOX_HEIGHT;
+
+export const PetCommandBar = observer(({ left, top }: { left: number; top: number }) => {
   if (!ravenEquipped()) return null;
   const current = Store.petMode;
 
@@ -74,8 +73,8 @@ export const PetCommandBar = observer(() => {
           className={`pet-command${current === command.mode ? ' selected' : ''}`}
           title={t(command.tipKey)}
           style={{
-            left: PET_BAR_X + i * BOX_WIDTH,
-            top: PET_BAR_Y - BAR_TOP,
+            left: left + i * BOX_WIDTH,
+            top,
             width: BOX_WIDTH,
             height: BOX_HEIGHT,
           }}

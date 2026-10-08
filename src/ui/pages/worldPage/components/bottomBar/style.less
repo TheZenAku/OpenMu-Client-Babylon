@@ -248,65 +248,46 @@
 }
 
 // ---------------------------------------------------------------------------
-// MUIdle Vael theme: the bar is drawn in CSS instead of the original's sprite
-// art (frame pieces, orbs, skill boxes, exp strip). Positions stay the
-// original's; only the look changes.
+// MUIdle Vael theme, after the owner's reference: three panels - HUNT, the skills with the potions and
+// the experience, the rates - and the window buttons in a column. No frame of its own: the panels are.
 @import (reference) '../../../../theme/vael.less';
 
 .bottom-bar {
-  background: linear-gradient(180deg, oklch(19% 0.007 265 / 0.97), oklch(11% 0.004 265 / 0.98));
-  border-top: 1px solid var(--v-border-strong);
-  box-shadow: 0 -8px 22px oklch(0% 0 0 / 0.55), inset 0 1px 0 oklch(100% 0 0 / 0.04);
+  bottom: 6px;
 
-  .vael-gauge {
-    background: oklch(9% 0.004 265);
-    border: 1px solid var(--v-border);
+  .hud-panel {
+    position: absolute;
     box-sizing: border-box;
+    .vael-panel();
+    background: var(--v-panel-gradient), oklch(11% 0.004 265 / 0.9);
+    box-shadow: 0 8px 22px oklch(0% 0 0 / 0.55), inset 0 1px 0 oklch(100% 0 0 / 0.04);
+  }
 
-    .gauge-fill {
-      right: 0;
-      transition: height 200ms ease-out;
-    }
+  // The skills panel's name on its top edge, like a tab.
+  .skills-panel-title {
+    position: absolute;
+    left: 50%;
+    top: -10px;
+    transform: translateX(-50%);
+    padding: 3px 14px;
+    border: 1px solid var(--v-border-strong);
+    background: linear-gradient(180deg, oklch(20% 0.008 265), oklch(13% 0.004 265));
+    .vael-label();
+    font-size: 9px;
+    color: var(--v-gilt);
+    white-space: nowrap;
 
-    &.hp .gauge-fill {
-      background: linear-gradient(0deg, var(--v-blood-deep), var(--v-blood-bright));
-      box-shadow: 0 0 8px var(--v-blood-glow);
-    }
-
-    &.mp .gauge-fill {
-      background: linear-gradient(0deg, oklch(42% 0.07 78), var(--v-gilt));
-      box-shadow: 0 0 8px var(--v-gilt-glow);
-    }
-
-    &.sd .gauge-fill {
-      background: linear-gradient(0deg, oklch(38% 0.03 250), oklch(74% 0.04 250));
-    }
-
-    &.ag .gauge-fill {
-      background: linear-gradient(0deg, oklch(38% 0.06 140), oklch(70% 0.09 140));
-    }
-
-    .gauge-label {
-      position: absolute;
-      top: 2px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      font-family: var(--v-font-label);
-      font-size: 4.5px;
-      font-weight: 500;
-      letter-spacing: 0.18em;
-      color: var(--v-gilt-bright);
-      text-shadow: 0 1px 1px oklch(0% 0 0 / 0.9);
-      pointer-events: none;
+    span {
+      letter-spacing: 0;
     }
   }
 
-  // Every skill box and potion slot is a tile (the recess was part of the art).
+  // Every skill box and potion slot is a tile; the current one wears blood.
   .skill-slot,
   .consumable-item {
     .vael-tile();
     box-sizing: border-box;
+    overflow: hidden;
   }
 
   .skill-slot:hover,
@@ -314,30 +295,318 @@
     border-color: var(--v-border-strong);
   }
 
-  .vael-slot {
-    box-sizing: border-box;
+  .skill-slot {
+    &.selected {
+      border-color: var(--v-gilt);
+      box-shadow: inset 0 0 10px var(--v-gilt-glow), 0 0 8px var(--v-gilt-glow);
+    }
 
-    &.lit {
+    // The current skill (the right button's): blood once there is one.
+    &.current.selected {
       .vael-tile-active();
+    }
+
+    &.empty {
+      border-style: dashed;
+    }
+
+    &.drop-target {
+      border-color: oklch(75% 0.15 145);
+      box-shadow: inset 0 0 10px oklch(70% 0.15 145 / 0.5);
+    }
+
+    .skill-icon {
+      transform-origin: 0 0;
+    }
+
+    .skill-hotkey {
+      left: 3px;
+      right: auto;
+      bottom: 2px;
+      font: 600 9px/1 var(--v-font-label);
+      color: var(--v-gilt-bright);
+      text-shadow: 0 1px 2px #000, 0 0 2px #000;
+    }
+
+    .skill-cost {
+      position: absolute;
+      right: 2px;
+      bottom: 2px;
+      font: 500 7px/1 var(--v-font-label);
+      color: oklch(80% 0.06 250);
+      text-shadow: 0 1px 2px #000, 0 0 2px #000;
+      pointer-events: none;
+    }
+
+    &.cooling .skill-cost {
+      display: none;
+    }
+
+    .skill-delay-left {
+      top: auto;
+      bottom: 2px;
+      transform: none;
+      right: 2px;
+      left: auto;
+      font: 600 9px/1 var(--v-font-label);
+      color: oklch(85% 0.08 250);
+    }
+
+    // The current-skill box: a small mark says it is the one the right button casts.
+    .skill-current-mark {
+      position: absolute;
+      left: 2px;
+      bottom: 1px;
+      font-size: 7px;
+      line-height: 1;
+      color: var(--v-gilt);
+      pointer-events: none;
+    }
+
+    &.fan {
+      .vael-tile();
+      border-color: var(--v-border-strong);
+      background: oklch(12% 0.004 265 / 0.96);
+      box-shadow: 0 6px 16px oklch(0% 0 0 / 0.6);
+
+      &.selected {
+        border-color: var(--v-gilt);
+      }
     }
   }
 
-  .skill-hotkey,
-  .skill-hotkey-target {
-    font-family: var(--v-font-label);
-    color: var(--v-gilt);
+  .consumable-item {
+    &.empty {
+      border-style: dashed;
+    }
+
+    .consumable-icon {
+      position: absolute;
+      inset: 4px 4px 10px;
+    }
+
+    .slot-key {
+      position: absolute;
+      left: 3px;
+      top: 2px;
+      font: 600 8px/1 var(--v-font-label);
+      color: var(--v-gilt-dim);
+    }
+
+    .slot-count {
+      position: absolute;
+      right: 3px;
+      bottom: 2px;
+      font: 600 10px/1 var(--v-font-label);
+      color: var(--v-gilt-bright);
+      text-shadow: 0 1px 2px #000, 0 0 2px #000;
+    }
+  }
+
+  .exp-text {
+    position: absolute;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 12px;
+    height: 12px;
+    font: 500 10px/12px var(--v-font-label);
+    color: var(--v-text);
+    pointer-events: none;
+
+    .exp-numbers {
+      letter-spacing: 0.02em;
+    }
+
+    .exp-percent {
+      position: absolute;
+      right: 0;
+      color: var(--v-gilt-bright);
+    }
+
+    .exp-master {
+      position: absolute;
+      left: 0;
+      .vael-label();
+      font-size: 8px;
+      color: oklch(72% 0.12 300);
+    }
   }
 
   .exp-track {
     position: absolute;
-    background: oklch(9% 0.004 265);
-    border: 1px solid oklch(77% 0.09 78 / 0.15);
     box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid oklch(77% 0.09 78 / 0.18);
+    border-radius: 2px;
+    background: oklch(9% 0.004 265);
     pointer-events: none;
+
+    .exp-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      background: var(--v-gilt-gradient);
+      box-shadow: 0 0 6px var(--v-gilt-glow);
+      transition: width 300ms ease-out;
+    }
+
+    &.is-master .exp-fill {
+      background: linear-gradient(90deg, oklch(42% 0.12 300), oklch(68% 0.14 300));
+    }
   }
 
-  .exp-fill {
-    background: var(--v-gilt-gradient);
-    box-shadow: 0 0 6px var(--v-gilt-glow);
+  .bar-button .vael-btn {
+    font-size: 11px;
   }
+
+  .pet-command span {
+    font-family: var(--v-font-label);
+    font-size: 8px;
+    color: var(--v-gilt);
+  }
+}
+
+// ---- HUNT (muidle/huntPanel.tsx) -----------------------------------------------
+
+.bottom-bar .hunt-panel {
+  display: grid;
+  grid-template-rows: 34px 26px 22px;
+  gap: 6px;
+  padding: 7px 8px;
+
+  button {
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .hunt-glyph {
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .hunt-mode {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid oklch(77% 0.09 78 / 0.2);
+    background: linear-gradient(180deg, oklch(17% 0.006 265), oklch(12% 0.004 265));
+    color: var(--v-gilt-dim);
+    font: 600 11px/1 var(--v-font-label);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+
+    &:hover {
+      color: var(--v-gilt-bright);
+      border-color: var(--v-border-strong);
+    }
+
+    &.is-on {
+      color: var(--v-gilt-bright);
+      border-color: var(--v-gilt);
+      background: linear-gradient(180deg, oklch(30% 0.06 70 / 0.9), oklch(16% 0.02 70 / 0.95));
+      box-shadow: inset 0 0 12px var(--v-gilt-glow), 0 0 10px oklch(77% 0.09 78 / 0.25);
+    }
+  }
+
+  .hunt-main {
+    font-size: 12px;
+
+    .hunt-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .hunt-manual .hunt-glyph {
+    filter: grayscale(1) sepia(1) saturate(0.6) brightness(1.1);
+  }
+
+  .hunt-row {
+    display: grid;
+    grid-template-columns: 26px 26px 1fr;
+    gap: 6px;
+  }
+
+  .hunt-icon {
+    border: 1px solid oklch(77% 0.09 78 / 0.2);
+    background: oklch(13% 0.004 265);
+    color: var(--v-gilt);
+    font-size: 12px;
+    line-height: 1;
+
+    &:hover {
+      border-color: var(--v-border-strong);
+      color: var(--v-gilt-bright);
+    }
+  }
+
+  .hunt-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid oklch(77% 0.09 78 / 0.2);
+    background: oklch(13% 0.004 265);
+    color: var(--v-gilt-dim);
+    font: 600 9px/1 var(--v-font-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+
+    .hunt-glyph {
+      font-size: 10px;
+    }
+
+    &.is-hunting {
+      color: oklch(92% 0.04 25);
+      border-color: oklch(55% 0.17 25 / 0.8);
+      background: linear-gradient(160deg, var(--v-blood-bright), var(--v-blood-deep));
+      box-shadow: 0 0 10px var(--v-blood-glow);
+    }
+
+    &.is-dead,
+    &.is-paused {
+      color: oklch(72% 0.13 50);
+      border-color: oklch(60% 0.13 50 / 0.6);
+    }
+  }
+}
+
+// ---- rates (statsPanel.tsx) ------------------------------------------------------
+
+.bottom-bar .stats-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+
+  .stats-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    font: 500 10px/1.2 var(--v-font-body);
+    color: var(--v-gilt-dim);
+    white-space: nowrap;
+
+    strong {
+      font: 600 11px/1.2 var(--v-font-label);
+      color: var(--v-text);
+    }
+
+    &.is-accent strong {
+      color: var(--v-gilt-bright);
+    }
+  }
+}
+
+.skill-drag-ghost {
+  transform: scale(1.4);
 }
