@@ -64,3 +64,22 @@ describe('findFreeSlot', () => {
     );
   });
 });
+
+describe('findFreeSlot over the pages of the window (D33)', () => {
+  it('goes on to page II once page I is full', () => {
+    const pageOne = [{ slot: first, width: columns, height: rows }];
+    expect(findFreeSlot(pageOne, rows * 2, 1, 1)).toBe(first + columns * rows);
+  });
+
+  it('never lays an item across two pages', () => {
+    // Page I has only its last row free: a 1 x 2 item goes to the top of page II, not across.
+    const pageOne = [{ slot: first, width: columns, height: rows - 1 }];
+    expect(findFreeSlot(pageOne, rows * 2, 1, 1)).toBe(first + columns * (rows - 1));
+    expect(findFreeSlot(pageOne, rows * 2, 1, 2)).toBe(first + columns * rows);
+  });
+
+  it('keeps to the pages the character has', () => {
+    const pageOne = [{ slot: first, width: columns, height: rows }];
+    expect(findFreeSlot(pageOne, rows, 1, 1)).toBe(-1);
+  });
+});

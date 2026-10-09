@@ -2,6 +2,8 @@ import { makeAutoObservable, runInAction } from 'mobx';
 import { EventBus } from '../libs/eventBus';
 import { Store } from '../store';
 import { mt } from './text';
+import { i18n } from '../i18n';
+import { setUnlockedPages } from '../common/inventoryPages';
 import { type HuntActivity, type HuntMapOption } from './huntMap';
 import { parseMixPreview, type MixPreview } from './mixOdds';
 
@@ -40,6 +42,43 @@ const SUB_HUNT_MODE = 0x13;
 const SUB_RESET = 0x14;
 const SUB_REQUEST_MIX_PREVIEW = 0x15;
 const SUB_SPLIT_STACK = 0x16;
+const SUB_INVENTORY_RESULT = 0x05;
+const SUB_JUNK_PREVIEW = 0x06;
+const SUB_SELL_ITEMS = 0x17;
+const SUB_REQUEST_JUNK_PREVIEW = 0x18;
+const SUB_REPAIR_ALL = 0x19;
+const SUB_BUY_INVENTORY_PAGE = 0x1a;
+
+/**
+ * The inventory pages of the character (D33): how many it has, how many the server offers, and the
+ * zen price of each page (index 0 is page I; 0 for a free page).
+ */
+export type InventoryPagesInfo = { unlocked: number; available: number; prices: number[] };
+
+/** The junk of the inventory as the server judged it, with what it sells for. */
+export type JunkPreview = { slots: number[]; zen: number };
+
+/** What an inventory action of the window came to (the server sells, repairs and unlocks). */
+type InventoryResult = {
+  action: 'sell' | 'repair' | 'page';
+  ok: boolean;
+  count: number;
+  zen: number;
+  reason: 'kept' | 'zenFull' | 'zen' | 'nothing' | 'unavailable' | null;
+};
+
+const PAGE_NAMES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+
+/** A page as the window names it: I to VII. */
+export function pageName(page: number): string {
+  return PAGE_NAMES[page - 1] ?? String(page);
+}
+
+/** Zen with the grouping of the player's language (17.556.917 in Portuguese). */
+export function zenText(zen: number): string {
+  const language = i18n.language === 'pt' ? 'pt-BR' : i18n.language;
+  return Math.floor(zen).toLocaleString(language);
+}
 
 export type IdleSettings = {
   autoTravel: boolean;
@@ -217,6 +256,10 @@ class MUIdleStore {
   quest: QuestInfo | null = null;
   /** The odds of the mix in the Chaos Machine, as the server last reported them. */
   mixPreview: MixPreview | null = null;
+  /** The inventory pages; one page until the server said. */
+  inventoryPages: InventoryPagesInfo = { unlocked: 1, available: 1, prices: [] };
+  /** The junk the server listed for "Sell junk", waiting for the player's confirmation. */
+  junkPreview: JunkPreview | null = null;
   progressionOpen = false;
   settingsOpen = false;
   eventsOpen = false;
@@ -255,6 +298,7 @@ class MUIdleStore {
         progression?: ProgressionInfo;
         contracts?: { day: string; contracts: ContractInfo[] };
         quest?: QuestInfo | null;
+        inventory?: InventoryPagesInfo;
         ground?: { x: number; y: number } | null;
       };
       this.huntIntent = state.hunt === true;
@@ -267,6 +311,10 @@ class MUIdleStore {
       if (state.contracts && Array.isArray(state.contracts.contracts)) this.contracts = state.contracts.contracts;
       if (state.activity) this.activity = state.activity;
       if (state.quest !== undefined) this.quest = state.quest;
+      if (state.inventory && Array.isArray(state.inventory.prices)) {
+        this.inventoryPages = state.inventory;
+        setUnlockedPages(state.inventory.unlocked);
+      }
       if (state.resume) this.scheduleResume(state.ground ?? null);
     } else if (subCode === SUB_SUMMARY) {
       this.summary = data as OfflineSummary;
@@ -274,6 +322,28 @@ class MUIdleStore {
       this.activity = data as HuntActivity;
     } else if (subCode === SUB_MIX_PREVIEW) {
       this.mixPreview = parseMixPreview(data);
+    } else if (subCode === SUB_JUNK_PREVIEW) {
+      const preview = data as Partial<JunkPreview>;
+      this.junkPreview = { slots: Array.isArray(preview.slots) ? preview.slots : [], zen: preview.zen ?? 0 };
+    } else if (subCode === SUB_INVENTORY_RESULT) {
+      this.onInventoryResult(data as InventoryResult);
+    }
+  }
+
+  /** The outcome of selling, repairing or unlocking, as a toast. */
+  private onInventoryResult(result: InventoryResult): void {
+    const params = { count: result.count, zen: zenText(result.zen), page: pageName(result.count) };
+    if (result.action === 'sell') {
+      if (result.ok) Store.addNotification(mt('inv.sold', params), 'info');
+      if (result.reason === 'zenFull') Store.addNotification(mt('inv.zenFull'), 'error');
+      else if (result.reason === 'kept') Store.addNotification(mt('inv.sellKept'), 'info');
+    } else if (result.action === 'repair') {
+      if (result.ok) Store.addNotification(mt('inv.repaired', params), 'info');
+      if (result.reason === 'zen') Store.addNotification(mt('inv.repairZen'), 'error');
+      else if (result.reason === 'nothing') Store.addNotification(mt('inv.repairNothing'), 'info');
+    } else if (result.action === 'page') {
+      if (result.ok) Store.addNotification(mt('inv.pageBought', params), 'info');
+      else Store.addNotification(mt(result.reason === 'zen' ? 'inv.pageZen' : 'inv.pageUnavailable'), 'error');
     }
   }
 
@@ -443,6 +513,38 @@ class MUIdleStore {
     // Every time: the map choices are judged by the server for the character as it is now - its
     // level, zen and equipment (new wings open Icarus) - not as it was at login.
     if (open) this.requestState();
+  }
+
+/** Sells inventory items anywhere, at the merchants' price (the server keeps worn and locked items). */
+  sellItems(slots: number[], junk = false): void {
+    if (slots.length > 0) this.send(SUB_SELL_ITEMS, { slots, junk });
+  }
+
+  /** Asks the server for the junk of the inventory (answered into `junkPreview`). */
+  requestJunkPreview(): void {
+    this.junkPreview = null;
+    this.send(SUB_REQUEST_JUNK_PREVIEW, {});
+  }
+
+  /** Sells what the junk preview listed - only what is still junk when the server gets it. */
+  sellJunk(): void {
+    const preview = this.junkPreview;
+    this.junkPreview = null;
+    if (preview) this.sellItems(preview.slots, true);
+  }
+
+  clearJunkPreview(): void {
+    this.junkPreview = null;
+  }
+
+  /** Repairs the worn gear (not the pet) anywhere. */
+  repairAll(): void {
+    this.send(SUB_REPAIR_ALL, {});
+  }
+
+  /** Unlocks the next inventory page with zen. */
+  buyInventoryPage(page: number): void {
+    this.send(SUB_BUY_INVENTORY_PAGE, { page });
   }
 
   private send(subCode: number, payload: unknown): void {

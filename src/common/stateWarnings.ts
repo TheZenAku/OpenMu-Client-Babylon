@@ -1,6 +1,7 @@
 import { reaction } from 'mobx';
 import { t } from '../i18n';
 import { Store } from '../store';
+import { usableRows } from './inventoryPages';
 import { skills } from '../skills';
 import { GameOptions } from './gameOptions';
 import { Notices } from './notices';
@@ -26,7 +27,6 @@ const DURABILITY_STEPS = [30, 10] as const;
 const BUFF_WARNING_SECONDS = 30;
 
 const GRID_COLUMNS = InventoryConstants.RowSize;
-const GRID_ROWS = InventoryConstants.InventoryRows;
 const GRID_FIRST = InventoryConstants.LastEquippableItemSlotIndex + 1;
 
 const WORN_SLOTS = Array.from(
@@ -34,7 +34,7 @@ const WORN_SLOTS = Array.from(
   (_, slot) => slot
 );
 
-function durabilityPercent(item: Item): number | null {
+export function durabilityPercent(item: Item): number | null {
   const def = itemDef(item.group, item.num);
   if (!def) return null;
 
@@ -51,6 +51,8 @@ function durabilityPercent(item: Item): number | null {
 
 /** Whether a 1x1 item would still find a square in the inventory grid. */
 function gridHasRoom(items: (Item | null)[]): boolean {
+  // Every page the character has (D33); a 1 x 1 square never lies across two.
+  const GRID_ROWS = usableRows();
   const used = new Uint8Array(GRID_COLUMNS * GRID_ROWS);
 
   for (let square = 0; square < GRID_COLUMNS * GRID_ROWS; square++) {

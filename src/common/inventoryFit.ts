@@ -53,6 +53,8 @@ export function findFreeSlot(
   }
 
   for (let row = 0; row + height <= rows; row++) {
+    // Every eight rows are a page of the window (D33): an item never lies across two.
+    if ((row % InventoryConstants.InventoryRows) + height > InventoryConstants.InventoryRows) continue;
     for (let column = 0; column + width <= columns; column++) {
       let fits = true;
       for (let y = 0; y < height && fits; y++) {

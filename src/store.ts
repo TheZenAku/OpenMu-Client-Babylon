@@ -78,6 +78,7 @@ import { Scalar } from './libs/babylon/exports';
 import { InventoryConstants } from './common/inventoryConstants';
 import { StatType } from './common/characterStats';
 import { findFreeSlot, type Footprint } from './common/inventoryFit';
+import { usableRows } from './common/inventoryPages';
 import { jewelTargetError } from './common/jewelUpgrade';
 import { ItemGroups } from './common/objects/enum';
 import { ItemsDatabase } from './common/itemsDatabase';
@@ -202,7 +203,8 @@ function walkDirection(rotYRadians: number): number {
  */
 function findFreeInventorySlot(items: (Item | null)[], item: Item): number {
   const first = InventoryConstants.LastEquippableItemSlotIndex + 1;
-  const rows = Math.floor((items.length - first) / InventoryConstants.RowSize);
+  // Only the pages the character has (D33); the array reaches the last extension.
+  const rows = Math.min(usableRows(), Math.floor((items.length - first) / InventoryConstants.RowSize));
   const occupied: Footprint[] = [];
 
   for (let slot = first; slot < items.length; slot++) {
@@ -392,10 +394,8 @@ class PlayerData {
   sta = 10;
   eng = 10;
 
-  items: (Item | null)[] = new Array(
-    InventoryConstants.InventoryRows * InventoryConstants.RowSize +
-      InventoryConstants.EquippableSlotsCount
-  ).fill(null);
+  // The grid and its extensions (the pages of D33), up to the personal store.
+  items: (Item | null)[] = new Array(InventoryConstants.FirstStoreItemSlotIndex).fill(null);
 
   get leftHandSlot() {
     return this.items[InventoryConstants.LeftHandSlot];

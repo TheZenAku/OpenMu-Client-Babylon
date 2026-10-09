@@ -1,3 +1,5 @@
+@import (reference) '../../../../theme/vael.less';
+
 // `CNewUIMyInventory` draws every piece at an absolute coordinate inside the
 // window, so the layout here is absolute positioning too - the component
 // supplies the original's numbers and this file only says how a piece behaves.
@@ -16,6 +18,15 @@
   .head-close {
     position: absolute;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: 700 11px/1 var(--v-font-body);
+    color: var(--v-gilt-dim);
+
+    &:hover {
+      color: var(--v-gilt-bright);
+    }
   }
 
   .equipment-slot {
@@ -183,6 +194,265 @@
     }
   }
 
+  // ---- MUIdle D33: the owner's reference - cards, page tabs, selling buttons, Zen and repair ----
+
+  .equipment-slot {
+    box-sizing: border-box;
+    .vael-tile();
+    border-radius: 2px;
+
+    .equipment-slot-back {
+      opacity: 0.35;
+    }
+
+    .equipment-slot-item {
+      inset: 2px 2px 5px;
+    }
+
+    &.filled {
+      border-color: oklch(77% 0.09 78 / 0.32);
+    }
+
+    &.excellent {
+      border-color: oklch(72% 0.17 145 / 0.85);
+      box-shadow: inset 0 0 6px oklch(72% 0.17 145 / 0.25);
+    }
+
+    &.ancient {
+      border-color: oklch(76% 0.14 70 / 0.9);
+      box-shadow: inset 0 0 6px oklch(76% 0.14 70 / 0.25);
+    }
+
+    &:hover {
+      border-color: var(--v-border-strong);
+    }
+  }
+
+  // The worn item's durability, under the card.
+  .durability {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    bottom: 1px;
+    height: 2px;
+    background: oklch(11% 0.004 265 / 0.9);
+    pointer-events: none;
+
+    span {
+      display: block;
+      height: 100%;
+    }
+
+    &.high span {
+      background: oklch(70% 0.17 145);
+    }
+
+    &.mid span {
+      background: oklch(75% 0.15 70);
+    }
+
+    &.low span {
+      background: oklch(58% 0.2 25);
+    }
+  }
+
+  // +level, bottom right of a card or a bag item.
+  .item-level {
+    position: absolute;
+    right: 2px;
+    bottom: 3px;
+    font: 700 8px/8px var(--v-font-label);
+    color: var(--v-gilt-bright);
+    text-shadow: 1px 1px 0 #000, -1px 0 1px #000;
+    pointer-events: none;
+  }
+
+  .inventory-item {
+    .item-level {
+      top: 1px;
+      bottom: auto;
+    }
+
+    &.excellent {
+      box-shadow: inset 0 0 0 1px oklch(72% 0.17 145 / 0.75);
+    }
+
+    &.ancient {
+      box-shadow: inset 0 0 0 1px oklch(76% 0.14 70 / 0.8);
+    }
+
+    // In a batch sale, or the junk the server would sell.
+    &.marked {
+      background: oklch(48% 0.17 25 / 0.35);
+      box-shadow: inset 0 0 0 1px var(--v-blood-bright);
+    }
+
+    &.locked {
+      box-shadow: inset 0 0 0 1px oklch(58% 0.2 25 / 0.9);
+    }
+
+    // A locked item (never sold by HUNT or the window): "P", for protected, as in the reference.
+    .lock-badge {
+      position: absolute;
+      left: 1px;
+      top: 1px;
+      padding: 0 1px;
+      font: 700 7px/8px var(--v-font-label);
+      color: #fff;
+      background: var(--v-blood-bright);
+      border-radius: 1px;
+    }
+  }
+
+  &.mode-batch .inventory-items,
+  &.mode-junk .inventory-items {
+    cursor: pointer;
+  }
+
+  .inv-tabs {
+    position: absolute;
+    display: flex;
+  }
+
+  .inv-tab {
+    box-sizing: border-box;
+    height: 100%;
+    padding: 0;
+    .vael-tile();
+    font: 700 8px/1 var(--v-font-display);
+    color: var(--v-gilt-dim);
+    cursor: pointer;
+
+    &.active {
+      .vael-tile-active();
+    }
+
+    &.locked {
+      opacity: 0.55;
+    }
+
+    // The page that can be bought now.
+    &.next {
+      opacity: 0.85;
+      border-style: dashed;
+    }
+
+    &.soon {
+      opacity: 0.3;
+      cursor: default;
+    }
+  }
+
+  .inv-count {
+    position: absolute;
+    right: 15px;
+    display: flex;
+    align-items: center;
+    font: 600 8px/1 var(--v-font-label);
+    color: var(--v-gilt-dim);
+  }
+
+  .inv-actions {
+    position: absolute;
+    width: 160px;
+    display: flex;
+    gap: 4px;
+  }
+
+  .inv-btn {
+    .vael-button();
+    box-sizing: border-box;
+    padding: 0 4px;
+    font-size: 7px;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    pointer-events: auto;
+
+    .glyph {
+      font-size: 9px;
+      flex: none;
+    }
+
+    .label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &.half {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    &.wide {
+      flex: 1 1 auto;
+      min-width: 0;
+      text-overflow: ellipsis;
+    }
+
+    &.narrow {
+      flex: none;
+      width: 36px;
+    }
+
+    &.primary {
+      .vael-button-primary();
+      padding: 0 4px;
+      font-size: 7px;
+    }
+
+    &.icon {
+      position: absolute;
+      padding: 0;
+
+      svg {
+        width: 11px;
+        height: 11px;
+      }
+    }
+
+    &.checked {
+      .vael-tile-active();
+    }
+
+    &.repair-all {
+      position: absolute;
+      padding: 0 2px;
+      letter-spacing: 0;
+    }
+  }
+
+  .inv-money {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 5px;
+    background: oklch(11% 0.004 265 / 0.9);
+    border: 1px solid oklch(48% 0.17 25 / 0.55);
+
+    .coin {
+      flex: none;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, oklch(92% 0.1 90), oklch(70% 0.14 75) 60%, oklch(50% 0.1 65));
+      box-shadow: 0 0 0 1px oklch(40% 0.08 65);
+    }
+
+    .amount {
+      flex: 1;
+      text-align: right;
+      font: 700 9px/1 var(--v-font-label);
+      color: oklch(66% 0.2 28);
+      text-shadow: 1px 1px 0 #000;
+    }
+  }
 }
 
 // The carried item is portalled onto the body - see the note at its JSX - so

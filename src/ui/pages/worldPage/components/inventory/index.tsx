@@ -15,7 +15,6 @@ import {
   usedMask,
 } from '../../../../components/itemGrid';
 import { ItemsDatabase } from '../../../../../common/itemsDatabase';
-import { goldColor } from '../../../../../common/goldColor';
 import {
   ITEM_HOTKEY_CODES,
   canRegisterItemHotkey,
@@ -30,25 +29,23 @@ import {
 import { InventorySort } from '../../../../../common/inventorySort';
 import { QuickItemActions } from '../../../../../common/quickItemActions';
 import { StorageKind } from '../../../../../common/itemStorage';
+import { InventoryConstants } from '../../../../../common/inventoryConstants';
+import { InventoryPages, pageFirstSlot } from '../../../../../common/inventoryPages';
+import { itemValue } from '../../../../../common/itemValue';
+import { durabilityPercent } from '../../../../../common/stateWarnings';
+import { MUIdle, pageName, zenText } from '../../../../../muidle/state';
+import { mt } from '../../../../../muidle/text';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MuSpriteFrame } from '../../../../components/muSprite';
-import { MuButton } from '../../../../components/muButton';
 import { MuItemWindow, MuTableFrame } from '../../../../components/muWindow';
 import { playUiSound } from '../../../../../libs/sfx';
 import {
-  BUTTON_FRAMES,
-  BUTTON_HEIGHT,
-  BUTTON_WIDTH,
-  BUTTON_Y,
+  ACTIONS_HEIGHT,
+  ACTIONS_Y,
   COLUMNS,
   EQUIPMENT_SLOTS,
-  EXIT_BUTTON_X,
-  EXIT_SPRITE,
-  EXIT_TOOLTIP,
-  EXPAND_BUTTON_X,
-  EXPAND_SPRITE,
-  EXPAND_TOOLTIP,
-  FIRST_SLOT,
+  FOOTER_HEIGHT,
+  FOOTER_Y,
   GRID_FRAME_HEIGHT,
   GRID_FRAME_WIDTH,
   GRID_FRAME_X,
@@ -59,31 +56,26 @@ import {
   HEAD_CLOSE_Y,
   GRID_X,
   GRID_Y,
-  MONEY_HEIGHT,
-  MONEY_SPRITE,
-  MONEY_TEXT_X,
-  MONEY_TEXT_Y,
   MONEY_WIDTH,
   MONEY_X,
-  MONEY_Y,
-  REPAIR_BUTTON_X,
-  REPAIR_SPRITE,
-  REPAIR_TOOLTIP,
+  REPAIR_ALL_WIDTH,
+  REPAIR_ALL_X,
   ROWS,
+  SHOP_BUTTON_SIZE,
   SHOP_BUTTON_X,
-  SHOP_SPRITE,
   SHOP_TOOLTIP,
   SQUARE,
   SQUARES,
+  TAB_GAP,
+  TAB_HEIGHT,
+  TAB_WIDTH,
+  TABS_X,
+  TABS_Y,
   TITLE,
   TITLE_Y,
 } from './layout';
 
 const WINDOW_ID = 'inventory';
-
-function slotOf(column: number, row: number): number {
-  return column + row * COLUMNS + FIRST_SLOT;
-}
 
 function itemSize(item: Item): { w: number; h: number } {
   const config = ItemsDatabase.getItem(item.group, item.num);
@@ -99,12 +91,13 @@ type Placed = {
   h: number;
 };
 
-function buildOccupancy(items: (Item | null)[]) {
+/** The squares of one page (D33) and the items lying on it; `first` is the page's first slot. */
+function buildOccupancy(items: (Item | null)[], first: number) {
   const squares: (Placed | null)[] = new Array(SQUARES).fill(null);
   const placed: Placed[] = [];
 
   for (let square = 0; square < SQUARES; square++) {
-    const slot = FIRST_SLOT + square;
+    const slot = first + square;
     const item = items[slot];
     if (!item) continue;
 
@@ -157,7 +150,7 @@ function targetSquareAt(
   return { column: Math.floor(x / SQUARE), row: Math.floor(y / SQUARE) };
 }
 
-/** The first place (row by row, from the top left) a w x h item fits at; null in a full bag. */
+/** The first place (row by row, from the top left) a w x h item fits at; null on a full page. */
 function firstFit(
   squares: (Placed | null)[],
   w: number,
@@ -207,6 +200,20 @@ function isConsumable(item: Item): boolean {
   return (n >= 0 && n <= 10) || (n >= 35 && n <= 40);
 }
 
+/** The bar under a worn item: green, then gold below half, red below a fifth. */
+function durabilityClass(percent: number): string {
+  if (percent < 20) return 'low';
+  if (percent < 50) return 'mid';
+  return 'high';
+}
+
+/** Excellent gear is framed green, ancient gold - as the reference draws them. */
+function qualityClass(item: Item): string {
+  if (item.isAncient) return ' ancient';
+  if (item.isExcellent) return ' excellent';
+  return '';
+}
+
 const EquipmentSlot = observer(
   ({
     slot,
@@ -234,12 +241,13 @@ const EquipmentSlot = observer(
 
     const fits = !!picked && isEquipable(slot, picked.item) && !item;
     const blocked = !!picked && !fits;
+    const durability = item ? durabilityPercent(item) : null;
 
     return (
       <div
         className={`equipment-slot${fits ? ' can-equip' : ''}${
           blocked ? ' blocked' : ''
-        }`}
+        }${item ? ` filled${qualityClass(item)}` : ''}`}
         data-no-drag="true"
         data-equipment-slot={slot}
         style={{ left: x, top: y, width, height }}
@@ -274,15 +282,24 @@ const EquipmentSlot = observer(
           onPutAway();
         }}
       >
-        <MuSpriteFrame
-          file={sprite}
-          width={width}
-          height={height}
-          className="equipment-slot-back"
-        />
+        {/* The silhouette of what goes here, while nothing does. */}
+        {!item && (
+          <MuSpriteFrame
+            file={sprite}
+            width={width}
+            height={height}
+            className="equipment-slot-back"
+          />
+        )}
         {!!item && (
           <span className="equipment-slot-item">
             <ItemIcon item={item} />
+          </span>
+        )}
+        {!!item && (item.lvl ?? 0) > 0 && <span className="item-level">+{item.lvl}</span>}
+        {durability !== null && (
+          <span className={`durability ${durabilityClass(durability)}`}>
+            <span style={{ width: `${Math.max(0, Math.min(100, durability))}%` }} />
           </span>
         )}
       </div>
@@ -292,10 +309,27 @@ const EquipmentSlot = observer(
 
 type HoverInfo = { item: Item; slot: number; x: number; y: number };
 
+/**
+ * What the window is doing besides the bag: selecting items to sell in one go, confirming the junk
+ * the server found, or confirming a page to unlock (D33).
+ */
+type Mode =
+  | { kind: 'normal' }
+  | { kind: 'batch'; selected: number[] }
+  | { kind: 'junk' }
+  | { kind: 'buy'; page: number };
+
+const NORMAL: Mode = { kind: 'normal' };
+
 /** V stays a second inventory key unless the user binds it elsewhere. */
 const ALT_HOT_KEY = 'KeyV';
 
 const ITEM_HOT_KEYS = ITEM_HOTKEY_CODES;
+
+/** The worn items "Repair all" mends: every slot but the pet's (the pet trainer does pets). */
+const REPAIRED_SLOTS = EQUIPMENT_SLOTS.map(info => info.slot).filter(
+  slot => slot !== InventoryConstants.PetSlot
+);
 
 export const Inventory = observer(() => {
   const playerData = Store.playerData;
@@ -304,21 +338,63 @@ export const Inventory = observer(() => {
   const [target, setTarget] = useState<{ column: number; row: number } | null>(null);
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [split, setSplit] = useState<SplitRequest | null>(null);
+  const [page, setPage] = useState(1);
+  const [mode, setMode] = useState<Mode>(NORMAL);
+
+  const unlocked = InventoryPages.unlocked;
+  const pages = MUIdle.inventoryPages;
+  const current = Math.min(page, unlocked);
+  const first = pageFirstSlot(current);
 
   const picked = Store.pickedItem;
   const pickedSize = picked ? itemSize(picked.item) : null;
 
-  const stamp = occupancyStamp(playerData.items, FIRST_SLOT, SQUARES);
+  const stamp = occupancyStamp(playerData.items, first, SQUARES);
   const { squares, placed } = useMemo(
-    () => buildOccupancy(playerData.items),
+    () => buildOccupancy(playerData.items, first),
     // `stamp` stands in for the item contents.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [playerData.items, stamp]
+    [playerData.items, stamp, first]
   );
   const used = useMemo(() => usedMask(squares), [squares]);
   // The handlers read the latest occupancy without being recreated.
   const latest = useRef({ squares, pickedSize });
   latest.current = { squares, pickedSize };
+
+  // Squares in use on every page the character has, for the counter beside the tabs.
+  const allStamp = occupancyStamp(playerData.items, pageFirstSlot(1), unlocked * SQUARES);
+  const usedSquares = useMemo(() => {
+    let count = 0;
+    for (let p = 1; p <= unlocked; p++) {
+      for (const entry of buildOccupancy(playerData.items, pageFirstSlot(p)).squares) {
+        if (entry) count++;
+      }
+    }
+    return count;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerData.items, allStamp, unlocked]);
+
+  // The junk preview answers "Sell junk": nothing to sell ends the mode with a word.
+  const junk = MUIdle.junkPreview;
+  useEffect(() => {
+    if (mode.kind !== 'junk' || !junk || junk.slots.length > 0) return;
+    Store.addNotification(mt('inv.junkNone'), 'info');
+    MUIdle.clearJunkPreview();
+    setMode(NORMAL);
+  }, [mode.kind, junk]);
+
+  // The selection keeps only items still there (sold, moved or looted away meanwhile).
+  const selected = mode.kind === 'batch' ? mode.selected.filter(slot => !!playerData.items[slot]) : [];
+  const selectedZen = selected.reduce((sum, slot) => sum + itemValue(playerData.items[slot]!, 1), 0);
+  const marked = new Set<number>(
+    mode.kind === 'batch' ? selected : mode.kind === 'junk' && junk ? junk.slots : []
+  );
+  const locked = new Set(MUIdle.lockedSlots);
+
+  const leaveMode = () => {
+    if (mode.kind === 'junk') MUIdle.clearJunkPreview();
+    setMode(NORMAL);
+  };
 
   // MUIdle: a drag ends where it is let go (see liftedAt); a click keeps the item on the cursor.
   const dropRef = useRef<(clientX: number, clientY: number) => void>(() => {});
@@ -411,6 +487,7 @@ export const Inventory = observer(() => {
     return null;
   }
 
+  const slotOf = (column: number, row: number) => first + column + row * COLUMNS;
 
   const gridPoint = (clientX: number, clientY: number) => {
     const rect = gridRef.current?.getBoundingClientRect();
@@ -505,6 +582,17 @@ export const Inventory = observer(() => {
     }
   };
 
+  /** The first free place for a w x h item: this page first, then the others the character has. */
+  const freeSlotFor = (w: number, h: number): number | null => {
+    const order = [current, ...Array.from({ length: unlocked }, (_, i) => i + 1).filter(p => p !== current)];
+    for (const p of order) {
+      const pageSquares = p === current ? squares : buildOccupancy(playerData.items, pageFirstSlot(p)).squares;
+      const fit = firstFit(pageSquares, w, h);
+      if (fit) return pageFirstSlot(p) + fit.column + fit.row * COLUMNS;
+    }
+    return null;
+  };
+
   /**
    * MUIdle: worn gear into the first free place of the bag - a right click on it, or on the bag
    * while carrying an item lifted off an equipment slot (which put it back in the hand before).
@@ -514,14 +602,18 @@ export const Inventory = observer(() => {
     const carried = Store.pickedItem;
     const item = carried ? carried.item : slot !== null ? playerData.items[slot] : null;
     if (!item) return;
-    if (carried && (carried.fromStorage !== StorageKind.Inventory || carried.fromSlot >= FIRST_SLOT)) {
+    if (
+      carried &&
+      (carried.fromStorage !== StorageKind.Inventory ||
+        carried.fromSlot > InventoryConstants.LastEquippableItemSlotIndex)
+    ) {
       Store.cancelPickedItem();
       return;
     }
 
     const { w, h } = itemSize(item);
-    const fit = firstFit(squares, w, h);
-    if (!fit) {
+    const free = freeSlotFor(w, h);
+    if (free === null) {
       Store.addNotification(t('notify.noRoomForItem'), 'error');
       if (carried) Store.cancelPickedItem();
       return;
@@ -531,7 +623,7 @@ export const Inventory = observer(() => {
       if (slot === null) return;
       Store.pickInventoryItem(slot);
     }
-    Store.placePickedItem(slotOf(fit.column, fit.row));
+    Store.placePickedItem(free);
   };
 
   // The release of a drag reads this render's grid.
@@ -546,8 +638,22 @@ export const Inventory = observer(() => {
     if (under && gridRef.current?.contains(under)) dropOnGrid(clientX, clientY);
   };
 
+  /** Batch selling: a click puts an item in or out of the sale; locked items stay out. */
+  const toggleSelected = (slot: number) => {
+    if (mode.kind !== 'batch' || locked.has(slot)) return;
+    const next = selected.includes(slot) ? selected.filter(s => s !== slot) : [...selected, slot];
+    setMode({ kind: 'batch', selected: next });
+  };
+
   const onGridPointerDown = (event: React.PointerEvent) => {
     if (event.button !== 0) return;
+
+    if (mode.kind === 'batch' || mode.kind === 'junk') {
+      const square = squareAt(event.clientX, event.clientY);
+      const entry = square >= 0 ? squares[square] : null;
+      if (entry) toggleSelected(entry.slot);
+      return;
+    }
 
     if (picked && pickedSize) {
       dropOnGrid(event.clientX, event.clientY);
@@ -583,6 +689,7 @@ export const Inventory = observer(() => {
 
   const onGridContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
+    if (mode.kind !== 'normal') return;
 
     // Right button puts the hammer down.
     if (Store.repairMode) {
@@ -631,10 +738,133 @@ export const Inventory = observer(() => {
     Store.placePickedItem(destination);
   };
 
+  /** A tab: switch to a page the character has (also while carrying an item), or offer the next one. */
+  const onTab = (p: number) => {
+    if (p <= unlocked) {
+      setPage(p);
+      return;
+    }
+    if (picked || mode.kind === 'batch') return;
+    if (p === unlocked + 1 && p <= pages.available) setMode({ kind: 'buy', page: p });
+  };
+
+  const tabTitle = (p: number) => {
+    if (p <= unlocked) return pageName(p);
+    if (p > pages.available) return mt('inv.pageSoon', { page: pageName(p) });
+    if (p > unlocked + 1) return mt('inv.buyPreviousFirst', { page: pageName(unlocked + 1) });
+    return mt('inv.pageLocked', { page: pageName(p), zen: zenText(pages.prices[p - 1] ?? 0) });
+  };
+
+  const needsRepair = REPAIRED_SLOTS.some(slot => {
+    const item = playerData.items[slot];
+    const percent = item ? durabilityPercent(item) : null;
+    return percent !== null && percent < 100;
+  });
+
+  const renderActions = () => {
+    if (mode.kind === 'batch') {
+      return (
+        <>
+          <button
+            type="button"
+            className="inv-btn primary wide"
+            disabled={selected.length === 0}
+            title={mt('inv.batchHint')}
+            onClick={() => {
+              MUIdle.sellItems(selected);
+              setMode(NORMAL);
+            }}
+          >
+            {selected.length === 0
+              ? mt('inv.batchHint')
+              : mt('inv.batchConfirm', { count: selected.length, zen: zenText(selectedZen) })}
+          </button>
+          <button type="button" className="inv-btn narrow" onClick={leaveMode}>
+            {mt('inv.cancel')}
+          </button>
+        </>
+      );
+    }
+
+    if (mode.kind === 'junk') {
+      const level = MUIdle.settings?.sellMaxItemLevel ?? 4;
+      return (
+        <>
+          <button
+            type="button"
+            className="inv-btn primary wide"
+            disabled={!junk || junk.slots.length === 0}
+            title={mt('inv.junkRule', { level })}
+            onClick={() => {
+              MUIdle.sellJunk();
+              setMode(NORMAL);
+            }}
+          >
+            {junk ? mt('inv.junkConfirm', { count: junk.slots.length, zen: zenText(junk.zen) }) : '…'}
+          </button>
+          <button type="button" className="inv-btn narrow" onClick={leaveMode}>
+            {mt('inv.cancel')}
+          </button>
+        </>
+      );
+    }
+
+    if (mode.kind === 'buy') {
+      const price = pages.prices[mode.page - 1] ?? 0;
+      return (
+        <>
+          <button
+            type="button"
+            className="inv-btn primary wide"
+            disabled={playerData.money < price}
+            title={playerData.money < price ? mt('inv.pageZen') : undefined}
+            onClick={() => {
+              MUIdle.buyInventoryPage(mode.page);
+              setMode(NORMAL);
+            }}
+          >
+            {mt('inv.buyPage', { page: pageName(mode.page), zen: zenText(price) })}
+          </button>
+          <button type="button" className="inv-btn narrow" onClick={leaveMode}>
+            {mt('inv.cancel')}
+          </button>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <button
+          type="button"
+          className="inv-btn half"
+          title={mt('inv.batchHint')}
+          disabled={!!picked}
+          onClick={() => setMode({ kind: 'batch', selected: [] })}
+        >
+          <span className="glyph">⚖</span>
+          <span className="label">{mt('inv.batchSell')}</span>
+        </button>
+        <button
+          type="button"
+          className="inv-btn half"
+          title={mt('inv.junkRule', { level: MUIdle.settings?.sellMaxItemLevel ?? 4 })}
+          disabled={!!picked}
+          onClick={() => {
+            setMode({ kind: 'junk' });
+            MUIdle.requestJunkPreview();
+          }}
+        >
+          <span className="glyph">♻</span>
+          <span className="label">{mt('inv.sellJunk')}</span>
+        </button>
+      </>
+    );
+  };
+
   return (
     <MuItemWindow
       id={WINDOW_ID}
-      className={`inventory${Store.repairMode ? ' repair-mode' : ''}`}
+      className={`inventory${Store.repairMode ? ' repair-mode' : ''}${mode.kind !== 'normal' ? ` mode-${mode.kind}` : ''}`}
       column={Store.characterInfoEnabled ? 1 : 0}
       onClose={() => {
         Store.inventoryEnabled = false;
@@ -658,7 +888,9 @@ export const Inventory = observer(() => {
           height: HEAD_CLOSE_HEIGHT,
         }}
         onClick={() => (Store.inventoryEnabled = false)}
-      />
+      >
+        ×
+      </div>
 
       {EQUIPMENT_SLOTS.map(info => (
         <EquipmentSlot
@@ -669,6 +901,33 @@ export const Inventory = observer(() => {
           onPutAway={() => putAway(info.slot)}
         />
       ))}
+
+      <div className="inv-tabs" data-no-drag="true" style={{ left: TABS_X, top: TABS_Y, height: TAB_HEIGHT }}>
+        {Array.from({ length: 7 }, (_, i) => i + 1).map(p => (
+          <button
+            key={p}
+            type="button"
+            className={`inv-tab${p === current ? ' active' : ''}${p > unlocked ? ' locked' : ''}${
+              p === unlocked + 1 && p <= pages.available ? ' next' : ''
+            }${p > pages.available ? ' soon' : ''}`}
+            style={{ width: TAB_WIDTH, marginRight: p < 7 ? TAB_GAP : 0 }}
+            title={tabTitle(p)}
+            onPointerDown={event => {
+              event.stopPropagation();
+              if (event.button === 0) onTab(p);
+            }}
+          >
+            {pageName(p)}
+          </button>
+        ))}
+      </div>
+      <div className="inv-count" style={{ top: TABS_Y, height: TAB_HEIGHT }} title={mt('inv.used')}>
+        {usedSquares}/{unlocked * SQUARES}
+      </div>
+
+      <div className="inv-actions" data-no-drag="true" style={{ left: GRID_X, top: ACTIONS_Y, height: ACTIONS_HEIGHT }}>
+        {renderActions()}
+      </div>
 
       <MuTableFrame
         left={GRID_FRAME_X}
@@ -712,7 +971,9 @@ export const Inventory = observer(() => {
         {placed.map(entry => (
           <div
             key={entry.slot}
-            className="inventory-item"
+            className={`inventory-item${qualityClass(entry.item)}${marked.has(entry.slot) ? ' marked' : ''}${
+              locked.has(entry.slot) ? ' locked' : ''
+            }`}
             style={{
               left: entry.column * SQUARE,
               top: entry.row * SQUARE,
@@ -721,9 +982,11 @@ export const Inventory = observer(() => {
             }}
           >
             <ItemIcon item={entry.item} />
+            {(entry.item.lvl ?? 0) > 0 && <span className="item-level">+{entry.item.lvl}</span>}
             {stackCount(entry.item) > 1 && (
               <span className="stack">{stackCount(entry.item)}</span>
             )}
+            {locked.has(entry.slot) && <span className="lock-badge">P</span>}
           </div>
         ))}
 
@@ -752,89 +1015,39 @@ export const Inventory = observer(() => {
         />
       )}
 
-      {}
-      <MuSpriteFrame
-        file={MONEY_SPRITE}
-        width={MONEY_WIDTH}
-        height={MONEY_HEIGHT}
-        style={{ position: 'absolute', left: MONEY_X, top: MONEY_Y }}
-      />
-      <div
-        className="inventory-money"
-        style={{
-          left: MONEY_TEXT_X,
-          top: MONEY_TEXT_Y,
-          color: goldColor(playerData.money),
-        }}
-      >
-        {playerData.money.toLocaleString('en-US')}
+      <div className="inv-money" style={{ left: MONEY_X, top: FOOTER_Y, width: MONEY_WIDTH, height: FOOTER_HEIGHT }}>
+        <span className="coin" />
+        <span className="amount">{zenText(playerData.money)}</span>
       </div>
 
-      <div data-no-drag="true" className="window-button" style={{ left: EXIT_BUTTON_X, top: BUTTON_Y }}>
-        <MuButton
-          file={EXIT_SPRITE}
-          width={BUTTON_WIDTH}
-          height={BUTTON_HEIGHT}
-          frames={BUTTON_FRAMES}
-          onClick={() => (Store.inventoryEnabled = false)}
-        >
-          <span className="button-tooltip">{t(EXIT_TOOLTIP)}</span>
-        </MuButton>
-      </div>
-      {}
-      <div
-        className="window-button"
+      <button
+        type="button"
+        className={`inv-btn icon${Economy.myShopOpen ? ' checked' : ''}`}
         data-no-drag="true"
-        style={{ left: REPAIR_BUTTON_X, top: BUTTON_Y }}
+        title={t(SHOP_TOOLTIP)}
+        style={{ left: SHOP_BUTTON_X, top: FOOTER_Y, width: SHOP_BUTTON_SIZE, height: FOOTER_HEIGHT }}
+        onClick={() => Economy.toggleMyShop()}
       >
-        <MuButton
-          file={REPAIR_SPRITE}
-          width={BUTTON_WIDTH}
-          height={BUTTON_HEIGHT}
-          frames={BUTTON_FRAMES}
-          disabled={!Store.canRepair}
-          checked={Store.repairMode}
-          onClick={() => Store.toggleRepairMode()}
-        >
-          <span className="button-tooltip">{t(REPAIR_TOOLTIP)}</span>
-        </MuButton>
-      </div>
-      <div
-        className="window-button"
-        data-no-drag="true"
-        style={{ left: SHOP_BUTTON_X, top: BUTTON_Y }}
-      >
-        {}
-        <MuButton
-          file={SHOP_SPRITE}
-          width={BUTTON_WIDTH}
-          height={BUTTON_HEIGHT}
-          frames={BUTTON_FRAMES}
-          checked={Economy.myShopOpen}
-          onClick={() => Economy.toggleMyShop()}
-        >
-          <span className="button-tooltip">{t(SHOP_TOOLTIP)}</span>
-        </MuButton>
-      </div>
-      <div
-        className="window-button"
-        data-no-drag="true"
-        style={{ left: EXPAND_BUTTON_X, top: BUTTON_Y }}
-      >
-        <MuButton
-          file={EXPAND_SPRITE}
-          width={BUTTON_WIDTH}
-          height={BUTTON_HEIGHT}
-          frames={BUTTON_FRAMES}
-          disabled
-        >
-          <span className="button-tooltip">{t(EXPAND_TOOLTIP)}</span>
-        </MuButton>
-      </div>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M2 6h12l-1-3H3zM3 7v6h4v-4h2v4h4V7" fill="none" stroke="currentColor" strokeWidth="1.3" />
+        </svg>
+      </button>
 
-      {}
+      <button
+        type="button"
+        className="inv-btn repair-all"
+        data-no-drag="true"
+        disabled={!needsRepair}
+        title={needsRepair ? mt('inv.repairAll') : mt('inv.repairNothing')}
+        style={{ left: REPAIR_ALL_X, top: FOOTER_Y, width: REPAIR_ALL_WIDTH, height: FOOTER_HEIGHT }}
+        onClick={() => MUIdle.repairAll()}
+      >
+        {mt('inv.repairAll')}
+      </button>
+
       {}
       {split && <SplitStackDialog request={split} onClose={() => setSplit(null)} />}
     </MuItemWindow>
   );
 });
+

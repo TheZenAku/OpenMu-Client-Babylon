@@ -94,7 +94,8 @@ function searchRange(slot: number, hotkey: ItemHotkey): [number, number] {
 }
 
 const GRID_START = InventoryConstants.LastEquippableItemSlotIndex + 1;
-const GRID_END = InventoryConstants.FirstExtensionItemSlotIndex;
+// Every page of the inventory (D33): the extensions follow the grid, the personal store after them.
+const GRID_END = InventoryConstants.FirstStoreItemSlotIndex;
 
 /** Items with a level of their own, where the level must match to count. */
 const levelMatters = (n: number) => n === SIEGE || n === TOWN_PORTAL || n === FRUIT;
