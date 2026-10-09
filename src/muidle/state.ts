@@ -4,6 +4,8 @@ import { Store } from '../store';
 import { mt } from './text';
 import { i18n } from '../i18n';
 import { setUnlockedPages } from '../common/inventoryPages';
+import { ItemSerializer } from '../common/itemSerializer';
+import type { Item } from '../ecs/world';
 import { type HuntActivity, type HuntMapOption } from './huntMap';
 import { parseMixPreview, type MixPreview } from './mixOdds';
 
@@ -48,23 +50,52 @@ const SUB_SELL_ITEMS = 0x17;
 const SUB_REQUEST_JUNK_PREVIEW = 0x18;
 const SUB_REPAIR_ALL = 0x19;
 const SUB_BUY_INVENTORY_PAGE = 0x1a;
+const SUB_STORE_ITEM = 0x1b;
+const SUB_RETRIEVE_ITEM = 0x1c;
 
 /**
  * The inventory pages of the character (D33): how many it has, how many the server offers, and the
  * zen price of each page (index 0 is page I; 0 for a free page).
  */
-export type InventoryPagesInfo = { unlocked: number; available: number; prices: number[] };
+export type InventoryPagesInfo = {
+  unlocked: number;
+  available: number;
+  prices: number[];
+  /** The pages in the inventory's own slots (I to III); the rest (IV to VII) are storage pages. */
+  native?: number;
+  /** The items of the storage pages, in the client's item format (hex). */
+  storage?: { slot: number; data: string; locked?: boolean }[];
+};
+
+/** An item on a storage page (IV to VII): its slot in the storage (page IV starts at 0). */
+export type StoredItem = { slot: number; item: Item; locked: boolean };
+
+function parseStoredItems(entries: InventoryPagesInfo['storage']): StoredItem[] {
+  const items: StoredItem[] = [];
+  for (const entry of entries ?? []) {
+    // Whole bytes in hex, or the entry is skipped (a garbled one must not become an item).
+    const pairs = typeof entry.data === 'string' && /^(?:[0-9a-fA-F]{2})+$/.test(entry.data) ? entry.data.match(/../g) : null;
+    if (!pairs) continue;
+    try {
+      const item = ItemSerializer.DeserializeItem(Uint8Array.from(pairs.map(pair => parseInt(pair, 16))));
+      items.push({ slot: entry.slot, item, locked: entry.locked === true });
+    } catch {
+      console.warn('[muidle] unreadable stored item', entry.slot);
+    }
+  }
+  return items;
+}
 
 /** The junk of the inventory as the server judged it, with what it sells for. */
 export type JunkPreview = { slots: number[]; zen: number };
 
 /** What an inventory action of the window came to (the server sells, repairs and unlocks). */
 type InventoryResult = {
-  action: 'sell' | 'repair' | 'page';
+  action: 'sell' | 'repair' | 'page' | 'store' | 'retrieve';
   ok: boolean;
   count: number;
   zen: number;
-  reason: 'kept' | 'zenFull' | 'zen' | 'nothing' | 'unavailable' | null;
+  reason: 'kept' | 'zenFull' | 'zen' | 'nothing' | 'unavailable' | 'full' | null;
 };
 
 const PAGE_NAMES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
@@ -258,6 +289,8 @@ class MUIdleStore {
   mixPreview: MixPreview | null = null;
   /** The inventory pages; one page until the server said. */
   inventoryPages: InventoryPagesInfo = { unlocked: 1, available: 1, prices: [] };
+  /** The items of the storage pages (IV to VII). */
+  storedItems: StoredItem[] = [];
   /** The junk the server listed for "Sell junk", waiting for the player's confirmation. */
   junkPreview: JunkPreview | null = null;
   progressionOpen = false;
@@ -313,7 +346,8 @@ class MUIdleStore {
       if (state.quest !== undefined) this.quest = state.quest;
       if (state.inventory && Array.isArray(state.inventory.prices)) {
         this.inventoryPages = state.inventory;
-        setUnlockedPages(state.inventory.unlocked);
+        setUnlockedPages(state.inventory.native ?? state.inventory.unlocked);
+        this.storedItems = parseStoredItems(state.inventory.storage);
       }
       if (state.resume) this.scheduleResume(state.ground ?? null);
     } else if (subCode === SUB_SUMMARY) {
@@ -344,6 +378,8 @@ class MUIdleStore {
     } else if (result.action === 'page') {
       if (result.ok) Store.addNotification(mt('inv.pageBought', params), 'info');
       else Store.addNotification(mt(result.reason === 'zen' ? 'inv.pageZen' : 'inv.pageUnavailable'), 'error');
+    } else if (result.action === 'store' && result.reason === 'full') {
+      Store.addNotification(mt('inv.pageFull'), 'error');
     }
   }
 
@@ -516,8 +552,18 @@ class MUIdleStore {
   }
 
 /** Sells inventory items anywhere, at the merchants' price (the server keeps worn and locked items). */
-  sellItems(slots: number[], junk = false): void {
-    if (slots.length > 0) this.send(SUB_SELL_ITEMS, { slots, junk });
+  sellItems(slots: number[], junk = false, storage: number[] = []): void {
+    if (slots.length > 0 || storage.length > 0) this.send(SUB_SELL_ITEMS, { slots, junk, storage });
+  }
+
+  /** Puts an inventory item onto a storage page (IV to VII), where it fits first. */
+  storeItem(slot: number, page: number): void {
+    this.send(SUB_STORE_ITEM, { slot, page });
+  }
+
+  /** Takes an item of a storage page back into the inventory. */
+  retrieveItem(storageSlot: number): void {
+    this.send(SUB_RETRIEVE_ITEM, { slot: storageSlot });
   }
 
   /** Asks the server for the junk of the inventory (answered into `junkPreview`). */

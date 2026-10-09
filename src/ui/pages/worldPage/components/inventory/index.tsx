@@ -30,7 +30,7 @@ import { InventorySort } from '../../../../../common/inventorySort';
 import { QuickItemActions } from '../../../../../common/quickItemActions';
 import { StorageKind } from '../../../../../common/itemStorage';
 import { InventoryConstants } from '../../../../../common/inventoryConstants';
-import { InventoryPages, pageFirstSlot } from '../../../../../common/inventoryPages';
+import { InventoryPages, SLOT_PAGES, pageFirstSlot } from '../../../../../common/inventoryPages';
 import { itemValue } from '../../../../../common/itemValue';
 import { durabilityPercent } from '../../../../../common/stateWarnings';
 import { MUIdle, pageName, zenText } from '../../../../../muidle/state';
@@ -315,11 +315,19 @@ type HoverInfo = { item: Item; slot: number; x: number; y: number };
  */
 type Mode =
   | { kind: 'normal' }
-  | { kind: 'batch'; selected: number[] }
+  | { kind: 'batch'; selected: number[]; stored: number[] }
   | { kind: 'junk' }
   | { kind: 'buy'; page: number };
 
 const NORMAL: Mode = { kind: 'normal' };
+
+/** The first storage slot of a storage page (IV to VII): page IV starts at 0. */
+function storageFirstSlot(page: number): number {
+  return (page - SLOT_PAGES - 1) * SQUARES;
+}
+
+/** The storage's 256 slots (pages IV to VII), as the grid reads them. */
+const STORAGE_SLOTS = 256;
 
 /** V stays a second inventory key unless the user binds it elsewhere. */
 const ALT_HOT_KEY = 'KeyV';
@@ -341,20 +349,34 @@ export const Inventory = observer(() => {
   const [page, setPage] = useState(1);
   const [mode, setMode] = useState<Mode>(NORMAL);
 
+  // The pages in the inventory's slots (I to III), and every page the character has (IV to VII
+  // are the storage pages, D33).
   const unlocked = InventoryPages.unlocked;
   const pages = MUIdle.inventoryPages;
-  const current = Math.min(page, unlocked);
-  const first = pageFirstSlot(current);
+  // Pages are bought in order: storage pages only once the three inventory pages are there.
+  const total = unlocked < SLOT_PAGES ? unlocked : Math.max(unlocked, pages.unlocked);
+  const current = Math.min(page, total);
+  const storagePage = current > SLOT_PAGES;
+  const first = storagePage ? storageFirstSlot(current) : pageFirstSlot(current);
+
+  // The storage pages as one item array by storage slot, like `playerData.items` for the bag.
+  const stored = MUIdle.storedItems;
+  const storedArray = useMemo(() => {
+    const items = new Array<Item | null>(STORAGE_SLOTS).fill(null);
+    for (const entry of stored) if (entry.slot >= 0 && entry.slot < STORAGE_SLOTS) items[entry.slot] = entry.item;
+    return items;
+  }, [stored]);
+  const source = storagePage ? storedArray : playerData.items;
 
   const picked = Store.pickedItem;
   const pickedSize = picked ? itemSize(picked.item) : null;
 
-  const stamp = occupancyStamp(playerData.items, first, SQUARES);
+  const stamp = occupancyStamp(source, first, SQUARES);
   const { squares, placed } = useMemo(
-    () => buildOccupancy(playerData.items, first),
+    () => buildOccupancy(source, first),
     // `stamp` stands in for the item contents.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [playerData.items, stamp, first]
+    [source, stamp, first]
   );
   const used = useMemo(() => usedMask(squares), [squares]);
   // The handlers read the latest occupancy without being recreated.
@@ -370,9 +392,14 @@ export const Inventory = observer(() => {
         if (entry) count++;
       }
     }
+    for (let p = SLOT_PAGES + 1; p <= total; p++) {
+      for (const entry of buildOccupancy(storedArray, storageFirstSlot(p)).squares) {
+        if (entry) count++;
+      }
+    }
     return count;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playerData.items, allStamp, unlocked]);
+  }, [playerData.items, allStamp, unlocked, storedArray, total]);
 
   // The junk preview answers "Sell junk": nothing to sell ends the mode with a word.
   const junk = MUIdle.junkPreview;
@@ -385,11 +412,24 @@ export const Inventory = observer(() => {
 
   // The selection keeps only items still there (sold, moved or looted away meanwhile).
   const selected = mode.kind === 'batch' ? mode.selected.filter(slot => !!playerData.items[slot]) : [];
-  const selectedZen = selected.reduce((sum, slot) => sum + itemValue(playerData.items[slot]!, 1), 0);
+  const selectedStored = mode.kind === 'batch' ? mode.stored.filter(slot => !!storedArray[slot]) : [];
+  const selectedZen =
+    selected.reduce((sum, slot) => sum + itemValue(playerData.items[slot]!, 1), 0) +
+    selectedStored.reduce((sum, slot) => sum + itemValue(storedArray[slot]!, 1), 0);
+  const selectedCount = selected.length + selectedStored.length;
+  // Bag and storage slots overlap in number: each page marks its own kind.
   const marked = new Set<number>(
-    mode.kind === 'batch' ? selected : mode.kind === 'junk' && junk ? junk.slots : []
+    storagePage
+      ? selectedStored
+      : mode.kind === 'batch'
+        ? selected
+        : mode.kind === 'junk' && junk
+          ? junk.slots
+          : []
   );
-  const locked = new Set(MUIdle.lockedSlots);
+  const locked = new Set(
+    storagePage ? stored.filter(entry => entry.locked).map(entry => entry.slot) : MUIdle.lockedSlots
+  );
 
   const leaveMode = () => {
     if (mode.kind === 'junk') MUIdle.clearJunkPreview();
@@ -543,6 +583,12 @@ export const Inventory = observer(() => {
   const dropOnGrid = (clientX: number, clientY: number) => {
     if (!picked || !pickedSize) return;
 
+    // A storage page takes the item where it fits first (the server places it).
+    if (storagePage) {
+      storePicked(current);
+      return;
+    }
+
     // A stack dropped on the same item merges into it (the server's full / partial stack), before
     // the jewel rule below would try to use one jewel on the other.
     if (picked.fromStorage === StorageKind.Inventory) {
@@ -584,7 +630,8 @@ export const Inventory = observer(() => {
 
   /** The first free place for a w x h item: this page first, then the others the character has. */
   const freeSlotFor = (w: number, h: number): number | null => {
-    const order = [current, ...Array.from({ length: unlocked }, (_, i) => i + 1).filter(p => p !== current)];
+    const all = Array.from({ length: unlocked }, (_, i) => i + 1);
+    const order = storagePage ? all : [current, ...all.filter(p => p !== current)];
     for (const p of order) {
       const pageSquares = p === current ? squares : buildOccupancy(playerData.items, pageFirstSlot(p)).squares;
       const fit = firstFit(pageSquares, w, h);
@@ -629,6 +676,12 @@ export const Inventory = observer(() => {
   // The release of a drag reads this render's grid.
   dropRef.current = (clientX: number, clientY: number) => {
     const under = document.elementFromPoint(clientX, clientY);
+    // Let go over a page tab: a storage tab keeps the item, another opens its page.
+    const tab = under?.closest<HTMLElement>('[data-page-tab]');
+    if (tab) {
+      onTab(Number(tab.dataset.pageTab));
+      return;
+    }
     const equipment = under?.closest<HTMLElement>('[data-equipment-slot]');
     if (equipment) {
       const slot = Number(equipment.dataset.equipmentSlot);
@@ -641,8 +694,26 @@ export const Inventory = observer(() => {
   /** Batch selling: a click puts an item in or out of the sale; locked items stay out. */
   const toggleSelected = (slot: number) => {
     if (mode.kind !== 'batch' || locked.has(slot)) return;
-    const next = selected.includes(slot) ? selected.filter(s => s !== slot) : [...selected, slot];
-    setMode({ kind: 'batch', selected: next });
+    const toggle = (list: number[]) => (list.includes(slot) ? list.filter(s => s !== slot) : [...list, slot]);
+    setMode(
+      storagePage
+        ? { kind: 'batch', selected, stored: toggle(selectedStored) }
+        : { kind: 'batch', selected: toggle(selected), stored: selectedStored }
+    );
+  };
+
+  /**
+   * The carried bag item onto a storage page (IV to VII): the server moves it where it fits first and
+   * takes it out of the bag; worn gear and items from other windows go back.
+   */
+  const storePicked = (target: number) => {
+    const carried = Store.pickedItem;
+    if (!carried) return;
+    const fromBag =
+      carried.fromStorage === StorageKind.Inventory &&
+      carried.fromSlot > InventoryConstants.LastEquippableItemSlotIndex;
+    Store.cancelPickedItem();
+    if (fromBag) MUIdle.storeItem(carried.fromSlot, target);
   };
 
   const onGridPointerDown = (event: React.PointerEvent) => {
@@ -665,6 +736,9 @@ export const Inventory = observer(() => {
 
     const entry = squares[square];
     if (!entry) return;
+
+    // A stored item is not lifted: a right click takes it back to the bag.
+    if (storagePage) return;
 
     // REPAIR_MODE_ON (NewUIMyInventory.cpp:1520): the click repairs instead.
     if (Store.repairMode) {
@@ -690,6 +764,18 @@ export const Inventory = observer(() => {
   const onGridContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
     if (mode.kind !== 'normal') return;
+
+    // A storage page: the right click takes the item back into the bag.
+    if (storagePage) {
+      if (picked) {
+        Store.cancelPickedItem();
+        return;
+      }
+      const square = squareAt(event.clientX, event.clientY);
+      const entry = square >= 0 ? squares[square] : null;
+      if (entry) MUIdle.retrieveItem(entry.slot);
+      return;
+    }
 
     // Right button puts the hammer down.
     if (Store.repairMode) {
@@ -740,18 +826,23 @@ export const Inventory = observer(() => {
 
   /** A tab: switch to a page the character has (also while carrying an item), or offer the next one. */
   const onTab = (p: number) => {
-    if (p <= unlocked) {
+    // A bag item dropped on a storage tab is kept there.
+    if (picked && p > SLOT_PAGES && p <= total) {
+      storePicked(p);
+      return;
+    }
+    if (p <= total) {
       setPage(p);
       return;
     }
     if (picked || mode.kind === 'batch') return;
-    if (p === unlocked + 1 && p <= pages.available) setMode({ kind: 'buy', page: p });
+    if (p === total + 1 && p <= pages.available) setMode({ kind: 'buy', page: p });
   };
 
   const tabTitle = (p: number) => {
-    if (p <= unlocked) return pageName(p);
+    if (p <= total) return p > SLOT_PAGES ? `${pageName(p)} - ${mt('inv.storeHint')}` : pageName(p);
     if (p > pages.available) return mt('inv.pageSoon', { page: pageName(p) });
-    if (p > unlocked + 1) return mt('inv.buyPreviousFirst', { page: pageName(unlocked + 1) });
+    if (p > total + 1) return mt('inv.buyPreviousFirst', { page: pageName(total + 1) });
     return mt('inv.pageLocked', { page: pageName(p), zen: zenText(pages.prices[p - 1] ?? 0) });
   };
 
@@ -768,16 +859,16 @@ export const Inventory = observer(() => {
           <button
             type="button"
             className="inv-btn primary wide"
-            disabled={selected.length === 0}
+            disabled={selectedCount === 0}
             title={mt('inv.batchHint')}
             onClick={() => {
-              MUIdle.sellItems(selected);
+              MUIdle.sellItems(selected, false, selectedStored);
               setMode(NORMAL);
             }}
           >
-            {selected.length === 0
+            {selectedCount === 0
               ? mt('inv.batchHint')
-              : mt('inv.batchConfirm', { count: selected.length, zen: zenText(selectedZen) })}
+              : mt('inv.batchConfirm', { count: selectedCount, zen: zenText(selectedZen) })}
           </button>
           <button type="button" className="inv-btn narrow" onClick={leaveMode}>
             {mt('inv.cancel')}
@@ -839,7 +930,7 @@ export const Inventory = observer(() => {
           className="inv-btn half"
           title={mt('inv.batchHint')}
           disabled={!!picked}
-          onClick={() => setMode({ kind: 'batch', selected: [] })}
+          onClick={() => setMode({ kind: 'batch', selected: [], stored: [] })}
         >
           <span className="glyph">⚖</span>
           <span className="label">{mt('inv.batchSell')}</span>
@@ -907,8 +998,9 @@ export const Inventory = observer(() => {
           <button
             key={p}
             type="button"
-            className={`inv-tab${p === current ? ' active' : ''}${p > unlocked ? ' locked' : ''}${
-              p === unlocked + 1 && p <= pages.available ? ' next' : ''
+            data-page-tab={p}
+            className={`inv-tab${p === current ? ' active' : ''}${p > total ? ' locked' : ''}${
+              p === total + 1 && p <= pages.available ? ' next' : ''
             }${p > pages.available ? ' soon' : ''}`}
             style={{ width: TAB_WIDTH, marginRight: p < 7 ? TAB_GAP : 0 }}
             title={tabTitle(p)}
@@ -922,7 +1014,7 @@ export const Inventory = observer(() => {
         ))}
       </div>
       <div className="inv-count" style={{ top: TABS_Y, height: TAB_HEIGHT }} title={mt('inv.used')}>
-        {usedSquares}/{unlocked * SQUARES}
+        {usedSquares}/{total * SQUARES}
       </div>
 
       <div className="inv-actions" data-no-drag="true" style={{ left: GRID_X, top: ACTIONS_Y, height: ACTIONS_HEIGHT }}>
@@ -1010,7 +1102,7 @@ export const Inventory = observer(() => {
           item={hover.item}
           x={hover.x}
           y={hover.y}
-          context="inventory"
+          context={storagePage ? 'plain' : 'inventory'}
           slot={hover.slot}
         />
       )}

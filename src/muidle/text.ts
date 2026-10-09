@@ -225,6 +225,8 @@ const EN = {
   'inv.confirm': 'Confirm',
   'inv.selected': '{count} selected: {zen} zen',
   'inv.used': 'Squares in use',
+  'inv.pageFull': 'No room for it on that page',
+  'inv.storeHint': 'Drop items on this tab to keep them here; right click one to take it back',
 } as const;
 
 export type MUIdleTextKey = keyof typeof EN;
@@ -448,6 +450,8 @@ const PT: Partial<Record<MUIdleTextKey, string>> = {
   'inv.confirm': 'Confirmar',
   'inv.selected': '{count} selecionado(s): {zen} zen',
   'inv.used': 'Quadrados ocupados',
+  'inv.pageFull': 'Não cabe nessa página',
+  'inv.storeHint': 'Solte itens nesta aba para guardá-los aqui; clique com o botão direito para trazê-los de volta',
 };
 
 export function mt(key: MUIdleTextKey, params?: Record<string, string | number>): string {
