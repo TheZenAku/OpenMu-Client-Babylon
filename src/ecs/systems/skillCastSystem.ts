@@ -1,6 +1,7 @@
 import type { Entity, ISystemFactory } from '../world';
 import { Store } from '../../store';
 import { applyPlayerActionSpeed, serverMinAttackInterval } from '../../common/playSpeed';
+import { approachNeedsWalk } from '../../common/approachPath';
 import {
   AreaSkillPacket,
   EnterGateRequestPacket,
@@ -617,7 +618,8 @@ export const SkillCastSystem: ISystemFactory = world => {
         // tiles of it (NetworkSystem, `truncatePathWithinRange`). Without
         // that the walk ends on top of what the hero came to cast at.
         world.castApproach = { x: ~~tx, y: ~~ty, range };
-        if (approachDelay <= 0) {
+        // A walk still headed for the target is not sent again (approachNeedsWalk).
+        if (approachDelay <= 0 && approachNeedsWalk(hero.pathfinding, tx, ty)) {
           approachDelay = APPROACH_INTERVAL;
           const moveTo = hero.playerMoveTo;
           moveTo.point.x = tx;

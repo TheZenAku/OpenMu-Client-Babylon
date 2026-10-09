@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { distanceAlongPath, truncatePathWithinRange } from './approachPath';
+import { approachNeedsWalk, distanceAlongPath, truncatePathWithinRange } from './approachPath';
 
 describe('truncatePathWithinRange', () => {
   /** A straight walk from (0, 0) to (10, 0), one cell per step. */
@@ -107,5 +107,35 @@ describe('the stall that looked like a speedhack', () => {
     // A 2 s hitch is 7.5 tiles, well inside the chunk: the server walked those
     // too, so there is nothing to hold back.
     expect(Math.min(7.5, distanceAlongPath({ x: 0, z: 0 }, path, sentThrough))).toBeCloseTo(7.5);
+  });
+});
+
+describe('approachNeedsWalk (a WalkRequest per tile read as a speedhack)', () => {
+  const walking = (to: { x: number; y: number }) => ({
+    to,
+    path: [{ x: 0, y: 0 }, { x: 1, y: 0 }],
+    calculated: true,
+  });
+
+  it('keeps the walk under way while the target stands where it was aimed', () => {
+    expect(approachNeedsWalk(walking({ x: 10, y: 0 }), 10.7, 0.2)).toBe(false);
+  });
+
+  it('keeps it when the target moved a single tile', () => {
+    expect(approachNeedsWalk(walking({ x: 10, y: 0 }), 11.5, 1.5)).toBe(false);
+  });
+
+  it('plans again once the target moved two tiles away from the aim', () => {
+    expect(approachNeedsWalk(walking({ x: 10, y: 0 }), 12.1, 0)).toBe(true);
+    expect(approachNeedsWalk(walking({ x: 10, y: 0 }), 10, 2)).toBe(true);
+  });
+
+  it('plans again when the walk is used up or there is none', () => {
+    expect(approachNeedsWalk({ to: { x: 10, y: 0 }, path: [], calculated: true }, 10, 0)).toBe(true);
+    expect(approachNeedsWalk({ to: { x: 10, y: 0 }, path: null, calculated: true }, 10, 0)).toBe(true);
+  });
+
+  it('plans again while a walk is still waiting to be planned', () => {
+    expect(approachNeedsWalk({ ...walking({ x: 10, y: 0 }), calculated: false }, 10, 0)).toBe(true);
   });
 });

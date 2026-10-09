@@ -16,7 +16,7 @@ import { playBowShotVisual } from '../../common/skillVisuals';
 import { combat } from '../../combat';
 import { MOUSE_UPDATE_SECONDS_MAX } from '../../combat/inputGate';
 import { skillDefinition } from '../../common/skillsDatabase';
-import { truncatePathWithinRange } from '../../common/approachPath';
+import { approachNeedsWalk, truncatePathWithinRange } from '../../common/approachPath';
 import { isHostilePlayer } from '../../combat/playerTarget';
 import { duelEnemyId } from '../../events/duel';
 import { ammoReload, type Hands } from '../../combat/weaponRange';
@@ -252,7 +252,8 @@ export const AttackSystem: ISystemFactory = world => {
       }
 
       if (distSquared > range * range) {
-        if (approachDelay <= 0) {
+        // A walk still headed for the target is not sent again (approachNeedsWalk).
+        if (approachDelay <= 0 && approachNeedsWalk(playerEntity.pathfinding, targetPos.x, targetPos.z)) {
           approachDelay = APPROACH_INTERVAL;
           const moveTo = playerEntity.playerMoveTo;
           moveTo.point.x = targetPos.x;

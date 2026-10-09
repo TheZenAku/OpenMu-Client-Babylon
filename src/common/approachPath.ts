@@ -61,3 +61,30 @@ export function truncatePathWithinRange(
     }
   }
 }
+
+/**
+ * How far (in tiles, either axis) the target may move from the cell an approach walk was aimed at
+ * before the walk is planned again. Inside that the hero keeps the walk he has, and once it is used
+ * up (the target stepped aside) the empty path asks for a new one.
+ */
+const APPROACH_RETARGET_TILES = 2;
+
+/**
+ * Whether an approach toward (x, y) needs a new walk.
+ *
+ * Re-planning on every throttle tick (0.4 s) sent the server a WalkRequest about every tile. When a
+ * few of them reach it together after a stall (a Wi-Fi hiccup, a busy host), three inside the
+ * speedhack check's 2 s window read as the hero covering those tiles at once
+ * (SpeedHackDetectPlugIn): the walk is refused, the server snaps him back, and the warnings add up
+ * to a ban. A walk still headed where the target stands is left to NetworkSystem, which hands the
+ * server the rest in 15-step chunks, like a click on the ground.
+ */
+export function approachNeedsWalk(
+  pathfinding: { to: { x: number; y: number }; path: unknown[] | null; calculated: boolean },
+  x: number,
+  y: number
+): boolean {
+  if (!pathfinding.calculated || !pathfinding.path || pathfinding.path.length === 0) return true;
+  const moved = Math.max(Math.abs(~~x - pathfinding.to.x), Math.abs(~~y - pathfinding.to.y));
+  return moved >= APPROACH_RETARGET_TILES;
+}
