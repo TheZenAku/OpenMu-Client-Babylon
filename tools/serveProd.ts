@@ -14,16 +14,61 @@
 
 import { resolve, sep } from 'path';
 
-const ROOT = resolve(import.meta.dir, '..', process.env.WEB_ROOT ?? 'dist');
+const DEFAULT_ROOT = resolve(import.meta.dir, '..', process.env.WEB_ROOT ?? 'dist');
+const ROOT_FILE = process.env.WEB_ROOT_FILE;
 const HOST = process.env.WEB_HOST ?? '0.0.0.0';
 const PORT = Number(process.env.WEB_PORT ?? 45100);
 const REGISTER_PORT = Number(process.env.REGISTER_API_PORT ?? 3100);
 const MARKET_PORT = Number(process.env.MARKETPLACE_API_PORT ?? 3300);
 const MAX_API_BODY = 64 * 1024;
 
-const INDEX = Bun.file(`${ROOT}${sep}index.html`);
-if (!(await INDEX.exists())) {
-  console.error(`serve:prod - ${ROOT}${sep}index.html is missing; run "bun run build" first.`);
+/**
+ * MUIdle (D34): the build to serve may change under the running server. The update tool builds the next
+ * client into another folder and names it in WEB_ROOT_FILE (first line; the build it replaces on the
+ * second line): a page loaded from then on gets the new build, and a tab still on the old one keeps
+ * finding its files (hashed code, game data) in the previous folder until it reloads. Without the file,
+ * WEB_ROOT (dist) as before.
+ */
+let roots: string[] = [DEFAULT_ROOT];
+let rootsStamp = 0;
+let rootsCheckedAt = 0;
+
+async function currentRoots(): Promise<string[]> {
+  if (!ROOT_FILE) return roots;
+  const now = Date.now();
+  if (now - rootsCheckedAt < 1000) return roots;
+  rootsCheckedAt = now;
+  try {
+    const file = Bun.file(ROOT_FILE);
+    if (!(await file.exists())) {
+      roots = [DEFAULT_ROOT];
+      rootsStamp = 0;
+      return roots;
+    }
+    if (file.lastModified === rootsStamp) return roots;
+    const named = (await file.text())
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(line => resolve(line));
+    const usable: string[] = [];
+    for (const dir of named) if (await Bun.file(`${dir}${sep}index.html`).exists()) usable.push(dir);
+    // A pointer to nothing (a build half done, a typo) keeps what is served now.
+    if (usable.length > 0) {
+      if (usable[0] !== roots[0]) console.log(`[${new Date().toISOString()}] serve:prod - now serving ${usable[0]}`);
+      roots = usable;
+      rootsStamp = file.lastModified;
+    }
+  } catch {
+    // Being written: the next request reads it again.
+    rootsCheckedAt = 0;
+  }
+  return roots;
+}
+
+if (!(await Bun.file(`${(await currentRoots())[0]}${sep}index.html`).exists())) {
+  console.error(`serve:prod - ${roots[0]}${sep}index.html is missing; run "bun run build" first.`);
   process.exit(1);
 }
 
@@ -91,22 +136,26 @@ const server = Bun.serve({
       return new Response('bad request', { status: 400 });
     }
 
-    const target = resolve(ROOT, `.${path}`);
-    if (target !== ROOT && !target.startsWith(ROOT + sep)) {
-      return new Response('not found', { status: 404 });
-    }
+    // The build served now first, then the one it replaced (a tab not reloaded yet asks for its files).
+    const bases = await currentRoots();
+    for (const base of bases) {
+      const target = resolve(base, `.${path}`);
+      if (target !== base && !target.startsWith(base + sep)) {
+        return new Response('not found', { status: 404 });
+      }
 
-    const file = Bun.file(target);
-    if (path !== '/' && (await file.exists())) {
-      return new Response(file, {
-        headers: securityHeaders(new Headers({ 'Cache-Control': cacheControl(path) })),
-      });
+      const file = Bun.file(target);
+      if (path !== '/' && (await file.exists())) {
+        return new Response(file, {
+          headers: securityHeaders(new Headers({ 'Cache-Control': cacheControl(path) })),
+        });
+      }
     }
 
     // Client-side routes (/online, /offline, ...) and the root get the app.
     const lastSegment = path.split('/').pop() ?? '';
     if (!lastSegment.includes('.')) {
-      return new Response(INDEX, {
+      return new Response(Bun.file(`${bases[0]}${sep}index.html`), {
         headers: securityHeaders(new Headers({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' })),
       });
     }
@@ -119,4 +168,4 @@ const server = Bun.serve({
   },
 });
 
-console.log(`serve:prod - ${ROOT} on http://${server.hostname}:${server.port}`);
+console.log(`serve:prod - ${roots[0]} on http://${server.hostname}:${server.port}`);

@@ -5,6 +5,7 @@ import { mt } from './text';
 import { i18n } from '../i18n';
 import { setUnlockedPages } from '../common/inventoryPages';
 import { ItemSerializer } from '../common/itemSerializer';
+import { BuildCheck, type UpdateNoticeData } from '../common/buildCheck';
 import type { Item } from '../ecs/world';
 import { type HuntActivity, type HuntMapOption } from './huntMap';
 import { parseMixPreview, type MixPreview } from './mixOdds';
@@ -51,6 +52,7 @@ const SUB_REQUEST_JUNK_PREVIEW = 0x18;
 const SUB_REPAIR_ALL = 0x19;
 const SUB_BUY_INVENTORY_PAGE = 0x1a;
 const SUB_STORE_ITEM = 0x1b;
+const SUB_NOTICE = 0x07;
 const SUB_RETRIEVE_ITEM = 0x1c;
 
 /**
@@ -359,6 +361,9 @@ class MUIdleStore {
     } else if (subCode === SUB_JUNK_PREVIEW) {
       const preview = data as Partial<JunkPreview>;
       this.junkPreview = { slots: Array.isArray(preview.slots) ? preview.slots : [], zen: preview.zen ?? 0 };
+    } else if (subCode === SUB_NOTICE) {
+      // An update: a new client build, or a server restart in some seconds (D34).
+      BuildCheck.onNotice(data as UpdateNoticeData);
     } else if (subCode === SUB_INVENTORY_RESULT) {
       this.onInventoryResult(data as InventoryResult);
     }

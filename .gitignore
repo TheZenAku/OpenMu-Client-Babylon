@@ -1,6 +1,8 @@
 node_modules/
 dist
 dist-register
+# The second build folder of the update tool (D34: built beside the one served, then switched to).
+dist-b
 
 # Build-time endpoints and the OpenMU admin credentials. `.env.example` files
 # are committed in their place. Note `dist` above does not cover
