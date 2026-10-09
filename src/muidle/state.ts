@@ -6,6 +6,7 @@ import { i18n } from '../i18n';
 import { setUnlockedPages } from '../common/inventoryPages';
 import { ItemSerializer } from '../common/itemSerializer';
 import { BuildCheck, type UpdateNoticeData } from '../common/buildCheck';
+import { ServerHunt } from '../common/serverHunt';
 import type { Item } from '../ecs/world';
 import { type HuntActivity, type HuntMapOption } from './huntMap';
 import { parseMixPreview, type MixPreview } from './mixOdds';
@@ -29,11 +30,6 @@ export { huntMapMode, withHuntMapMode } from './huntMap';
 
 const CODE = 0xee;
 
-let resumeTimer: ReturnType<typeof setInterval> | null = null;
-let mapReadyAt = 0;
-EventBus.on('look.mapReady', () => {
-  mapReadyAt = performance.now();
-});
 const SUB_STATE = 0x01;
 const SUB_SUMMARY = 0x02;
 const SUB_ACTIVITY = 0x03;
@@ -53,6 +49,7 @@ const SUB_REPAIR_ALL = 0x19;
 const SUB_BUY_INVENTORY_PAGE = 0x1a;
 const SUB_STORE_ITEM = 0x1b;
 const SUB_NOTICE = 0x07;
+const SUB_MANUAL_CONTROL = 0x1d;
 const SUB_RETRIEVE_ITEM = 0x1c;
 
 /**
@@ -301,15 +298,16 @@ class MUIdleStore {
 
   constructor() {
     makeAutoObservable(this);
+    // The player's own walks, swings and casts while HUNT is on reach the server (HUNT v2).
+    ServerHunt.notifyServer = () => this.send(SUB_MANUAL_CONTROL, {});
   }
 
   /**
-   * HUNT is on: the MU Helper runs (as the server last said), or HUNT is the character's intent and
-   * on its way - walking to a ground, paused for the fee - with the helper not running yet. The
-   * button then stops it rather than starting it a second time.
+   * HUNT is on: the server hunts for the character (HUNT v2, docs/HUNT_V2.md) - online with the
+   * engine of the offline hunt, the client only shows it.
    */
   get hunting(): boolean {
-    return Store.muHelper.active || this.huntIntent;
+    return this.huntIntent;
   }
 
   onPacket(subCode: number, json: string): void {
@@ -337,6 +335,7 @@ class MUIdleStore {
         ground?: { x: number; y: number } | null;
       };
       this.huntIntent = state.hunt === true;
+      ServerHunt.active = this.huntIntent;
       this.settings = { ...DEFAULT_IDLE_SETTINGS, ...(state.settings ?? {}) };
       this.lockedSlots = Array.isArray(state.lockedSlots) ? state.lockedSlots : [];
       if (Array.isArray(state.maps)) this.maps = state.maps;
@@ -351,7 +350,6 @@ class MUIdleStore {
         setUnlockedPages(state.inventory.native ?? state.inventory.unlocked);
         this.storedItems = parseStoredItems(state.inventory.storage);
       }
-      if (state.resume) this.scheduleResume(state.ground ?? null);
     } else if (subCode === SUB_SUMMARY) {
       this.summary = data as OfflineSummary;
     } else if (subCode === SUB_ACTIVITY) {
@@ -388,68 +386,6 @@ class MUIdleStore {
     }
   }
 
-  /**
-   * The server asked to resume HUNT (the character was hunting when the
-   * player left). The helper loop stops itself in a safezone, and until the
-   * terrain of the map arrived every tile reads as one - so the start waits
-   * for the map, then for the hero to stand outside the safezone.
-   *
-   * With a `ground` (the server warped the character to its pinned map) the
-   * hero first walks there, with the helper paused, which would otherwise
-   * fight in town on the way.
-   */
-  private scheduleResume(ground: { x: number; y: number } | null = null): void {
-    if (resumeTimer) clearInterval(resumeTimer);
-    const started = performance.now();
-    let walkIssuedAt = 0;
-    resumeTimer = setInterval(() => {
-      const waited = performance.now() - started;
-      const hero = Store.world?.playerEntity;
-      if (ground) {
-        // The state comes after the map entry, so the map may have loaded before it; a walk sent
-        // before the terrain is there goes nowhere and is simply sent again below.
-        if (mapReadyAt === 0 || !hero) {
-          if (waited > 30_000) ground = null;
-          return;
-        }
-        const p = Store.playerData;
-        const arrived = Math.abs(p.x - ground.x) <= 3 && Math.abs(p.y - ground.y) <= 3;
-        if (!arrived && waited < 60_000) {
-          if (Store.muHelper.active) Store.toggleMuHelper();
-          // Re-issued now and then: a long route is walked in stretches.
-          if (performance.now() - walkIssuedAt > 8_000) {
-            walkIssuedAt = performance.now();
-            const move = hero.playerMoveTo;
-            move.point.x = ground.x;
-            move.point.y = ground.y;
-            move.handled = false;
-            move.sendToServer = true;
-          }
-          return;
-        }
-        ground = null;
-      }
-      const ready = mapReadyAt > 0 && performance.now() - mapReadyAt > 1500;
-      if (Store.muHelper.active || waited > 90_000) {
-        clearInterval(resumeTimer!);
-        resumeTimer = null;
-        return;
-      }
-      if (!hero || (!ready && waited < 15_000)) return;
-      if (hero.attributeSystem?.isAboveZero('inSafeZone')) {
-        // Really in town (died, or warped home): HUNT waits for the player.
-        if (waited > 20_000) {
-          clearInterval(resumeTimer!);
-          resumeTimer = null;
-        }
-        return;
-      }
-      clearInterval(resumeTimer!);
-      resumeTimer = null;
-      this.startHunt();
-    }, 1000);
-  }
-
   /** The HUNT/MANUAL button. */
   toggleHunt(): void {
     if (Store.isOffline) return;
@@ -458,22 +394,20 @@ class MUIdleStore {
   }
 
   private startHunt(): void {
-    // The server flips `muHelper.active` with its answer; the intent is
+    // The server hunts from here on - also from town (its navigator takes the hunt out). The intent is
     // stored right away so a disconnect a second later still knows it.
     this.huntIntent = true;
+    ServerHunt.active = true;
+    ServerHunt.manualUntil = 0;
     this.send(SUB_HUNT_MODE, { hunt: true });
-    // In town the server takes the hunt out first - a warp to a pinned map, else a walk to a hunting
-    // ground of this map - and HUNT starts on arrival (the helper does not run in a safezone).
-    if (Store.muHelper.active || Store.world?.playerEntity?.attributeSystem?.isAboveZero('inSafeZone')) return;
-    Store.toggleMuHelper();
+    // The browser's own MU Helper (the original's) has no part in HUNT any more.
+    if (Store.muHelper.active) Store.toggleMuHelper();
   }
 
   private stopHunt(): void {
-    // Also a hunt still on its way: no resume may start it again.
-    if (resumeTimer) clearInterval(resumeTimer);
-    resumeTimer = null;
     if (Store.muHelper.active) Store.toggleMuHelper();
     this.huntIntent = false;
+    ServerHunt.active = false;
     this.send(SUB_HUNT_MODE, { hunt: false });
   }
 

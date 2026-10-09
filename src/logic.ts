@@ -346,6 +346,7 @@ import { devQuery } from './common/devSeams';
 import { QuickItemActions } from './common/quickItemActions';
 import { gameServerTarget } from './common/serverConfig';
 import { MsgWinCode } from './common/msgWin';
+import { serverDrivesHero } from './common/serverHunt';
 import { CREATE_MESSAGES } from './ui/pages/charactersPage/layout';
 
 /** MoveSpeed 10 x REFERENCE_FPS 25 / 100 units per tile (ZzzCharacter.cpp:11530). */
@@ -1624,13 +1625,19 @@ EventBus.on('ObjectWalked', packet => {
   const obj = world.getByNetId(maskedId);
   if (!obj) return;
 
-  if (obj.localPlayer) return;
+  // In manual play the hero's walk is the client's own, and this is its echo. While the server hunts
+  // (HUNT v2) the walk is the server's: the hero follows it - without sending it back.
+  if (obj.localPlayer && !serverDrivesHero()) return;
   if (isDeadMonster(obj)) return;
 
   if (obj.playerMoveTo) {
     obj.playerMoveTo.handled = false;
     obj.playerMoveTo.point.x = p.TargetX;
     obj.playerMoveTo.point.y = p.TargetY;
+    if (obj.localPlayer) {
+      obj.playerMoveTo.sendToServer = false;
+      obj.playerMoveTo.silent = true;
+    }
   } else {
     obj.transform.pos.x = p.TargetX;
     obj.transform.pos.z = p.TargetY;
@@ -2553,8 +2560,9 @@ EventBus.on('ObjectAnimation', packet => {
   // client never applies its own viewport animation packets to the Hero.
   // Applying the echo restarted the swing mid-clip (action === CurrentAction
   // is true while swinging) and snapped rot.y to the server's 45°-quantised,
-  // often stale, direction.
-  if (obj.localPlayer) return;
+  // often stale, direction. While the server hunts (HUNT v2) it swings for the hero, and nothing
+  // local does: the hero then plays the server's swing like anyone else's.
+  if (obj.localPlayer && !serverDrivesHero()) return;
 
   // AttackPlayer: the last object whose attack animation arrived (ReceiveAction AT_ATTACK1/2, WSclient.cpp:3596-3608).
   const attackAction = obj.monsterAnimation ? MonsterActionType.Attack1 : ServerPlayerActionType.Attack1;
@@ -2757,7 +2765,7 @@ EventBus.on('SkillAnimation', packet => {
     playTargetedSkillVisual(world.scene, p.SkillId, caster, target);
     return;
   }
-  if (target && target !== caster && !caster.localPlayer) {
+  if (target && target !== caster && (!caster.localPlayer || serverDrivesHero())) {
     const dx = target.transform.pos.x - caster.transform.pos.x;
     const dz = target.transform.pos.z - caster.transform.pos.z;
     if (dx * dx + dz * dz > 0.01) {
@@ -2814,7 +2822,7 @@ EventBus.on('AreaSkillAnimation', packet => {
   const caster = world.getByNetId(casterId);
   if (!caster) return;
 
-  if (!caster.localPlayer) {
+  if (!caster.localPlayer || serverDrivesHero()) {
     // Rotation byte: Angle / 360 * 256 of the caster's yaw.
     caster.transform.rot.y = (p.Rotation / 256) * Math.PI * 2;
   }

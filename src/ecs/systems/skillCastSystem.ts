@@ -2,6 +2,7 @@ import type { Entity, ISystemFactory } from '../world';
 import { Store } from '../../store';
 import { applyPlayerActionSpeed, serverMinAttackInterval } from '../../common/playSpeed';
 import { approachNeedsWalk } from '../../common/approachPath';
+import { noteManualControl } from '../../common/serverHunt';
 import {
   AreaSkillPacket,
   EnterGateRequestPacket,
@@ -189,6 +190,7 @@ export const SkillCastSystem: ISystemFactory = world => {
 
   function sendTargeted(skill: number, targetId: number): void {
     if (Store.isOffline) return;
+    noteManualControl();
     const packet = TargetedSkillPacket.createPacket();
     packet.SkillId = skill;
     packet.TargetId = targetId;
@@ -197,6 +199,7 @@ export const SkillCastSystem: ISystemFactory = world => {
 
   function sendRageAttack(skill: number, targetId: number): void {
     if (Store.isOffline) return;
+    noteManualControl();
     const packet = RageAttackRequestPacket.createPacket();
     packet.SkillId = skill;
     packet.TargetId = targetId;
@@ -681,6 +684,7 @@ export const SkillCastSystem: ISystemFactory = world => {
           sendRageAttack(def.num, targetId);
           combat.beginDarkSide(def.num, targetId);
         } else if (area) {
+          noteManualControl();
           const packet = AreaSkillPacket.createPacket();
           packet.SkillId = def.num;
           packet.TargetX = ~~tx;

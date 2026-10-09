@@ -2,6 +2,7 @@ import type { Entity, ISystemFactory } from '../world';
 import { Store } from '../../store';
 import { applyPlayerActionSpeed, serverMinAttackInterval } from '../../common/playSpeed';
 import { HitRequestPacket } from '../../common/packets/ClientToServerPackets';
+import { noteManualControl } from '../../common/serverHunt';
 import {
   MonsterActionType,
   ServerPlayerActionType,
@@ -318,6 +319,7 @@ export const AttackSystem: ISystemFactory = world => {
         // CreateArrows() at AttackStage's hit key: the bow lets go here.
         playBowShotVisual(world.scene, playerEntity, target);
         if (target.dying || target.objOutOfScope || target.netId === undefined) return;
+        noteManualControl();
         const packet = HitRequestPacket.createPacket();
         packet.TargetId = target.netId;
         packet.AttackAnimation = attackAnimation;

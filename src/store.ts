@@ -79,6 +79,7 @@ import { InventoryConstants } from './common/inventoryConstants';
 import { StatType } from './common/characterStats';
 import { findFreeSlot, type Footprint } from './common/inventoryFit';
 import { usableRows } from './common/inventoryPages';
+import { noteManualControl } from './common/serverHunt';
 import { jewelTargetError } from './common/jewelUpgrade';
 import { ItemGroups } from './common/objects/enum';
 import { ItemsDatabase } from './common/itemsDatabase';
@@ -1907,6 +1908,7 @@ export const Store = new (class _Store {
    * sent in segments by NetworkSystem.
    */
   sendWalkPath(x: number, y: number, dirs: number[]): void {
+    noteManualControl();
     if (dirs.length === 0) return;
     // Walking away ends the NPC talk: OpenMU refuses potions, trades and even
     // death while it thinks a dialog is open.
@@ -2805,6 +2807,7 @@ export const Store = new (class _Store {
   }
 
   pickupItemRequest(itemNetId: number): void {
+    noteManualControl();
     if (this.isOffline) return;
 
     const packet = PickupItemRequestPacket.createPacket();
