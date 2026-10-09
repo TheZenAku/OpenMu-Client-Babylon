@@ -31,7 +31,7 @@ function huntDefaults(): MuHelperConfig {
 }
 
 /** Canonical clone: what survives the wire is what the copy holds. */
-function cloneConfig(config: MuHelperConfig): MuHelperConfig {
+export function cloneConfig(config: MuHelperConfig): MuHelperConfig {
   return decodeMuHelperConfig(encodeMuHelperConfig(config));
 }
 
@@ -77,8 +77,8 @@ export function resetMuHelperDraft(): void {
  * `MuHelperSaveDataRequest`; the server echoes `MuHelperConfigurationData`.
  * Offline the config only applies locally.
  */
-export function saveMuHelperConfig(): void {
-  const blob = encodeMuHelperConfig(MuHelperState.draft);
+export function saveMuHelperConfig(config: MuHelperConfig = MuHelperState.draft): void {
+  const blob = encodeMuHelperConfig(config);
   runInAction(() => {
     MuHelperState.config = decodeMuHelperConfig(blob);
     MuHelperState.windowOpen = false;

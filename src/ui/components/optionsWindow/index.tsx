@@ -1,6 +1,7 @@
 import { playUiSound } from '../../../libs/sfx';
 import './style.less';
 import { useEffect, useRef, useState } from 'react';
+import { observable, runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { Store } from '../../../store';
 import { useEventBus } from '../../../hooks/useEventBus';
@@ -49,12 +50,16 @@ import { PageTree, SearchField } from './nav';
 import { OptionRow, type RowActions } from './rows';
 import { ScrollBar } from './scrollbar';
 import { ConfirmBox, NoticeBox } from './dialogs';
+import { HUNT_PAGES, huntDraftDirty, saveHuntDraft } from './huntPages';
+import { MUIdle } from '../../../muidle/state';
+import { mt } from '../../../muidle/text';
+import { ensureMuHelperWatching } from '../../../muHelper/state';
 
 const WINDOW_ID = 'options';
 const HOT_KEY = 'options';
 
 const WIN_WIDTH = 640;
-const WIN_HEIGHT = 540;
+const WIN_HEIGHT = 590;
 
 const PANEL_TOP = 36;
 const PANEL_BOTTOM = WIN_HEIGHT - 52;
@@ -114,9 +119,24 @@ const CONFIRM_TEXT: Record<ExitKind, TextKey> = {
  */
 let lastPage: Page = ALL_PAGES[0];
 
+/** A page another window asked for (the HUNT panel's buttons): opened with the window. */
+const OptionsRequest = observable({ page: null as Page | null }, { page: observable.ref });
+
+/** Opens the options window on a page (by id), e.g. the MU Helper tab's `hunt`. */
+export function openOptionsPage(id: string): void {
+  const page = ALL_PAGES.find(candidate => candidate.id === id);
+  if (!page) return;
+  lastPage = page;
+  runInAction(() => {
+    OptionsRequest.page = page;
+    Store.optionsEnabled = true;
+  });
+}
+
 type Hovered =
   | { kind: 'row'; row: Row }
   | { kind: 'exit'; labelKey: TextKey; helpKey: TextKey }
+  | { kind: 'text'; title: string; body: string }
   | null;
 
 type Match = { page: Page; rows: Row[] };
@@ -153,11 +173,16 @@ function search(query: string): Match[] {
 
 const HelpStrip = observer(({ hovered, page }: { hovered: Hovered; page: Page | null }) => {
   let title = '';
-  let body = t(page?.hintKey ?? 'options.help.idle');
+  let body = page?.custom
+    ? mt(huntDraftDirty() ? 'opt.unsaved' : 'opt.hint')
+    : t(page?.hintKey ?? 'options.help.idle');
   let blocker: Blocker | null = null;
   let applies: TextKey | undefined;
 
-  if (hovered?.kind === 'exit') {
+  if (hovered?.kind === 'text') {
+    title = hovered.title;
+    body = hovered.body;
+  } else if (hovered?.kind === 'exit') {
     title = t(hovered.labelKey);
     body = t(hovered.helpKey);
   } else if (hovered?.kind === 'row') {
@@ -245,8 +270,31 @@ export const OptionsWindow = observer(() => {
     },
   });
 
+  // A page asked for from outside (openOptionsPage).
+  const requested = OptionsRequest.page;
+  useEffect(() => {
+    if (!requested) return;
+    setPage(requested);
+    setQuery('');
+    setHovered(null);
+    setCapturing(null);
+    if (rowsRef.current) rowsRef.current.scrollTop = 0;
+    runInAction(() => {
+      OptionsRequest.page = null;
+    });
+  }, [requested]);
+
+  // The MU Helper tab works on the server's copies: fresh map choices and configuration.
+  useEffect(() => {
+    if (!Store.optionsEnabled || !page.custom) return;
+    ensureMuHelperWatching();
+    if (!Store.isOffline) MUIdle.requestState();
+  }, [Store.optionsEnabled, page]);
+
   useEffect(() => {
     if (Store.optionsEnabled) return;
+    // Closing the window keeps what the MU Helper tab changed.
+    if (huntDraftDirty()) saveHuntDraft();
     setCapturing(null);
     setConfirming(null);
     setConfirmingDefaults(false);
@@ -453,6 +501,19 @@ export const OptionsWindow = observer(() => {
             )}
           </FitText>
         </div>
+        {!searching && page.custom && (
+          <OptionsButton
+            label={mt('save')}
+            width={DEFAULTS_WIDTH}
+            disabled={!huntDraftDirty()}
+            checked={huntDraftDirty()}
+            onClick={saveHuntDraft}
+            style={{
+              left: CONTENT_X + CONTENT_WIDTH - PANEL_PAD - DEFAULTS_WIDTH - 2,
+              top: PANEL_TOP + 3,
+            }}
+          />
+        )}
         {!searching && (optionKeys.length > 0 || isKeysPage) && (
           <OptionsButton
             label={t('options.defaults')}
@@ -479,6 +540,12 @@ export const OptionsWindow = observer(() => {
           }}
         >
           {matches === null &&
+            page.custom &&
+            HUNT_PAGES[page.custom]({
+              onHelp: (title, body) => setHovered({ kind: 'text', title, body }),
+            })}
+          {matches === null &&
+            !page.custom &&
             sectionsOf(page).map((section, i) => (
               <div key={section.titleKey ?? `untitled-${i}`} className="options-group">
                 {section.titleKey && (

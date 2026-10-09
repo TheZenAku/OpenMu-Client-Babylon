@@ -11,6 +11,7 @@ import {
   skillDefinition,
   type SkillDefinition,
 } from '../../../../../common/skillsDatabase';
+import { isAttackSkill, isBuffSkill } from '../../../../../muHelper/skillFilters';
 import { skillDisplayName } from '../../../../../common/skillNames';
 import { uiClick } from '../../../../../libs/sfx';
 import { useEventBus } from '../../../../../hooks/useEventBus';
@@ -137,21 +138,6 @@ const Stepper = ({
     </button>
   </div>
 );
-
-/** `FilterByAttackSkills`: what an attack slot may hold. */
-function isAttackSkill(def: SkillDefinition): boolean {
-  return (
-    (def.type === 'DirectHit' ||
-      def.type === 'AreaSkillAutomaticHits' ||
-      def.type === 'AreaSkillExplicitTarget') &&
-    (def.damage > 0 || def.damageType !== 'None')
-  );
-}
-
-/** `FilterByBuffSkills`: what a buff slot may hold. */
-function isBuffSkill(def: SkillDefinition): boolean {
-  return def.type === 'Buff' || def.type === 'Regeneration';
-}
 
 type PickerTarget =
   | { kind: 'skill'; index: 0 | 1 | 2 }
@@ -722,7 +708,7 @@ export const MuHelperWindow = observer(() => {
         <button type="button" onClick={uiClick(resetMuHelperDraft)}>
           {t('muHelper.init')}
         </button>
-        <button type="button" onClick={uiClick(saveMuHelperConfig)}>
+        <button type="button" onClick={uiClick(() => saveMuHelperConfig())}>
           {t('muHelper.save')}
         </button>
       </div>

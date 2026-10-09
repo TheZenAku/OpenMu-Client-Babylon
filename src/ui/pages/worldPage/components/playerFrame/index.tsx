@@ -1,4 +1,5 @@
 import './style.less';
+import { openOptionsPage } from '../../../../components/optionsWindow';
 import { observer } from 'mobx-react-lite';
 import { Store } from '../../../../../store';
 import { i18n } from '../../../../../i18n';
@@ -118,7 +119,7 @@ export const PlayerFrame = observer(() => {
           <strong>{formatNumber(p.points)}</strong>
           <small>{mt('hud.points')}</small>
         </button>
-        <button type="button" className="pf-box pf-map" title={mt('hud.huntMapTip')} onClick={uiClick(() => MUIdle.openSettings())}>
+        <button type="button" className="pf-box pf-map" title={mt('hud.huntMapTip')} onClick={uiClick(() => openOptionsPage('hunt'))}>
           <span className="pf-glyph" aria-hidden>
             ⚑
           </span>

@@ -19,6 +19,9 @@ const base: IdleSettings = {
   questItemsFirst: true,
   questsAuto: false,
   buildPreset: null,
+  autoSkills: true,
+  autoCombo: true,
+  skillOrder: [],
 };
 
 describe('the hunting map setting', () => {

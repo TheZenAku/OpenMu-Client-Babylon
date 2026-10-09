@@ -103,7 +103,13 @@
   .options-tree {
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   .options-tree-category {
@@ -596,5 +602,77 @@
     color: var(--v-gilt-bright);
     font-size: 11px;
     text-shadow: @shadow;
+  }
+
+  // MU Helper tab (huntPages.tsx).
+  .hunt-note {
+    padding: 4px 8px 6px 22px;
+    text-align: left;
+  }
+
+  .hunt-skill-row {
+    gap: 6px;
+  }
+
+  .hunt-skill-rank {
+    flex: none;
+    width: 16px;
+    color: @gold;
+    font-size: 11px;
+    text-shadow: @shadow;
+  }
+
+  .hunt-skill-icon {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    overflow: hidden;
+
+    > * {
+      transform: scale(0.7);
+      transform-origin: 0 0;
+    }
+  }
+
+  .hunt-skill-move,
+  .hunt-extra-button {
+    flex: none;
+    min-width: 24px;
+    height: 18px;
+    padding: 0 6px;
+    border: 1px solid @gold-dim;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.45);
+    color: @gold;
+    font-size: 10px;
+    cursor: pointer;
+    pointer-events: auto;
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    &:not(:disabled):hover {
+      color: var(--v-gilt-bright);
+      border-color: @gold;
+    }
+  }
+
+  .hunt-extra-add {
+    gap: 6px;
+  }
+
+  .hunt-extra-input {
+    flex: 1;
+    min-width: 0;
+    height: 18px;
+    padding: 0 6px;
+    border: 1px solid @gold-dim;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.55);
+    color: @text;
+    font-size: 11px;
+    pointer-events: auto;
   }
 }

@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { Store } from '../../../../../store';
 import { MUIdle, huntMapMode } from '../../../../../muidle/state';
 import { mt, type MUIdleTextKey } from '../../../../../muidle/text';
-import { toggleMuHelperWindow } from '../../../../../muHelper/state';
+import { openOptionsPage } from '../../../../components/optionsWindow';
 import { uiClick } from '../../../../../libs/sfx';
 
 /**
@@ -50,10 +50,10 @@ export const HuntPanel = observer(({ left, width, height }: { left: number; widt
         <span className="hunt-label">{mt('manual')}</span>
       </button>
       <div className="hunt-row">
-        <button type="button" className="hunt-icon" title={mt('hud.huntMapTip')} onClick={uiClick(() => MUIdle.openSettings())}>
+        <button type="button" className="hunt-icon" title={mt('hud.huntMapTip')} onClick={uiClick(() => openOptionsPage('hunt'))}>
           ⚑
         </button>
-        <button type="button" className="hunt-icon" title={mt('helperSettings')} onClick={uiClick(() => toggleMuHelperWindow(true))}>
+        <button type="button" className="hunt-icon" title={mt('helperSettings')} onClick={uiClick(() => openOptionsPage('skills'))}>
           ⚙
         </button>
         <span className={`hunt-pill is-${kind}`} aria-live="polite">

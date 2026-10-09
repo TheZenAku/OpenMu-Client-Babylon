@@ -133,6 +133,12 @@ export type IdleSettings = {
   questsAuto: boolean;
   /** Auto build preset (Elf "support", MG "energy", DL "raven"); null for the class default. */
   buildPreset: string | null;
+  /** HUNT picks the attack skills, the combo and the buffs on its own (HUNT v2). */
+  autoSkills: boolean;
+  /** HUNT chains the class combo out of the learned skills (Blade Knight). */
+  autoCombo: boolean;
+  /** The attack skills in the order the player wants them cast; empty: HUNT decides. */
+  skillOrder: number[];
 };
 
 /** Why the character cannot join an event now, as the server judged it. */
@@ -259,6 +265,9 @@ export const DEFAULT_IDLE_SETTINGS: IdleSettings = {
   questItemsFirst: true,
   questsAuto: false,
   buildPreset: null,
+  autoSkills: true,
+  autoCombo: true,
+  skillOrder: [],
 };
 
 class MUIdleStore {

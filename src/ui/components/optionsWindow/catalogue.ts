@@ -1,3 +1,4 @@
+import type { HuntPageKind } from './huntPages';
 import {
   CAMERA_FOV_MAX_DEG,
   CAMERA_FOV_MIN_DEG,
@@ -133,6 +134,8 @@ export type Page = {
   /** What the help strip says with nothing hovered. */
   hintKey?: TextKey;
   sections: Section[];
+  /** A page drawn by its own component instead of rows (the MU Helper tab, huntPages.tsx). */
+  custom?: HuntPageKind;
 };
 
 export type Category = { id: string; labelKey: TextKey; pages: Page[] };
@@ -287,6 +290,16 @@ const TIER_STYLE = (cap: 'ramp' | 'outline' | 'dialled' | 'tuned'): Need[] => [
 ];
 
 export const CATEGORIES: Category[] = [
+  {
+    // MUIdle (HUNT v2): the idle settings and the MU Helper configuration, kept on the server.
+    id: 'muHelper',
+    labelKey: 'muHelper.title',
+    pages: [
+      { id: 'hunt', labelKey: 'muHelper.tabHunt', sections: [], custom: 'huntGeneral' },
+      { id: 'skills', labelKey: 'skills.title', sections: [], custom: 'huntSkills' },
+      { id: 'obtain', labelKey: 'muHelper.tabObtain', sections: [], custom: 'huntPickup' },
+    ],
+  },
   {
     id: 'game',
     labelKey: 'options.tab.game',
