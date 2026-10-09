@@ -237,13 +237,22 @@ const PERFORMANCE_MODES: PerformanceMode[] = ['full', 'reduced', 'minimum', 'aut
 /** First backpack slot: 0..11 are the equipped items, which are never sold anyway. */
 const FIRST_BACKPACK_SLOT = 12;
 
+/** The backpack's plain weapons and armor - what the merchant trip may sell as junk - each with a lock. */
 const LockedItems = observer(({ onHelp }: { onHelp: HelpFn }) => {
   const items = Store.playerData.items
     .map((item, slot) => ({ item, slot }))
-    .filter(({ item, slot }) => item && slot >= FIRST_BACKPACK_SLOT);
+    .filter(
+      ({ item, slot }) =>
+        item &&
+        slot >= FIRST_BACKPACK_SLOT &&
+        item.group <= 11 &&
+        !item.isExcellent &&
+        !item.isAncient &&
+        !(item.socketCount ?? 0)
+    );
   if (!items.length) return null;
   return (
-    <>
+    <Section title={mt('lockedItems')}>
       {items.map(({ item, slot }) => {
         const locked = MUIdle.isSlotLocked(slot);
         return (
@@ -258,7 +267,7 @@ const LockedItems = observer(({ onHelp }: { onHelp: HelpFn }) => {
           />
         );
       })}
-    </>
+    </Section>
   );
 });
 
@@ -392,10 +401,6 @@ export const HuntGeneralPage = observer(({ onHelp }: { onHelp: HelpFn }) => {
         />
       </Section>
 
-      <Section title={mt('lockedItems')}>
-        <LockedItems onHelp={onHelp} />
-      </Section>
-
       <Section title={mt('opt.section.character')}>
         <Toggle
           label={mt('autoBuild')}
@@ -425,6 +430,8 @@ export const HuntGeneralPage = observer(({ onHelp }: { onHelp: HelpFn }) => {
           onChange={index => Performance.setMode(PERFORMANCE_MODES[index])}
         />
       </Section>
+
+      <LockedItems onHelp={onHelp} />
     </>
   );
 });
