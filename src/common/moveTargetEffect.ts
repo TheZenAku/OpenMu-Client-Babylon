@@ -9,6 +9,7 @@ import {
   Texture,
   TransformNode,
   Vector3,
+  VertexBuffer,
   VertexData,
   type AbstractMesh,
   type Scene,
@@ -101,6 +102,26 @@ export function loadEffectTexture(scene: Scene, file: string): Promise<Texture> 
   textureCache.set(file, pending);
 
   return pending;
+}
+
+/** The most a decal's alpha reaches (TerrainDecal.setAlpha). */
+const MAX_DECAL_ALPHA = 0.999;
+
+/**
+ * A per-frame vertex rewrite straight into the mesh's buffers. `updateVerticesData` notifies the geometry,
+ * which marks the mesh's attributes dirty, so a decal or ribbon redrawn every frame made Babylon re-derive
+ * its material's defines every frame - ~100 times a second while a caster hunted (10-14).
+ */
+function writeVertices(mesh: Mesh, positions: Float32Array | number[], uvs: Float32Array | number[]): void {
+  const positionBuffer = mesh.getVertexBuffer(VertexBuffer.PositionKind);
+  const uvBuffer = mesh.getVertexBuffer(VertexBuffer.UVKind);
+  if (positionBuffer?.isUpdatable() && uvBuffer?.isUpdatable()) {
+    positionBuffer.update(positions);
+    uvBuffer.update(uvs);
+    return;
+  }
+  mesh.updateVerticesData(VertexBuffer.PositionKind, positions);
+  mesh.updateVerticesData(VertexBuffer.UVKind, uvs);
 }
 
 function excludeFromGlow(world: World, mesh: Mesh | AbstractMesh): void {
@@ -234,9 +255,13 @@ export class TerrainDecal {
     return this.#mesh.isEnabled(false);
   }
 
-  /** o->Alpha of the pointer effect (fade-out during its last 50 ticks). */
+  /**
+   * o->Alpha of the pointer effect (fade-out during its last 50 ticks). Kept below 1: Babylon re-derives a
+   * material's defines whenever its alpha crosses 1 (opaque or not), and every fading ring crossed it -
+   * the decal blends either way (MATERIAL_ALPHABLEND), so 0.999 is the same picture (10-14).
+   */
   setAlpha(alpha: number): void {
-    this.#material.alpha = alpha;
+    this.#material.alpha = Math.min(alpha, MAX_DECAL_ALPHA);
   }
 
   #gridLines(a: number, b: number, out: Float64Array): void {
@@ -308,8 +333,7 @@ export class TerrainDecal {
       }
     }
 
-    this.#mesh.updateVerticesData('position', positions);
-    this.#mesh.updateVerticesData('uv', uvs);
+    writeVertices(this.#mesh, positions, uvs);
 
     if (!this.#dark) this.#material.emissiveColor.set(light[0], light[1], light[2]);
     this.#mesh.setEnabled(true);
@@ -544,8 +568,7 @@ class Ribbon {
       positions[v * 3 + 2] = positions[(v - 1) * 3 + 2];
     }
 
-    this.#mesh.updateVerticesData('position', positions);
-    this.#mesh.updateVerticesData('uv', uvs);
+    writeVertices(this.#mesh, positions, uvs);
     this.#mesh.setEnabled(true);
   }
 }
