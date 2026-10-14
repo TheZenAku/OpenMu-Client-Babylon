@@ -51,6 +51,9 @@ const SUB_STORE_ITEM = 0x1b;
 const SUB_NOTICE = 0x07;
 const SUB_MANUAL_CONTROL = 0x1d;
 const SUB_RETRIEVE_ITEM = 0x1c;
+const SUB_MAP_SPOTS = 0x08;
+const SUB_REQUEST_MAP_SPOTS = 0x1e;
+const SUB_PIN_SPOT = 0x1f;
 
 /**
  * The inventory pages of the character (D33): how many it has, how many the server offers, and the
@@ -87,6 +90,12 @@ function parseStoredItems(entries: InventoryPagesInfo['storage']): StoredItem[] 
 
 /** The junk of the inventory as the server judged it, with what it sells for. */
 export type JunkPreview = { slots: number[]; zen: number };
+
+/** A hunting spot of the current map (the server's MUIdleMapSpots): one monster's spawns within a cell. */
+export type MapSpot = { x: number; y: number; monster: string; level: number; count: number; rate: number };
+
+/** The hunting spots of a map, the best of them (index, -1 without one) and the spot HUNT was sent to. */
+export type MapSpots = { map: number; spots: MapSpot[]; best: number; pinned: { x: number; y: number } | null };
 
 /** What an inventory action of the window came to (the server sells, repairs and unlocks). */
 type InventoryResult = {
@@ -301,6 +310,8 @@ class MUIdleStore {
   storedItems: StoredItem[] = [];
   /** The junk the server listed for "Sell junk", waiting for the player's confirmation. */
   junkPreview: JunkPreview | null = null;
+  /** The hunting spots of the current map, for the map window (TAB); null until the server sent them. */
+  mapSpots: MapSpots | null = null;
   progressionOpen = false;
   settingsOpen = false;
   eventsOpen = false;
@@ -368,6 +379,12 @@ class MUIdleStore {
     } else if (subCode === SUB_JUNK_PREVIEW) {
       const preview = data as Partial<JunkPreview>;
       this.junkPreview = { slots: Array.isArray(preview.slots) ? preview.slots : [], zen: preview.zen ?? 0 };
+    } else if (subCode === SUB_MAP_SPOTS) {
+      const spots = data as Partial<MapSpots>;
+      this.mapSpots =
+        typeof spots.map === 'number' && Array.isArray(spots.spots)
+          ? { map: spots.map, spots: spots.spots, best: spots.best ?? -1, pinned: spots.pinned ?? null }
+          : null;
     } else if (subCode === SUB_NOTICE) {
       // An update: a new client build, or a server restart in some seconds (D34).
       BuildCheck.onNotice(data as UpdateNoticeData);
@@ -539,6 +556,18 @@ class MUIdleStore {
   /** Unlocks the next inventory page with zen. */
   buyInventoryPage(page: number): void {
     this.send(SUB_BUY_INVENTORY_PAGE, { page });
+  }
+
+  /** Asks for the hunting spots of the current map (the map window). */
+  requestMapSpots(): void {
+    if (Store.isOffline) return;
+    this.send(SUB_REQUEST_MAP_SPOTS, {});
+  }
+
+  /** Sends HUNT to a spot of the current map (or lets it choose again); the server answers with the spots. */
+  pinSpot(spot: { x: number; y: number } | null): void {
+    if (Store.isOffline) return;
+    this.send(SUB_PIN_SPOT, spot ? { x: Math.floor(spot.x), y: Math.floor(spot.y) } : { clear: true });
   }
 
   private send(subCode: number, payload: unknown): void {

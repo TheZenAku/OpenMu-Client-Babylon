@@ -274,6 +274,12 @@ const EN = {
   'opt.percentHp': 'at {percent}% HP',
   'opt.performance.help': 'How much the browser draws: lower it on a weak device.',
   'opt.lock.help': 'A locked item is never sold automatically.',
+  'map.spot': '{monster} (level {level}) x{count}',
+  'map.spotRate': '~{rate} XP/min',
+  'map.best': 'Best spot',
+  'map.chosen': 'HUNT goes here',
+  'map.hint': 'Right click a spot: walk there - with HUNT on, hunt there',
+  'map.huntThere': 'HUNT heads to the chosen spot',
 } as const;
 
 export type MUIdleTextKey = keyof typeof EN;
@@ -546,6 +552,12 @@ const PT: Partial<Record<MUIdleTextKey, string>> = {
   'opt.percentHp': 'com {percent}% de HP',
   'opt.performance.help': 'Quanto o navegador desenha: diminua num aparelho fraco.',
   'opt.lock.help': 'Um item travado nunca é vendido automaticamente.',
+  'map.spot': '{monster} (nível {level}) x{count}',
+  'map.spotRate': '~{rate} XP/min',
+  'map.best': 'Melhor spot',
+  'map.chosen': 'A caça vai para cá',
+  'map.hint': 'Botão direito num spot: andar até lá - com a caça ligada, caçar lá',
+  'map.huntThere': 'A caça está indo para o spot escolhido',
 };
 
 export function mt(key: MUIdleTextKey, params?: Record<string, string | number>): string {

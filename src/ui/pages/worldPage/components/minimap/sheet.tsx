@@ -10,6 +10,8 @@ import type { MinimapMarker } from '../../../../../common/minimapData';
 import { useMuSprite } from '../../../../components/muSprite';
 import { MuTipText } from '../../../../components/muText';
 import { useUiStageScale } from '../../../../components/uiStage';
+import { MUIdle, type MapSpot } from '../../../../../muidle/state';
+import { mt } from '../../../../../muidle/text';
 import {
   CENTER_BUTTON,
   CenterButton,
@@ -65,8 +67,145 @@ const SHEET_ALPHA = 0.85;
 const CENTER_X = 320;
 const CENTER_Y = 240;
 
-/** `m_Lenth[]`: map edge length per zoom step. */
-const ZOOM_LEVELS = [800, 1000, 1200, 1400, 1600, 1800];
+/**
+ * `m_Lenth[]`: map edge length per zoom step - the original's 800 and up, and ours below it: the first
+ * step shows the whole map (its 45° diamond fits the sheet's height) around the map's centre, which is
+ * where the sheet opens.
+ */
+const ZOOM_LEVELS = [290, 450, 600, 800, 1000, 1200, 1400, 1600, 1800];
+
+/** The zoom step showing the whole map. */
+const WHOLE_MAP_ZOOM = 0;
+
+/** A walk across the whole map: every tile may be expanded once (the default budget gives up early). */
+const WHOLE_MAP_EXPANSIONS = 256 * 256;
+
+/** The screen point of a tile, the view centred on `center` (the same spin as the markers'). */
+function tileToScreen(tile: MapPoint, center: MapPoint, mapSize: number): { x: number; y: number } {
+  const dx = ((tile.y - center.y) / TERRAIN_SIZE) * mapSize;
+  const dy = ((tile.x - center.x) / TERRAIN_SIZE) * mapSize;
+  const rad = (MAP_ROTATION * Math.PI) / 180;
+  return {
+    x: CENTER_X + dx * Math.cos(rad) - dy * Math.sin(rad),
+    y: CENTER_Y + dx * Math.sin(rad) + dy * Math.cos(rad),
+  };
+}
+
+/** The walkable tile nearest to a spot's centre (it may sit on a wall), or null. */
+function walkableNear(x: number, y: number): MapPoint | null {
+  const world = Store.world;
+  if (!world) return null;
+  for (let radius = 0; radius <= 6; radius++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
+        const tx = x + dx;
+        const ty = y + dy;
+        if (tx >= 0 && ty >= 0 && tx < TERRAIN_SIZE && ty < TERRAIN_SIZE && world.isWalkable(tx, ty)) {
+          return { x: tx, y: ty };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * MUIdle (HUNT v2): a right click on a spot. With HUNT on, the hunt goes there and hunts there (the
+ * server walks the hero); in MANUAL the hero walks there, the whole way, as after a click on the ground.
+ */
+function goToSpot(spot: MapSpot): boolean {
+  if (MUIdle.hunting) {
+    MUIdle.pinSpot(spot);
+    Store.addNotification(mt('map.huntThere'), 'info');
+    return true;
+  }
+
+  const hero = Store.world?.playerEntity;
+  const tile = walkableNear(spot.x, spot.y);
+  if (!hero || !tile) return false;
+  hero.pathfinding.maxExpansions = WHOLE_MAP_EXPANSIONS;
+  hero.playerMoveTo.point.x = tile.x + 0.5;
+  hero.playerMoveTo.point.y = tile.y + 0.5;
+  hero.playerMoveTo.handled = false;
+  hero.playerMoveTo.sendToServer = true;
+  if (Store.world) {
+    Store.world.attackTarget = null;
+    Store.world.pickupTarget = null;
+    Store.world.talkTarget = null;
+  }
+  return true;
+}
+
+/** A hunting spot: a dot sized by its monsters, coloured by what it pays (best gold, HUNT's spot red). */
+const SpotDot = ({
+  spot,
+  center,
+  mapSize,
+  best,
+  pinned,
+  onHover,
+  onGo,
+}: {
+  spot: MapSpot;
+  center: MapPoint;
+  mapSize: number;
+  best: boolean;
+  pinned: boolean;
+  onHover: (spot: MapSpot | null) => void;
+  onGo: (spot: MapSpot) => void;
+}) => {
+  const { x, y } = tileToScreen(spot, center, mapSize);
+  const size = Math.min(14, 6 + Math.floor(spot.count / 3));
+  const kind = pinned ? 'is-pinned' : best ? 'is-best' : spot.rate > 0 ? 'is-good' : 'is-poor';
+  return (
+    <div
+      className={`minimap-spot ${kind}`}
+      style={{ left: x - size / 2, top: y - size / 2, width: size, height: size }}
+      onMouseEnter={() => onHover(spot)}
+      onMouseLeave={() => onHover(null)}
+      onContextMenu={e => {
+        e.preventDefault();
+        e.stopPropagation();
+        onGo(spot);
+      }}
+    />
+  );
+};
+
+const SpotTip = ({
+  spot,
+  center,
+  mapSize,
+  best,
+  pinned,
+}: {
+  spot: MapSpot;
+  center: MapPoint;
+  mapSize: number;
+  best: boolean;
+  pinned: boolean;
+}) => {
+  const { x, y } = tileToScreen(spot, center, mapSize);
+  const lines = [
+    mt('map.spot', { monster: spot.monster, level: spot.level, count: spot.count }),
+    spot.rate > 0 ? mt('map.spotRate', { rate: Math.round(spot.rate).toLocaleString('pt-BR') }) : null,
+    pinned ? mt('map.chosen') : best ? mt('map.best') : null,
+  ].filter(Boolean);
+  return (
+    <MuTipText
+      text={lines.join(' · ')}
+      background="rgba(0,0,0,0.8)"
+      style={{
+        position: 'absolute',
+        left: x,
+        top: y - 10,
+        transform: 'translate(-50%, -100%)',
+        whiteSpace: 'nowrap',
+      }}
+    />
+  );
+};
 
 const CLOSE_BUTTON = { x: 640 - 27, y: 3, width: 30, height: 25 };
 const CLOSE_FRAME = { width: 36, height: 29 };
@@ -191,17 +330,31 @@ const SheetView = ({
   const hero = useHeroTile(true);
   const partyMarkers = usePartyMarkers(true, map);
   const [hovered, setHovered] = useState<MinimapMarker | null>(null);
+  const [hoveredSpot, setHoveredSpot] = useState<MapSpot | null>(null);
   const [pan, setPan] = useState<MapPan>(NO_PAN);
   const scale = useUiStageScale();
   const mapSize = ZOOM_LEVELS[zoom];
   const { dragging, handlers } = useMapDrag(mapSize, scale, setPan);
 
-  const center: MapPoint = { x: hero.x + pan.v, y: hero.y + pan.u };
+  // MUIdle (HUNT v2): the hunting spots of this map, asked for when the sheet opens on it.
+  useEffect(() => {
+    MUIdle.requestMapSpots();
+  }, [map]);
+  const spots = MUIdle.mapSpots?.map === map ? MUIdle.mapSpots : null;
+  const pinned = spots?.pinned ?? null;
+
+  // The whole map around its own centre; closer in, around the hero (as the original).
+  const wholeMap = zoom === WHOLE_MAP_ZOOM;
+  const anchor: MapPoint = wholeMap ? { x: TERRAIN_SIZE / 2, y: TERRAIN_SIZE / 2 } : hero;
+  const center: MapPoint = { x: anchor.x + pan.v, y: anchor.y + pan.u };
+  const go = (spot: MapSpot) => {
+    if (goToSpot(spot)) close();
+  };
   const tx = (center.y / TERRAIN_SIZE) * mapSize;
   const ty = (center.x / TERRAIN_SIZE) * mapSize;
-  // The hero sits off the centre by the pan, upright as the original draws it.
-  const heroDx = (-pan.u / TERRAIN_SIZE) * mapSize;
-  const heroDy = (-pan.v / TERRAIN_SIZE) * mapSize;
+  // The hero sits off the centre by the pan (and the map's centre on the whole map), upright.
+  const heroDx = ((hero.y - center.y) / TERRAIN_SIZE) * mapSize;
+  const heroDy = ((hero.x - center.x) / TERRAIN_SIZE) * mapSize;
 
   return (
     <div
@@ -262,7 +415,29 @@ const SheetView = ({
               transform: `rotate(${MAP_ROTATION}deg) translate(${heroDx}px, ${heroDy}px) rotate(${-MAP_ROTATION}deg)`,
             }}
           />
+          {spots?.spots.map((spot, i) => (
+            <SpotDot
+              key={`spot-${spot.x}-${spot.y}-${i}`}
+              spot={spot}
+              center={center}
+              mapSize={mapSize}
+              best={i === spots.best}
+              pinned={!!pinned && Math.abs(pinned.x - spot.x) <= 15 && Math.abs(pinned.y - spot.y) <= 15}
+              onHover={setHoveredSpot}
+              onGo={go}
+            />
+          ))}
           {hovered && <MarkerTip marker={hovered} center={center} mapSize={mapSize} />}
+          {hoveredSpot && spots && (
+            <SpotTip
+              spot={hoveredSpot}
+              center={center}
+              mapSize={mapSize}
+              best={spots.spots.indexOf(hoveredSpot) === spots.best}
+              pinned={!!pinned && Math.abs(pinned.x - hoveredSpot.x) <= 15 && Math.abs(pinned.y - hoveredSpot.y) <= 15}
+            />
+          )}
+          {spots && spots.spots.length > 0 && <div className="minimap-spot-hint">{mt('map.hint')}</div>}
         </div>
         <Frame width={SHEET_WIDTH} height={SHEET_HEIGHT} />
         {isPanned(pan) && (
@@ -276,6 +451,8 @@ const SheetView = ({
     </div>
   );
 };
+
+const SheetViewObserved = observer(SheetView);
 
 export const MinimapSheet = observer(() => {
   const open = Store.minimapEnabled;
@@ -308,5 +485,5 @@ export const MinimapSheet = observer(() => {
     );
   };
 
-  return <SheetView minimap={minimap} map={map} zoom={zoom} onWheel={onWheel} close={close} />;
+  return <SheetViewObserved minimap={minimap} map={map} zoom={zoom} onWheel={onWheel} close={close} />;
 });

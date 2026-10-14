@@ -166,6 +166,11 @@ export type Entity = Partial<{
     path: IVector2Like[] | null;
     calculated: boolean;
     /**
+     * The search budget of the next search only (the map window's walk across the whole map); the
+     * default budget gives up on a long way and walks the hero to the closest tile it found.
+     */
+    maxExpansions?: number;
+    /**
      * The last step of `path` the server has been sent (NetworkSystem, the
      * only writer). Undefined when it has the whole path. MoveAlongPathSystem
      * refuses to walk the hero past it: a WalkRequest whose source tile is

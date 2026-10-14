@@ -53,8 +53,10 @@ export const PathfindingSystem: ISystemFactory = world => {
 
         pathfinding.path = world.pathfinder.search(
           pathfinding.from,
-          pathfinding.to
+          pathfinding.to,
+          pathfinding.maxExpansions ? { maxExpansions: pathfinding.maxExpansions } : undefined
         );
+        pathfinding.maxExpansions = undefined;
 
         pathfinding.calculated = true;
 
