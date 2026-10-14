@@ -38,6 +38,7 @@ import {
   LiveList,
   TICK,
   additiveMaterial,
+  capVisibility,
   darkCardGain,
   fadeOut,
   fxNow,
@@ -503,6 +504,7 @@ export function spawnModel(scene: Scene, at: Vector3, opts: ModelOptions): Model
             }
           });
           clip = gltf.animationGroups[0] ?? null;
+          capBlendedMeshes(gltf.mesh);
           meshes.push(gltf.mesh);
           return;
         }
@@ -629,6 +631,7 @@ export function spawnModel(scene: Scene, at: Vector3, opts: ModelOptions): Model
             clip.start(false, ANIMATION_SPEED, clip.from, to);
           } else clip.play(opts.loop ?? true);
         }
+        capBlendedMeshes(gltf.mesh);
         meshes.push(gltf.mesh);
       })
       .catch(err => console.warn('[effects] model failed', opts.model, err));
@@ -769,6 +772,17 @@ export function spawnModel(scene: Scene, at: Vector3, opts: ModelOptions): Model
       alpha = a;
     },
   };
+}
+
+/**
+ * The model's meshes on a blending material keep their visibility below 1 (core.ts `capVisibility`): the fade
+ * from 1 made Babylon re-derive their defines at the crossing, hundreds of times a second while a caster
+ * hunted (10-14). They blend either way; the instance is this spawn's own and goes with it.
+ */
+function capBlendedMeshes(root: AbstractMesh): void {
+  for (const mesh of [root, ...root.getChildMeshes(false)]) {
+    if (mesh.material?.transparencyMode === Material.MATERIAL_ALPHABLEND) capVisibility(mesh);
+  }
 }
 
 function spawn(scene: Scene, at: Vector3, opts: ModelOptions): EffectHandle {

@@ -507,19 +507,20 @@ const MESH_VISIBILITY = Object.getOwnPropertyDescriptor(AbstractMesh.prototype, 
  */
 const MAX_CARD_VISIBILITY = 0.999;
 
-function capVisibility(card: Card): void {
+export function capVisibility(mesh: AbstractMesh): void {
   if (!MESH_VISIBILITY?.get || !MESH_VISIBILITY.set) return;
   const { get, set } = MESH_VISIBILITY;
-  Object.defineProperty(card, 'visibility', {
+  Object.defineProperty(mesh, 'visibility', {
     configurable: true,
     enumerable: true,
-    get(this: Card) {
+    get(this: AbstractMesh) {
       return get.call(this);
     },
-    set(this: Card, value: number) {
+    set(this: AbstractMesh, value: number) {
       set.call(this, Math.min(value, MAX_CARD_VISIBILITY));
     },
   });
+  if (mesh.visibility > MAX_CARD_VISIBILITY) mesh.visibility = MAX_CARD_VISIBILITY;
 }
 
 let cardSeq = 0;
