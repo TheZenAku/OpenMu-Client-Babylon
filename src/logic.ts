@@ -736,6 +736,8 @@ EventBus.on('MapChanged', packet => {
   if (p.IsMapChange) {
     // HideAll on warp: the merchant stays behind.
     Store.closeNpcShop();
+    // ...and the NPC's dialogue with him (the hunt's buff trip warped on and left it open, 10-14).
+    EventBus.emit('heroWalked', {});
     // `ReceiveMapChange` (WSclient.cpp:622): the notice stack and the minimap
     // sheet do not survive a warp.
     Notices.clear();
