@@ -29,7 +29,7 @@ import {
 } from '../libs/babylon/exports';
 import { clampAlpha } from './clampAlpha';
 import { chromeMaterial, disposeChromeMaterials } from './chrome';
-import { getMaterial, loadGLTF } from '../common/modelLoader';
+import { getMaterial, loadGLTF, type LoadedModel } from '../common/modelLoader';
 import { BlendState } from '../common/objects/enum';
 import { Store } from '../store';
 import type { TestScene } from '../scenes/testScene';
@@ -467,13 +467,18 @@ export function spawnModel(scene: Scene, at: Vector3, opts: ModelOptions): Model
     }
   };
 
+  const poolable = isPoolable(opts);
+  let loaded: LoadedModel | null = null;
+
   if (world) {
-    void loadGLTF(opts.model, world)
+    void (poolable ? acquireInstance(opts.model, world) : loadGLTF(opts.model, world))
       .then(gltf => {
         if (disposed) {
-          gltf.mesh.dispose(false, false);
+          if (poolable) releaseInstance(opts.model, gltf);
+          else gltf.mesh.dispose(false, false);
           return;
         }
+        loaded = gltf;
         gltf.mesh.setParent(node);
         gltf.mesh.position.setAll(0);
         gltf.mesh.scaling.set(1, -1, 1);
@@ -739,6 +744,7 @@ export function spawnModel(scene: Scene, at: Vector3, opts: ModelOptions): Model
       for (const m of fadeMats) m.dispose(false, false);
       for (const m of meshes) releaseEffectGlow(m);
       for (const cp of copyNodes) cp.node.dispose(false, false);
+      if (poolable && loaded) releaseInstance(opts.model, loaded);
       node.dispose(false, false);
     },
   });
@@ -785,6 +791,80 @@ function capBlendedMeshes(root: AbstractMesh): void {
   }
 }
 
+/**
+ * Instances of finished simple spawns, per model file, for the next spawn of that model. A spell's
+ * model used to be instantiated from the GLB cache for every spawn and disposed after a few ticks:
+ * the crackle a wizard's hand casts (two lightning models a tick) and the thunder of the third wings
+ * made ~20 instances a second per character in view - each a clone of the meshes, a skeleton and
+ * animation groups, each re-deriving its materials on its first draw (10-14). A simple spawn - one
+ * which only places, scales, tints and fades the model (`isPoolable`) - leaves nothing behind that
+ * the next one does not set again.
+ */
+const instancePool = new Map<string, LoadedModel[]>();
+
+/** Instances kept per model file; more go as before. */
+const POOL_PER_MODEL = 32;
+
+/** A spawn which only places, scales, tints and fades its model (nothing per instance to undo). */
+function isPoolable(opts: ModelOptions): boolean {
+  return (
+    !opts.native &&
+    !opts.copies &&
+    !opts.shine &&
+    opts.blendMesh === undefined &&
+    opts.blendLight === undefined &&
+    !opts.blendClamp &&
+    !opts.solidFade &&
+    !opts.solid &&
+    !opts.texture &&
+    !opts.cutout &&
+    !opts.alphaTest &&
+    !opts.plainColour &&
+    !opts.shadow &&
+    opts.hideMesh === undefined &&
+    opts.rearAt === undefined &&
+    !opts.uvScroll &&
+    !opts.scrollU &&
+    !opts.scrollV &&
+    opts.keysPerTick === undefined &&
+    opts.playTo === undefined &&
+    opts.blend !== 'subtract'
+  );
+}
+
+function acquireInstance(model: string, world: NonNullable<typeof Store.world>): Promise<LoadedModel> {
+  const pool = instancePool.get(model);
+  while (pool?.length) {
+    const instance = pool.pop()!;
+    if (instance.mesh.isDisposed()) continue;
+    instance.mesh.setEnabled(true);
+    return Promise.resolve(instance);
+  }
+  return loadGLTF(model, world);
+}
+
+function releaseInstance(model: string, instance: LoadedModel): void {
+  for (const group of instance.animationGroups) group.stop();
+  if (instance.mesh.isDisposed()) return;
+  let pool = instancePool.get(model);
+  if (!pool) {
+    pool = [];
+    instancePool.set(model, pool);
+  }
+  if (pool.length >= POOL_PER_MODEL) {
+    disposeInstance(instance);
+    return;
+  }
+  instance.mesh.setParent(null);
+  instance.mesh.setEnabled(false);
+  pool.push(instance);
+}
+
+function disposeInstance(instance: LoadedModel): void {
+  for (const group of instance.animationGroups) group.dispose();
+  instance.mesh.dispose(false, false);
+}
+
 function spawn(scene: Scene, at: Vector3, opts: ModelOptions): EffectHandle {
   return spawnModel(scene, at, opts);
 }
@@ -795,6 +875,8 @@ function update(_map: number, dt: number): void {
 
 function reset(): void {
   live.clear();
+  for (const pool of instancePool.values()) for (const instance of pool) disposeInstance(instance);
+  instancePool.clear();
   disposeChromeMaterials();
 }
 
