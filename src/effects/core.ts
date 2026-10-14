@@ -1,4 +1,5 @@
 import {
+  AbstractMesh,
   Color4,
   Constants,
   CreatePlane,
@@ -486,7 +487,38 @@ export interface SheetCells {
 const CELL_INSET = 0.005;
 const WHOLE_SHEET_UVS = [0, 0, 1, 0, 1, 1, 0, 1];
 
-const cardPool = new Map<Scene, Card[]>();
+/**
+ * Free cards per scene and material. A card goes back to the cards of its own material: handing a card
+ * another material makes Babylon rebuild its shader defines on the next draw (string work and garbage
+ * for every card taken), which measured at hundreds of rebuilds a second while a wizard hunted (10-14).
+ */
+const cardPool = new Map<Scene, Map<StandardMaterial, Card[]>>();
+
+/** `AbstractMesh.visibility`, whose setter a blended card wraps (`capVisibility`). */
+const MESH_VISIBILITY = Object.getOwnPropertyDescriptor(AbstractMesh.prototype, 'visibility');
+
+/**
+ * The most a blended card's `visibility` reaches. Babylon flags the mesh's defines dirty whenever its
+ * visibility crosses 1 (it changes whether the mesh needs alpha blending), and the effects fade cards
+ * from 1 down every few frames - each crossing a full define rebuild. A card on a blending material
+ * blends either way, and 0.999 of the colour is the same picture.
+ */
+const MAX_CARD_VISIBILITY = 0.999;
+
+function capVisibility(card: Card): void {
+  if (!MESH_VISIBILITY?.get || !MESH_VISIBILITY.set) return;
+  const { get, set } = MESH_VISIBILITY;
+  Object.defineProperty(card, 'visibility', {
+    configurable: true,
+    enumerable: true,
+    get(this: Card) {
+      return get.call(this);
+    },
+    set(this: Card, value: number) {
+      set.call(this, Math.min(value, MAX_CARD_VISIBILITY));
+    },
+  });
+}
 
 let cardSeq = 0;
 
@@ -503,12 +535,12 @@ export function acquireCard(
   billboard = true,
   group = EFFECT_RENDERING_GROUP
 ): Card {
-  let pool = cardPool.get(scene);
-  if (!pool) {
-    pool = [];
-    cardPool.set(scene, pool);
+  let byMaterial = cardPool.get(scene);
+  if (!byMaterial) {
+    byMaterial = new Map();
+    cardPool.set(scene, byMaterial);
   }
-  let card = pool.pop();
+  let card = byMaterial.get(material)?.pop();
   if (!card) {
     card = CreatePlane(`fxCard${cardSeq++}`, { size: 1, updatable: true }, scene);
     card.isPickable = false;
@@ -520,8 +552,10 @@ export function acquireCard(
     // no tier, so it would cost a draw to contribute nothing. The card's own
     // halo is the effects layer's (glow.ts).
     (scene as TestScene).look?.glow.addExcludedMesh(card);
+    card.material = material;
+    // The card keeps this material for good (it returns to its pool); a blending one never reaches 1.
+    if (material.transparencyMode === Material.MATERIAL_ALPHABLEND) capVisibility(card);
   }
-  card.material = material;
   card.renderingGroupId = group;
   // A card in the world's group is matter: it goes into the G-buffer, so the
   // haze and the AO read its own depth rather than whatever stands behind it
@@ -556,7 +590,18 @@ export function releaseCard(scene: Scene, card: Card): void {
     card.updateVerticesData(VertexBuffer.UVKind, WHOLE_SHEET_UVS);
     card.metadata.cellUvs = false;
   }
-  cardPool.get(scene)?.push(card);
+  const material = card.material as StandardMaterial | null;
+  const byMaterial = cardPool.get(scene);
+  if (!material || !byMaterial) {
+    card.dispose(false, false);
+    return;
+  }
+  let pool = byMaterial.get(material);
+  if (!pool) {
+    pool = [];
+    byMaterial.set(material, pool);
+  }
+  pool.push(card);
 }
 
 /**
@@ -1038,7 +1083,7 @@ export function disposePools(): void {
   for (const byKey of materials.values()) for (const m of byKey.values()) m.dispose(false, false);
   materials.clear();
   disposeSoftEdgeMasks();
-  for (const pool of cardPool.values()) for (const c of pool) c.dispose(false, false);
+  for (const byMaterial of cardPool.values()) for (const pool of byMaterial.values()) for (const c of pool) c.dispose(false, false);
   cardPool.clear();
   for (const map of systems.values()) for (const ps of map.values()) ps.dispose(false);
   systems.clear();
