@@ -285,12 +285,20 @@ const MAGIC_SPEED_DIVISOR: Record<BaseClass, number> = {
   [BaseClass.RageFighter]: 9,
 };
 
+/**
+ * The server's ceiling of both speeds (OpenMU `Stats.AttackSpeed` / `Stats.MagicSpeed`, MaximumValue 200).
+ * Uncapped, a character with a lot of agility animated and swung far faster than the server counts it
+ * (a Dark Lord with 14 000 agility: 1 400 against 200) - every swing a request the server then weighed
+ * against its own 200, the speed-hack check banned for (test0, 10-08), and the stutter of 10-14.
+ */
+export const MAX_ATTACK_SPEED = 200;
+
 export function attackSpeedOf(cls: CharacterClassNumber, agility: number): number {
-  return Math.trunc(agility / ATTACK_SPEED_DIVISOR[getBaseClass(cls)]);
+  return Math.min(MAX_ATTACK_SPEED, Math.trunc(agility / ATTACK_SPEED_DIVISOR[getBaseClass(cls)]));
 }
 
 export function magicSpeedOf(cls: CharacterClassNumber, agility: number): number {
-  return Math.trunc(agility / MAGIC_SPEED_DIVISOR[getBaseClass(cls)]);
+  return Math.min(MAX_ATTACK_SPEED, Math.trunc(agility / MAGIC_SPEED_DIVISOR[getBaseClass(cls)]));
 }
 
 export type DerivedStats = {

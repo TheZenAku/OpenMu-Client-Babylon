@@ -1644,6 +1644,10 @@ EventBus.on('ObjectWalked', packet => {
   }
 
   obj.transform.rot.y = convertDirectionToAngle(p.TargetRotation);
+
+  // The server walked the hero (HUNT v2): what a walk of the player's own closes (an NPC's dialogue the
+  // hunt's buff or shopping trip opened, quest windows) closes the same way - the server closed its side.
+  if (obj.localPlayer) EventBus.emit('heroWalked', {});
 });
 
 /**
