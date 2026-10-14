@@ -23,6 +23,7 @@ import type { TestScene } from '../scenes/testScene';
 import { addEffectGlow, disposeEffectGlow, dropEffectGlow } from './glow';
 import { disposeSoftEdgeMasks, fadeSheetEdges, fadeSheetSides, softEdgeMask } from './softEdge';
 import { installSpriteLinearDecode } from '../libs/babylon/spriteLinear';
+import { installGreasedLineInPlace } from '../libs/babylon/greasedLineInPlace';
 import { useGroundFade } from './groundFade';
 import type { EffectHandle } from './layer';
 
@@ -50,6 +51,7 @@ import type { EffectHandle } from './layer';
 /** MU's 25 Hz effect tick - the C++ counts lifetimes in these. */
 // Before any sprite manager exists: every sprite user imports this module.
 installSpriteLinearDecode();
+installGreasedLineInPlace();
 
 export const TICK = 1 / 25;
 
