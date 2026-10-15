@@ -7,6 +7,7 @@ import { setUnlockedPages } from '../common/inventoryPages';
 import { ItemSerializer } from '../common/itemSerializer';
 import { BuildCheck, type UpdateNoticeData } from '../common/buildCheck';
 import { ServerHunt } from '../common/serverHunt';
+import { itemDisplayName } from '../common/itemTooltip';
 import type { Item } from '../ecs/world';
 import { type HuntActivity, type HuntMapOption } from './huntMap';
 import { parseMixPreview, type MixPreview } from './mixOdds';
@@ -99,12 +100,16 @@ export type MapSpots = { map: number; spots: MapSpot[]; best: number; pinned: { 
 
 /** What an inventory action of the window came to (the server sells, repairs and unlocks). */
 type InventoryResult = {
-  action: 'sell' | 'repair' | 'page' | 'store' | 'retrieve';
+  /** `equip`: HUNT put a piece on (`count` is its equipment slot); `autoSell`: HUNT sold junk. */
+  action: 'sell' | 'repair' | 'page' | 'store' | 'retrieve' | 'equip' | 'autoSell';
   ok: boolean;
   count: number;
   zen: number;
   reason: 'kept' | 'zenFull' | 'zen' | 'nothing' | 'unavailable' | 'full' | null;
 };
+
+/** Slots 0..11 are the equipment, the bag starts after them. */
+const FIRST_BAG_SLOT = 12;
 
 const PAGE_NAMES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
 
@@ -148,6 +153,16 @@ export type IdleSettings = {
   autoCombo: boolean;
   /** The attack skills in the order the player wants them cast; empty: HUNT decides. */
   skillOrder: number[];
+  /** HUNT puts the best piece of the bag on (by the character's own numbers). */
+  autoEquip: boolean;
+  /** Equipment slots (0..11) the player keeps: HUNT never changes them. Changed one by one (lockItem). */
+  lockedEquipSlots: number[];
+  /** Junk also: orbs and scrolls the character never learns. */
+  sellSkillItems: boolean;
+  /** Junk also: weaker potions while a stronger one is there, apples, ale, antidotes. */
+  sellWeakPotions: boolean;
+  /** Junk also: event materials below the character's event level. */
+  sellOldEventItems: boolean;
 };
 
 /** Why the character cannot join an event now, as the server judged it. */
@@ -277,6 +292,11 @@ export const DEFAULT_IDLE_SETTINGS: IdleSettings = {
   autoSkills: true,
   autoCombo: true,
   skillOrder: [],
+  autoEquip: true,
+  lockedEquipSlots: [],
+  sellSkillItems: true,
+  sellWeakPotions: true,
+  sellOldEventItems: true,
 };
 
 class MUIdleStore {
@@ -409,6 +429,11 @@ class MUIdleStore {
       else Store.addNotification(mt(result.reason === 'zen' ? 'inv.pageZen' : 'inv.pageUnavailable'), 'error');
     } else if (result.action === 'store' && result.reason === 'full') {
       Store.addNotification(mt('inv.pageFull'), 'error');
+    } else if (result.action === 'equip') {
+      const item = Store.playerData.items[result.count];
+      if (item) Store.addNotification(mt('inv.equipped', { item: itemDisplayName(item) }), 'info');
+    } else if (result.action === 'autoSell' && result.ok) {
+      Store.addNotification(mt('inv.autoSold', params), 'info');
     }
   }
 
@@ -446,17 +471,22 @@ class MUIdleStore {
     Store.addNotification(mt('saved'), 'info');
   }
 
-  /** Locks/unlocks the item in an inventory slot; the server answers with the new state. */
   /** Split `amount` pieces off the stack in an inventory slot onto a free square (the server checks it all). */
   splitStack(slot: number, amount: number): void {
     this.send(SUB_SPLIT_STACK, { slot, amount });
   }
 
+  /**
+   * Locks/unlocks: an equipment slot (0..11) itself - HUNT never changes it, also while empty - or the item
+   * in a bag slot, whose lock follows it. The server answers with the new state.
+   */
   lockItem(slot: number, locked: boolean): void {
     this.send(SUB_LOCK_ITEM, { slot, locked });
   }
 
+  /** An equipment slot locked as a slot, or a slot whose item is locked. */
   isSlotLocked(slot: number): boolean {
+    if (slot < FIRST_BAG_SLOT && this.settings?.lockedEquipSlots?.includes(slot)) return true;
     return this.lockedSlots.includes(slot);
   }
 

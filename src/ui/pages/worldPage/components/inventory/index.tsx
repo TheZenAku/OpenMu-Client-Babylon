@@ -225,6 +225,7 @@ const EquipmentSlot = observer(
     item,
     onHover,
     onPutAway,
+    lockMode,
   }: {
     slot: number;
     x: number;
@@ -236,8 +237,11 @@ const EquipmentSlot = observer(
     onHover: (info: HoverInfo | null) => void;
     /** MUIdle: the worn item (or the one carried off a slot) into the first free place of the bag. */
     onPutAway: () => void;
+    /** MUIdle: a click locks or unlocks the slot (HUNT never changes a locked one). */
+    lockMode: boolean;
   }) => {
     const picked = Store.pickedItem;
+    const locked = MUIdle.isSlotLocked(slot);
 
     const fits = !!picked && isEquipable(slot, picked.item) && !item;
     const blocked = !!picked && !fits;
@@ -247,9 +251,10 @@ const EquipmentSlot = observer(
       <div
         className={`equipment-slot${fits ? ' can-equip' : ''}${
           blocked ? ' blocked' : ''
-        }${item ? ` filled${qualityClass(item)}` : ''}`}
+        }${item ? ` filled${qualityClass(item)}` : ''}${locked ? ' locked' : ''}`}
         data-no-drag="true"
         data-equipment-slot={slot}
+        title={locked ? mt('inv.slotLocked') : undefined}
         style={{ left: x, top: y, width, height }}
         onPointerEnter={event =>
           onHover(item ? { item, slot, x: event.clientX, y: event.clientY } : null)
@@ -258,6 +263,11 @@ const EquipmentSlot = observer(
         onPointerDown={event => {
           if (event.button !== 0) return;
           event.stopPropagation();
+
+          if (lockMode) {
+            MUIdle.lockItem(slot, !locked);
+            return;
+          }
 
           if (!picked) {
             // REPAIR_MODE_ON (NewUIMyInventory.cpp:1415): the click repairs.
@@ -302,6 +312,7 @@ const EquipmentSlot = observer(
             <span style={{ width: `${Math.max(0, Math.min(100, durability))}%` }} />
           </span>
         )}
+        {locked && <span className="lock-badge">P</span>}
       </div>
     );
   }
@@ -317,6 +328,7 @@ type Mode =
   | { kind: 'normal' }
   | { kind: 'batch'; selected: number[]; stored: number[] }
   | { kind: 'junk' }
+  | { kind: 'lock' }
   | { kind: 'buy'; page: number };
 
 const NORMAL: Mode = { kind: 'normal' };
@@ -726,6 +738,14 @@ export const Inventory = observer(() => {
       return;
     }
 
+    // Lock mode: a click locks or unlocks the item (the storage pages keep theirs from the window's list).
+    if (mode.kind === 'lock') {
+      const square = squareAt(event.clientX, event.clientY);
+      const entry = square >= 0 ? squares[square] : null;
+      if (entry && !storagePage) MUIdle.lockItem(entry.slot, !locked.has(entry.slot));
+      return;
+    }
+
     if (picked && pickedSize) {
       dropOnGrid(event.clientX, event.clientY);
       return;
@@ -900,6 +920,19 @@ export const Inventory = observer(() => {
       );
     }
 
+    if (mode.kind === 'lock') {
+      return (
+        <>
+          <span className="inv-btn wide hint" title={mt('inv.lockTitle')}>
+            {mt('inv.lockHint')}
+          </span>
+          <button type="button" className="inv-btn narrow primary" onClick={leaveMode}>
+            {mt('inv.done')}
+          </button>
+        </>
+      );
+    }
+
     if (mode.kind === 'buy') {
       const price = pages.prices[mode.page - 1] ?? 0;
       return (
@@ -948,6 +981,18 @@ export const Inventory = observer(() => {
           <span className="glyph">♻</span>
           <span className="label">{mt('inv.sellJunk')}</span>
         </button>
+        <button
+          type="button"
+          className="inv-btn lock"
+          title={mt('inv.lockTitle')}
+          aria-label={mt('inv.lock')}
+          disabled={!!picked}
+          onClick={() => setMode({ kind: 'lock' })}
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2M3.5 7h9v7h-9z" fill="none" stroke="currentColor" strokeWidth="1.4" />
+          </svg>
+        </button>
       </>
     );
   };
@@ -990,6 +1035,7 @@ export const Inventory = observer(() => {
           item={playerData.items[info.slot] ?? null}
           onHover={setHover}
           onPutAway={() => putAway(info.slot)}
+          lockMode={mode.kind === 'lock'}
         />
       ))}
 

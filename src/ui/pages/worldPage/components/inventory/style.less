@@ -305,8 +305,28 @@
   }
 
   &.mode-batch .inventory-items,
-  &.mode-junk .inventory-items {
+  &.mode-junk .inventory-items,
+  &.mode-lock .inventory-items,
+  &.mode-lock .equipment-slot {
     cursor: pointer;
+  }
+
+  // MUIdle: a locked equipment slot (HUNT never changes it), marked like a locked item.
+  .equipment-slot.locked {
+    box-shadow: inset 0 0 0 1px oklch(58% 0.2 25 / 0.9);
+
+    .lock-badge {
+      position: absolute;
+      left: 1px;
+      top: 1px;
+      z-index: 1;
+      padding: 0 1px;
+      font: 700 7px/8px var(--v-font-label);
+      color: #fff;
+      background: var(--v-blood-bright);
+      border-radius: 1px;
+      pointer-events: none;
+    }
   }
 
   .inv-tabs {
@@ -417,6 +437,25 @@
 
     &.checked {
       .vael-tile-active();
+    }
+
+    // MUIdle: the padlock that turns the lock mode on.
+    &.lock {
+      flex: none;
+      width: 18px;
+      padding: 0;
+
+      svg {
+        width: 10px;
+        height: 10px;
+      }
+    }
+
+    // The lock mode's explanation, in place of the buttons.
+    &.hint {
+      cursor: default;
+      justify-content: flex-start;
+      text-overflow: ellipsis;
     }
 
     &.repair-all {

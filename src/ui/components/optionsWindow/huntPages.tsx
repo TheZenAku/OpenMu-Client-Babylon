@@ -36,6 +36,7 @@ import { skillDefinition, type SkillDefinition } from '../../../common/skillsDat
 import { skillDisplayName } from '../../../common/skillNames';
 import { BaseClass, getBaseClass } from '../../../common/characterStats';
 import { itemDisplayName } from '../../../common/itemTooltip';
+import { FIRST_GRID_SLOT, SLOT_PAGES, pageFirstSlot } from '../../../common/inventoryPages';
 import { Checkbox, FitText, OptionsButton, Slider, Stepper } from './controls';
 import { CONTROL_WIDTH } from './rows';
 
@@ -45,7 +46,7 @@ import { CONTROL_WIDTH } from './rows';
  * Save (or when the window closes). The classic MU Helper window stays for its manual skill slots.
  */
 
-export type HuntPageKind = 'huntGeneral' | 'huntSkills' | 'huntPickup';
+export type HuntPageKind = 'huntGeneral' | 'huntSkills' | 'huntPickup' | 'huntInventory';
 
 /** What the pages changed and did not send yet. */
 export const HuntDraft = observable(
@@ -234,22 +235,15 @@ const Percent = (props: {
 
 const PERFORMANCE_MODES: PerformanceMode[] = ['full', 'reduced', 'minimum', 'auto'];
 
-/** First backpack slot: 0..11 are the equipped items, which are never sold anyway. */
-const FIRST_BACKPACK_SLOT = 12;
+/** The equipment slots, 0..11. */
+const EQUIPMENT_SLOTS = Array.from({ length: FIRST_GRID_SLOT }, (_, slot) => slot);
 
-/** The backpack's plain weapons and armor - what the merchant trip may sell as junk - each with a lock. */
+/** The items of the bag (pages I-III) - what HUNT may sell or put on - each with a lock. */
 const LockedItems = observer(({ onHelp }: { onHelp: HelpFn }) => {
+  const lastSlot = pageFirstSlot(SLOT_PAGES + 1);
   const items = Store.playerData.items
     .map((item, slot) => ({ item, slot }))
-    .filter(
-      ({ item, slot }) =>
-        item &&
-        slot >= FIRST_BACKPACK_SLOT &&
-        item.group <= 11 &&
-        !item.isExcellent &&
-        !item.isAncient &&
-        !(item.socketCount ?? 0)
-    );
+    .filter(({ item, slot }) => item && slot >= FIRST_GRID_SLOT && slot < lastSlot);
   if (!items.length) return null;
   return (
     <Section title={mt('lockedItems')}>
@@ -367,25 +361,6 @@ export const HuntGeneralPage = observer(({ onHelp }: { onHelp: HelpFn }) => {
 
       <Section title={mt('opt.section.merchant')}>
         <Toggle
-          label={mt('autoSell')}
-          help={mt('alwaysKept')}
-          onHelp={onHelp}
-          value={idle.autoSell}
-          onChange={value => setIdle({ autoSell: value })}
-        />
-        <Range
-          label={mt('sellMaxItemLevel', { level: idle.sellMaxItemLevel })}
-          help={mt('alwaysKept')}
-          onHelp={onHelp}
-          indent
-          inert={!idle.autoSell}
-          value={idle.sellMaxItemLevel}
-          min={0}
-          max={9}
-          text={`+${idle.sellMaxItemLevel}`}
-          onChange={value => setIdle({ sellMaxItemLevel: value })}
-        />
-        <Toggle
           label={mt('autoRepair')}
           help={mt('autoRepair')}
           onHelp={onHelp}
@@ -428,6 +403,88 @@ export const HuntGeneralPage = observer(({ onHelp }: { onHelp: HelpFn }) => {
           index={PERFORMANCE_MODES.indexOf(Performance.mode)}
           options={PERFORMANCE_MODES.map(mode => mt(`perf.${mode}` as MUIdleTextKey))}
           onChange={index => Performance.setMode(PERFORMANCE_MODES[index])}
+        />
+      </Section>
+    </>
+  );
+});
+
+/** Inventory: HUNT's gear (the best piece on, slot locks), its junk rules and the item locks. */
+export const HuntInventoryPage = observer(({ onHelp }: { onHelp: HelpFn }) => {
+  const idle = idleNow();
+  return (
+    <>
+      <Section title={mt('opt.section.gear')}>
+        <Toggle
+          label={mt('opt.autoEquip')}
+          help={mt('opt.autoEquip.help')}
+          onHelp={onHelp}
+          value={idle.autoEquip}
+          onChange={value => setIdle({ autoEquip: value })}
+        />
+        {EQUIPMENT_SLOTS.map(slot => {
+          const locked = MUIdle.isSlotLocked(slot);
+          const item = Store.playerData.items[slot];
+          return (
+            <Toggle
+              key={slot}
+              indent
+              label={`${locked ? '🔒' : '🔓'} ${mt(`slot.${slot}` as MUIdleTextKey)}: ${item ? itemDisplayName(item) : mt('slot.empty')}`}
+              help={mt('opt.slotLock.help')}
+              onHelp={onHelp}
+              value={locked}
+              onChange={value => MUIdle.lockItem(slot, value)}
+            />
+          );
+        })}
+      </Section>
+
+      <Section title={mt('opt.section.junk')}>
+        <Toggle
+          label={mt('autoSell')}
+          help={mt('opt.junk.help')}
+          onHelp={onHelp}
+          value={idle.autoSell}
+          onChange={value => setIdle({ autoSell: value })}
+        />
+        <Range
+          label={mt('sellMaxItemLevel', { level: idle.sellMaxItemLevel })}
+          help={mt('alwaysKept')}
+          onHelp={onHelp}
+          indent
+          inert={!idle.autoSell}
+          value={idle.sellMaxItemLevel}
+          min={0}
+          max={9}
+          text={`+${idle.sellMaxItemLevel}`}
+          onChange={value => setIdle({ sellMaxItemLevel: value })}
+        />
+        <Toggle
+          label={mt('opt.sellSkillItems')}
+          help={mt('opt.junk.help')}
+          onHelp={onHelp}
+          indent
+          inert={!idle.autoSell}
+          value={idle.sellSkillItems}
+          onChange={value => setIdle({ sellSkillItems: value })}
+        />
+        <Toggle
+          label={mt('opt.sellWeakPotions')}
+          help={mt('opt.junk.help')}
+          onHelp={onHelp}
+          indent
+          inert={!idle.autoSell}
+          value={idle.sellWeakPotions}
+          onChange={value => setIdle({ sellWeakPotions: value })}
+        />
+        <Toggle
+          label={mt('opt.sellOldEventItems')}
+          help={mt('opt.junk.help')}
+          onHelp={onHelp}
+          indent
+          inert={!idle.autoSell}
+          value={idle.sellOldEventItems}
+          onChange={value => setIdle({ sellOldEventItems: value })}
         />
       </Section>
 
@@ -762,4 +819,5 @@ export const HUNT_PAGES: Record<HuntPageKind, (props: { onHelp: HelpFn }) => Rea
   huntGeneral: props => <HuntGeneralPage {...props} />,
   huntSkills: props => <HuntSkillsPage {...props} />,
   huntPickup: props => <HuntPickupPage {...props} />,
+  huntInventory: props => <HuntInventoryPage {...props} />,
 };

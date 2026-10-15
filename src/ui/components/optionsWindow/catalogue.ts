@@ -298,6 +298,7 @@ export const CATEGORIES: Category[] = [
       { id: 'hunt', labelKey: 'muHelper.tabHunt', sections: [], custom: 'huntGeneral' },
       { id: 'skills', labelKey: 'skills.title', sections: [], custom: 'huntSkills' },
       { id: 'obtain', labelKey: 'muHelper.tabObtain', sections: [], custom: 'huntPickup' },
+      { id: 'inventory', labelKey: 'inventory.title', sections: [], custom: 'huntInventory' },
     ],
   },
   {
