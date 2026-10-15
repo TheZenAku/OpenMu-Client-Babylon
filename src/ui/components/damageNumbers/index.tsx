@@ -3,10 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { With } from 'miniplex';
 import type { Entity } from '../../../ecs/world';
 import type { Events } from '../../../libs/eventBus/events';
-import type { MuSprite } from '../../../libs/mu/sprites';
 import { useEventBus } from '../../../hooks/useEventBus';
 import { usePositionOnScreen } from '../../../hooks';
 import { useMuSprite } from '../muSprite';
+import { type Rgb, tintClass, useAtlasImage } from './tint';
 
 const FONT_FILE = 'FontTest.OZT';
 
@@ -38,8 +38,6 @@ const PX_PER_MU = DIGIT_CELL / MIN_SCALE;
 
 const DIGIT_ADVANCE = DIGIT_CELL * Math.SQRT1_2;
 
-type Rgb = readonly [number, number, number];
-
 const SHIELD_COLOUR: Rgb = [0.8, 1, 0];
 const MISS_SELF_COLOUR: Rgb = [1, 1, 1];
 const MISS_OTHER_COLOUR: Rgb = [0.5, 0.5, 0.5];
@@ -50,13 +48,6 @@ function shade(colour: Rgb, amount: number): Rgb {
     Math.max(0, colour[1] - amount),
     Math.max(0, colour[2] - amount),
   ];
-}
-
-function toCss(colour: Rgb): string {
-  const [r, g, b] = colour;
-  return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(
-    b * 255
-  )})`;
 }
 
 function lookFor(kind: number, onSelf: boolean): { colour: Rgb; scale: number } {
@@ -142,6 +133,7 @@ export const DamageNumbers = () => {
   const nextId = useRef(0);
 
   const font = useMuSprite(FONT_FILE);
+  const atlas = useAtlasImage(font?.url);
 
   useEventBus('objectDamaged', event => {
     const onSelf = event.entity.localPlayer === true;
@@ -181,7 +173,7 @@ export const DamageNumbers = () => {
         <FloatingDamageNumber
           key={number.id}
           number={number}
-          font={font}
+          atlas={atlas}
           onDone={remove}
         />
       ))}
@@ -191,11 +183,11 @@ export const DamageNumbers = () => {
 
 const FloatingDamageNumber = ({
   number,
-  font,
+  atlas,
   onDone,
 }: {
   number: FloatingNumber;
-  font: MuSprite | null;
+  atlas: HTMLImageElement | null;
   onDone: (id: number) => void;
 }) => {
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -248,46 +240,19 @@ const FloatingDamageNumber = ({
     return () => cancelAnimationFrame(frame);
   }, [number, onDone]);
 
-  const colour = toCss(number.colour);
+  const tint = atlas ? tintClass(atlas, number.colour) : '';
 
   return (
     <div ref={anchorRef} className="damage-number">
-      <div ref={glyphsRef} className="glyphs">
-        {font &&
-          (number.value === MISS ? (
-            <MissGlyph font={font} colour={colour} />
-          ) : (
-            <DigitGlyphs font={font} colour={colour} value={number.value} />
-          ))}
+      <div ref={glyphsRef} className={`glyphs ${tint}`}>
+        {tint &&
+          (number.value === MISS ? <MissGlyph /> : <DigitGlyphs value={number.value} />)}
       </div>
     </div>
   );
 };
 
-function maskStyle(font: MuSprite, x: number, y: number) {
-  const image = `url(${font.url})`;
-  const size = `${ATLAS_WIDTH}px ${ATLAS_HEIGHT}px`;
-  const position = `${-x}px ${-y}px`;
-
-  return {
-    maskImage: image,
-    WebkitMaskImage: image,
-    maskSize: size,
-    WebkitMaskSize: size,
-    maskPosition: position,
-    WebkitMaskPosition: position,
-  } as const;
-}
-
-const DigitGlyphs = ({
-  font,
-  colour,
-  value,
-}: {
-  font: MuSprite;
-  colour: string;
-  value: number;
-}) => {
+const DigitGlyphs = ({ value }: { value: number }) => {
   const digits = String(value);
 
   return (
@@ -306,8 +271,7 @@ const DigitGlyphs = ({
             left: i * DIGIT_ADVANCE,
             width: DIGIT_CELL,
             height: DIGIT_CELL,
-            backgroundColor: colour,
-            ...maskStyle(font, Number(digit) * DIGIT_CELL, 0),
+            backgroundPosition: `${-Number(digit) * DIGIT_CELL}px 0px`,
           }}
         />
       ))}
@@ -315,10 +279,9 @@ const DigitGlyphs = ({
   );
 };
 
-const MissGlyph = ({ font, colour }: { font: MuSprite; colour: string }) => {
+const MissGlyph = () => {
   const zoomX = (MISS_SIZE.width * PX_PER_MU) / MISS_SRC.width;
   const zoomY = (MISS_SIZE.height * PX_PER_MU) / MISS_SRC.height;
-  const image = `url(${font.url})`;
   const size = `${ATLAS_WIDTH * zoomX}px ${ATLAS_HEIGHT * zoomY}px`;
   const position = `${-MISS_SRC.x * zoomX}px ${-MISS_SRC.y * zoomY}px`;
 
@@ -333,13 +296,8 @@ const MissGlyph = ({ font, colour }: { font: MuSprite; colour: string }) => {
           left: 0,
           width,
           height,
-          backgroundColor: colour,
-          maskImage: image,
-          WebkitMaskImage: image,
-          maskSize: size,
-          WebkitMaskSize: size,
-          maskPosition: position,
-          WebkitMaskPosition: position,
+          backgroundSize: size,
+          backgroundPosition: position,
         }}
       />
     </div>

@@ -25,12 +25,13 @@
     position: relative;
   }
 
-  // A glyph is a solid colour cut out by the atlas, which is how the original
-  // gets its tint (a white texture modulated by `glColor4f`).
+  // A glyph is a cell of the atlas tinted for its colour (`tint.ts`: the
+  // original's white texture times `glColor4f`, outline kept); the image
+  // comes from the colour's class on `.glyphs`.
   .digit {
     position: absolute;
     top: 0;
-    mask-repeat: no-repeat;
-    -webkit-mask-repeat: no-repeat;
+    background-repeat: no-repeat;
+    background-size: 256px 32px;
   }
 }
