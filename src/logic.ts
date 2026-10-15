@@ -252,6 +252,7 @@ import {
   type EmojiBubbleId,
 } from './common/emojiBubbles';
 import { startEmojiBubble } from './ecs/systems/emojiBubbleSystem';
+import { glideFrom } from './ecs/systems/glideSystem';
 import { chatEmojiBubbleOf, type ChatEmojiBubble } from './common/chatEmojis';
 import { EMOJI_CATALOG } from './emojis';
 import { fromChatWire } from './common/chatWire';
@@ -1594,9 +1595,12 @@ EventBus.on('ObjectMoved', packet => {
     );
   }
 
+  const from = { x: obj.transform.pos.x, y: obj.transform.pos.y, z: obj.transform.pos.z };
   obj.transform.pos.x = p.PositionX;
   obj.transform.pos.z = p.PositionY;
   obj.transform.pos.y = world.getTerrainHeight(p.PositionX, p.PositionY);
+  // MUIdle: a few tiles (a weapon skill's lunge, a knock-back) slide in; a warp stays a cut.
+  glideFrom(obj, from);
 
   if (obj.playerMoveTo) {
     obj.playerMoveTo.point.x = p.PositionX;

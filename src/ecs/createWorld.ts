@@ -8,6 +8,7 @@ import { CombatSfxSystem } from './systems/combatSfxSystem';
 import { WeaponTrailSystem } from './systems/weaponTrailSystem';
 import { ImpactEffectSystem } from './systems/impactEffectSystem';
 import { DropMotionSystem } from './systems/dropMotionSystem';
+import { GlideSystem } from './systems/glideSystem';
 import { DeathSystem } from './systems/deathSystem';
 import { NameTagSystem } from './systems/nameTagSystem';
 import { HeadTrackingSystem } from './systems/headTrackingSystem';
@@ -108,6 +109,8 @@ const factories: ISystemFactory[] = [
   WeaponTrailSystem,
   // Fresh drops fall and tumble in; Icarus drops bob. Render-only posOffset.
   DropMotionSystem,
+  // MUIdle: a short instant move (a weapon skill's lunge, a knock-back) slides instead of cutting.
+  GlideSystem,
   HeadTrackingSystem,
   AppearanceSystem,
   // After AppearanceSystem: the Blood Castle carrier's back item goes on
